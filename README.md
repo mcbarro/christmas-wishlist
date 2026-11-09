@@ -56,10 +56,12 @@ functions and Row Level Security described below.
 
 ### Option A: automated migrations (recommended)
 
-The repository contains two migrations:
+The repository contains these migrations, applied in order:
 
 - `supabase/migrations/20261109000000_init_wishlist.sql`
 - `supabase/migrations/20261109010000_group_logic.sql`
+- `supabase/migrations/20261109020000_fix_add_item_returning.sql`
+- `supabase/migrations/20261109030000_fix_join_group_ambiguity.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -337,7 +339,9 @@ status messages.
 │   ├── config.toml
 │   └── migrations/
 │       ├── 20261109000000_init_wishlist.sql
-│       └── 20261109010000_group_logic.sql
+│       ├── 20261109010000_group_logic.sql
+│       ├── 20261109020000_fix_add_item_returning.sql
+│       └── 20261109030000_fix_join_group_ambiguity.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json
