@@ -45,23 +45,22 @@ jobs:
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
-          if [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_PROJECT_ID" ] && [ -n "$SUPABASE_DB_PASSWORD" ]; then
+          if [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_PROJECT_ID" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
+            if [ -n "$SUPABASE_DB_PASSWORD" ]; then
+              echo "has_password=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "has_password=false" >> "$GITHUB_OUTPUT"
+              echo "::notice::SUPABASE_DB_PASSWORD is not set; the CLI will try a temporary login role with the access token."
+            fi
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Supabase database secrets are incomplete. Skipping database migrations."
+            echo "::notice::Supabase access token or project id is missing. Skipping database migrations."
           fi
-
-      - name: Link Supabase project
-        if: steps.database.outputs.enabled == 'true'
-        env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
-        run: supabase link --project-ref "$SUPABASE_PROJECT_ID"
 
       - name: Push database migrations
         if: steps.database.outputs.enabled == 'true'
+        continue-on-error: true
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

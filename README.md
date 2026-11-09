@@ -169,9 +169,9 @@ reserve available gifts.
 | ------ | -------- | ------- |
 | `SUPABASE_URL` or `VITE_SUPABASE_URL` | Yes | Supabase project URL |
 | `SUPABASE_ANON_KEY` or `VITE_SUPABASE_ANON_KEY` | Yes | Public anon key |
-| `SUPABASE_PROJECT_ID` | Yes for migrations | Project reference used by `supabase link` |
+| `SUPABASE_PROJECT_ID` | Yes for migrations | Project reference used by `supabase db push --remote` |
 | `SUPABASE_ACCESS_TOKEN` | Yes for migrations | Personal Access Token for the Supabase CLI |
-| `SUPABASE_DB_PASSWORD` | Yes for migrations | Database password used by `supabase db push` |
+| `SUPABASE_DB_PASSWORD` | Recommended for migrations | Database password; if omitted, the CLI tries a temporary login role with the access token |
 | `CUSTOM_DOMAIN` | No | Custom domain written to `dist/CNAME` |
 | `PAGES_TOKEN` | No | PAT with Pages/admin permissions used to enable Pages automatically |
 
@@ -410,7 +410,8 @@ both project sites and custom domains.
 | A shared link opens a 404 | Make sure GitHub Pages uses **GitHub Actions** as its source and that the latest build contains `404.html`. |
 | Share Target does not appear | Install the PWA over HTTPS, then share from a compatible Android browser. iOS does not support Web Share Target. |
 | Product details are empty | Microlink may be rate-limited or blocked by the store. The user can enter the details manually. |
-| `supabase db push` is skipped | Set `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_ID` and `SUPABASE_DB_PASSWORD`. |
+| `supabase db push` is skipped | Set `SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_ID`. `SUPABASE_DB_PASSWORD` is recommended if the project uses network restrictions or the temporary login role is not allowed. |
+| `supabase db push` still fails | Check the workflow log, verify the project is active, and apply the migration manually with `supabase_schema.sql`. The app remains usable in local demo mode while sync is unavailable. |
 | Custom domain serves a blank page | Check the DNS records, enable Enforce HTTPS and verify that the `CUSTOM_DOMAIN` secret has no protocol or trailing slash. |
 
 ## License
