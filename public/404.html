@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Christmas Wishlist</title>
+    <script>
+      // GitHub Pages SPA fallback. At build time the deployment base is
+      // substituted here (for example /christmas-wishlist, or an empty string
+      // when a custom domain is used).
+      (function () {
+        var base = '__BASE_PATH__';
+        var location = window.location;
+        var route = location.pathname;
+
+        if (base && route.indexOf(base + '/') === 0) {
+          route = route.slice(base.length);
+        } else if (base && route === base) {
+          route = '/';
+        }
+
+        var query = location.search ? '&' + location.search.slice(1) : '';
+        location.replace(
+          location.origin +
+            base +
+            '/?/' +
+            route.replace(/^\/+/, '') +
+            query +
+            location.hash
+        );
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>
