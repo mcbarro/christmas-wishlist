@@ -36,10 +36,10 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
   return (
     <article
       aria-labelledby={titleId}
-      className="group overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] shadow-xl shadow-black/20 transition duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:bg-white/[0.055] animate-fade-up"
+      className="group overflow-hidden rounded-3xl border border-line bg-surface shadow-xl shadow-black/5 transition duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-strong animate-fade-up"
       style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
     >
-      <div className="relative overflow-hidden bg-slate-900">
+      <div className="relative overflow-hidden bg-surface-strong">
         {hasImage ? (
           <img
             src={item.image_url}
@@ -51,24 +51,21 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
           />
         ) : (
           <div className="flex aspect-[4/3] items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(225,29,72,0.28),transparent_60%),radial-gradient(circle_at_70%_80%,rgba(16,185,129,0.18),transparent_60%)]">
-            <Gift
-              className="h-12 w-12 text-white/30"
-              aria-hidden="true"
-            />
+            <Gift className="h-12 w-12 text-subtle" aria-hidden="true" />
           </div>
         )}
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-image-shade via-transparent to-transparent" />
 
         {reserved ? (
-          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-emerald-300/30 bg-emerald-950/80 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-200 backdrop-blur">
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-panel-glass px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-success backdrop-blur">
             <Check className="h-3 w-3" aria-hidden="true" />
             {t('card.reservedBadge')}
           </span>
         ) : (
-          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/70 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-slate-200 backdrop-blur">
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-line bg-panel-glass px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-ink backdrop-blur">
             <span
-              className="h-1.5 w-1.5 rounded-full bg-emerald-400"
+              className="h-1.5 w-1.5 rounded-full bg-success"
               aria-hidden="true"
             />
             {t('card.available')}
@@ -76,7 +73,7 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
         )}
 
         {item.price ? (
-          <span className="absolute right-3 top-3 max-w-[55%] truncate rounded-full border border-amber-300/25 bg-slate-950/75 px-2.5 py-1 text-xs font-bold text-amber-200 backdrop-blur">
+          <span className="absolute right-3 top-3 max-w-[55%] truncate rounded-full border border-price/25 bg-price-bg px-2.5 py-1 text-xs font-bold text-price backdrop-blur">
             {item.price}
           </span>
         ) : null}
@@ -86,14 +83,14 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
         <div>
           <h3
             id={titleId}
-            className="line-clamp-3 font-display text-lg font-semibold leading-snug text-white"
+            className="line-clamp-3 font-display text-lg font-semibold leading-snug text-ink"
           >
             {item.url ? (
               <a
                 href={item.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="transition hover:text-rose-200"
+                className="transition hover:text-accent"
               >
                 {item.title}
               </a>
@@ -103,13 +100,13 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
           </h3>
 
           {item.notes ? (
-            <p className="mt-1.5 line-clamp-4 text-sm leading-relaxed text-slate-400">
+            <p className="mt-1.5 line-clamp-4 text-sm leading-relaxed text-muted">
               {item.notes}
             </p>
           ) : null}
         </div>
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-subtle">
           <span>{addedByLabel}</span>
           {dateLabel ? (
             <>
@@ -120,8 +117,8 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
         </div>
 
         {reserved ? (
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2">
-            <div className="flex min-w-0 items-center gap-2 text-sm text-emerald-200">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-success/10 px-3 py-2">
+            <div className="flex min-w-0 items-center gap-2 text-sm text-success">
               <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="truncate">
                 {reservedByMe
@@ -132,7 +129,7 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
             <button
               type="button"
               onClick={() => onRelease(item)}
-              className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-300/80 transition hover:text-emerald-100"
+              className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-success/80 transition hover:text-success"
               aria-label={t('card.releaseAria', { title: item.title })}
             >
               <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -156,7 +153,7 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
             href={item.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 transition hover:text-rose-200"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-subtle transition hover:text-accent"
             aria-label={t('card.openAria', { title: item.title })}
           >
             <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />

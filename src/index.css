@@ -4,16 +4,111 @@
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
   --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
-  --color-ink-950: #070b14;
-  --color-ink-900: #0b1020;
-  --color-ink-800: #10182b;
+}
+
+@theme inline {
+  --color-page: var(--theme-page);
+  --color-header: var(--theme-header);
+  --color-panel: var(--theme-panel);
+  --color-panel-glass: var(--theme-panel-glass);
+  --color-surface: var(--theme-surface);
+  --color-surface-strong: var(--theme-surface-strong);
+  --color-field: var(--theme-field);
+  --color-line: var(--theme-line);
+  --color-line-strong: var(--theme-line-strong);
+  --color-ink: var(--theme-ink);
+  --color-muted: var(--theme-muted);
+  --color-subtle: var(--theme-subtle);
+  --color-accent: var(--theme-accent);
+  --color-success: var(--theme-success);
+  --color-warning: var(--theme-warning);
+  --color-danger: var(--theme-danger);
+  --color-info: var(--theme-info);
+  --color-overlay: var(--theme-overlay);
+  --color-price: var(--theme-price);
+  --color-price-bg: var(--theme-price-bg);
+  --color-image-shade: var(--theme-image-shade);
+}
+
+:root {
+  color-scheme: light;
+
+  --theme-page: #f7f3ec;
+  --theme-header: rgba(247, 243, 236, 0.9);
+  --theme-panel: #fffaf3;
+  --theme-panel-glass: rgba(255, 250, 243, 0.9);
+  --theme-surface: #fffdf9;
+  --theme-surface-strong: #f2e9dd;
+  --theme-field: #fffdf9;
+  --theme-line: #e6dacb;
+  --theme-line-strong: #d6c5b2;
+  --theme-ink: #211814;
+  --theme-muted: #5f5148;
+  --theme-subtle: #75655b;
+  --theme-accent: #b91c1c;
+  --theme-success: #047857;
+  --theme-warning: #92400e;
+  --theme-danger: #be123c;
+  --theme-info: #0369a1;
+  --theme-overlay: rgba(28, 20, 16, 0.44);
+  --theme-price: #92400e;
+  --theme-price-bg: rgba(255, 251, 235, 0.9);
+  --theme-image-shade: rgba(0, 0, 0, 0.25);
+
+  --theme-glow-accent: rgba(225, 29, 72, 0.08);
+  --theme-glow-success: rgba(16, 185, 129, 0.07);
+  --theme-glow-warm: rgba(251, 191, 36, 0.12);
+  --theme-dot: rgba(61, 42, 33, 0.07);
+  --theme-selection: rgba(244, 63, 94, 0.22);
+  --theme-selection-text: #211814;
+  --theme-scroll-track: #efe7db;
+  --theme-scroll-thumb: rgba(61, 42, 33, 0.22);
+  --theme-scroll-thumb-hover: rgba(61, 42, 33, 0.38);
+  --theme-autofill-bg: #fffdf9;
+  --theme-autofill-text: #211814;
+  --theme-focus: rgba(220, 38, 38, 0.85);
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --theme-page: #070b14;
+  --theme-header: rgba(7, 11, 20, 0.9);
+  --theme-panel: #0e1526;
+  --theme-panel-glass: rgba(14, 21, 38, 0.86);
+  --theme-surface: #0f172a;
+  --theme-surface-strong: #17223a;
+  --theme-field: #0b1322;
+  --theme-line: rgba(255, 255, 255, 0.1);
+  --theme-line-strong: rgba(255, 255, 255, 0.2);
+  --theme-ink: #f8fafc;
+  --theme-muted: #cbd5e1;
+  --theme-subtle: #94a3b8;
+  --theme-accent: #fb7185;
+  --theme-success: #6ee7b7;
+  --theme-warning: #fcd34d;
+  --theme-danger: #fda4af;
+  --theme-info: #7dd3fc;
+  --theme-overlay: rgba(2, 6, 23, 0.82);
+  --theme-price: #fde68a;
+  --theme-price-bg: rgba(2, 6, 23, 0.78);
+  --theme-image-shade: rgba(2, 6, 23, 0.52);
+
+  --theme-glow-accent: rgba(225, 29, 72, 0.16);
+  --theme-glow-success: rgba(16, 185, 129, 0.1);
+  --theme-glow-warm: rgba(251, 191, 36, 0.06);
+  --theme-dot: rgba(255, 255, 255, 0.055);
+  --theme-selection: rgba(244, 63, 94, 0.35);
+  --theme-selection-text: #ffffff;
+  --theme-scroll-track: #070b14;
+  --theme-scroll-thumb: rgba(148, 163, 184, 0.25);
+  --theme-scroll-thumb-hover: rgba(148, 163, 184, 0.4);
+  --theme-autofill-bg: #10182b;
+  --theme-autofill-text: #f8fafc;
+  --theme-focus: rgba(251, 113, 133, 0.9);
 }
 
 @layer base {
-  :root {
-    color-scheme: dark;
-  }
-
   html {
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
@@ -22,13 +117,13 @@
   body {
     min-height: 100dvh;
     overflow-x: clip;
-    background-color: var(--color-ink-950);
+    background-color: var(--theme-page);
     background-image:
-      radial-gradient(70rem 45rem at 85% -10%, rgba(225, 29, 72, 0.16), transparent 60%),
-      radial-gradient(60rem 40rem at -10% 0%, rgba(16, 185, 129, 0.1), transparent 55%),
-      radial-gradient(50rem 30rem at 50% 110%, rgba(251, 191, 36, 0.06), transparent 60%);
+      radial-gradient(70rem 45rem at 85% -10%, var(--theme-glow-accent), transparent 60%),
+      radial-gradient(60rem 40rem at -10% 0%, var(--theme-glow-success), transparent 55%),
+      radial-gradient(50rem 30rem at 50% 110%, var(--theme-glow-warm), transparent 60%);
     background-attachment: fixed;
-    color: #e2e8f0;
+    color: var(--theme-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -40,7 +135,10 @@
     z-index: 0;
     pointer-events: none;
     content: "";
-    background-image: radial-gradient(rgba(255, 255, 255, 0.055) 0.5px, transparent 0.5px);
+    background-image: radial-gradient(
+      var(--theme-dot) 0.5px,
+      transparent 0.5px
+    );
     background-size: 24px 24px;
     mask-image: linear-gradient(to bottom, black, transparent 72%);
   }
@@ -62,12 +160,12 @@
   }
 
   ::selection {
-    background: rgba(244, 63, 94, 0.35);
-    color: white;
+    background: var(--theme-selection);
+    color: var(--theme-selection-text);
   }
 
   :focus-visible {
-    outline: 2px solid rgba(251, 113, 133, 0.9);
+    outline: 2px solid var(--theme-focus);
     outline-offset: 2px;
   }
 
@@ -79,9 +177,9 @@
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
   textarea:-webkit-autofill {
-    -webkit-text-fill-color: #f8fafc;
-    -webkit-box-shadow: 0 0 0 1000px #10182b inset;
-    caret-color: #f8fafc;
+    -webkit-text-fill-color: var(--theme-autofill-text);
+    -webkit-box-shadow: 0 0 0 1000px var(--theme-autofill-bg) inset;
+    caret-color: var(--theme-autofill-text);
     transition: background-color 9999s ease-out;
   }
 
@@ -91,16 +189,16 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #070b14;
+    background: var(--theme-scroll-track);
   }
 
   ::-webkit-scrollbar-thumb {
     border-radius: 999px;
-    background: rgba(148, 163, 184, 0.25);
+    background: var(--theme-scroll-thumb);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(148, 163, 184, 0.4);
+    background: var(--theme-scroll-thumb-hover);
   }
 }
 

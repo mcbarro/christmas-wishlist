@@ -30,17 +30,14 @@ export default function ErrorBoundary({ children }) {
       className="flex min-h-dvh items-center justify-center px-4 py-12"
       role="alert"
     >
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.035] p-8 text-center shadow-2xl shadow-black/30">
-        <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-rose-400/20 bg-rose-500/10">
-          <AlertTriangle
-            className="h-7 w-7 text-rose-300"
-            aria-hidden="true"
-          />
+      <div className="w-full max-w-md rounded-3xl border border-line bg-surface p-8 text-center shadow-2xl shadow-black/10">
+        <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-danger/20 bg-danger/10">
+          <AlertTriangle className="h-7 w-7 text-danger" aria-hidden="true" />
         </div>
-        <h1 className="font-display text-2xl font-semibold text-white">
+        <h1 className="font-display text-2xl font-semibold text-ink">
           {t('error.boundaryTitle')}
         </h1>
-        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+        <p className="mt-2 text-sm leading-relaxed text-muted">
           {t('error.boundaryDescription')}
         </p>
         <button

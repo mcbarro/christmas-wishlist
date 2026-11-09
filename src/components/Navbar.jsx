@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Download, Gift, Plus, Search, X } from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar({
   search,
@@ -22,29 +23,28 @@ export default function Navbar({
       ? {
           label: t('nav.demo'),
           title: t('nav.demoTitle'),
-          dot: 'bg-amber-400',
-          className: 'border-amber-300/20 bg-amber-500/10 text-amber-200',
+          dot: 'bg-warning',
+          className: 'border-warning/20 bg-warning/10 text-warning',
         }
       : connection === 'live'
         ? {
             label: t('nav.live'),
             title: t('nav.liveTitle'),
-            dot: 'bg-emerald-400',
-            className:
-              'border-emerald-300/20 bg-emerald-500/10 text-emerald-200',
+            dot: 'bg-success',
+            className: 'border-success/20 bg-success/10 text-success',
           }
         : connection === 'connecting'
           ? {
               label: t('nav.connecting'),
               title: t('nav.connectingTitle'),
-              dot: 'animate-pulse bg-sky-400',
-              className: 'border-sky-300/20 bg-sky-500/10 text-sky-200',
+              dot: 'animate-pulse bg-info',
+              className: 'border-info/20 bg-info/10 text-info',
             }
           : {
               label: t('nav.offline'),
               title: t('nav.offlineTitle'),
-              dot: 'bg-slate-500',
-              className: 'border-white/10 bg-white/5 text-slate-400',
+              dot: 'bg-subtle',
+              className: 'border-line bg-surface text-muted',
             };
 
   const filters = [
@@ -58,22 +58,22 @@ export default function Navbar({
   ];
 
   return (
-    <header className="safe-top sticky top-0 z-30 border-b border-white/10 bg-[#080d19]/90 backdrop-blur-xl">
+    <header className="safe-top sticky top-0 z-30 border-b border-line bg-header backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-3 rounded-xl">
             <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-red-700 shadow-lg shadow-rose-950/40">
               <Gift className="h-5 w-5 text-white" aria-hidden="true" />
               <span
-                className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-[#080d19]"
+                className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-page"
                 aria-hidden="true"
               />
             </span>
             <span className="min-w-0">
-              <span className="block truncate font-display text-lg font-semibold leading-tight text-white sm:text-xl">
+              <span className="block truncate font-display text-lg font-semibold leading-tight text-ink sm:text-xl">
                 {t('app.title')}
               </span>
-              <span className="hidden truncate text-xs text-slate-400 sm:block">
+              <span className="hidden truncate text-xs text-muted sm:block">
                 {t('app.subtitle')}
               </span>
             </span>
@@ -98,7 +98,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={onInstall}
-                className="grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:bg-white/10 hover:text-white"
+                className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
                 aria-label={t('nav.install')}
                 title={t('nav.install')}
               >
@@ -107,6 +107,7 @@ export default function Navbar({
             ) : null}
 
             <LanguageSwitcher />
+            <ThemeToggle />
 
             <button
               type="button"
@@ -123,7 +124,7 @@ export default function Navbar({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative min-w-0 flex-1">
             <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
               aria-hidden="true"
             />
             <input
@@ -134,13 +135,13 @@ export default function Navbar({
               aria-label={t('nav.searchLabel')}
               autoComplete="off"
               enterKeyHint="search"
-              className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-9 pr-9 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-rose-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-rose-500/20"
+              className="w-full rounded-xl border border-line bg-field py-2.5 pl-9 pr-9 text-sm text-ink placeholder:text-subtle outline-none transition focus:border-accent/60 focus:bg-panel focus:ring-2 focus:ring-accent/20"
             />
             {search ? (
               <button
                 type="button"
                 onClick={() => onSearchChange('')}
-                className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-slate-500 transition hover:bg-white/10 hover:text-white"
+                className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-subtle transition hover:bg-surface-strong hover:text-ink"
                 aria-label={t('nav.clearSearch')}
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -163,16 +164,16 @@ export default function Navbar({
                   aria-pressed={selected}
                   className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                     selected
-                      ? 'border-white/20 bg-white text-slate-950'
-                      : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white'
+                      ? 'border-line-strong bg-ink text-page'
+                      : 'border-line bg-surface text-muted hover:bg-surface-strong hover:text-ink'
                   }`}
                 >
                   {entry.label}
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
                       selected
-                        ? 'bg-slate-950/10 text-slate-700'
-                        : 'bg-white/10 text-slate-400'
+                        ? 'bg-page/15 text-page'
+                        : 'bg-surface-strong text-subtle'
                     }`}
                   >
                     {entry.count}

@@ -23,9 +23,9 @@ const EMPTY_FORM = {
 };
 
 const INPUT_CLASS =
-  'w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-rose-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-rose-500/20';
+  'w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-sm text-ink placeholder:text-subtle outline-none transition focus:border-accent/60 focus:bg-panel focus:ring-2 focus:ring-accent/20';
 
-const LABEL_CLASS = 'mb-1.5 block text-xs font-semibold text-slate-300';
+const LABEL_CLASS = 'mb-1.5 block text-xs font-semibold text-muted';
 
 function seedForm(initial) {
   const seed = { ...EMPTY_FORM };
@@ -179,7 +179,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface-strong disabled:cursor-not-allowed disabled:opacity-50"
           >
             {t('add.cancel')}
           </button>
@@ -207,7 +207,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
       <form id="add-wish-form" onSubmit={handleSubmit} className="space-y-5">
         {errors.form ? (
           <div
-            className="rounded-xl border border-rose-400/20 bg-rose-500/10 px-3.5 py-2.5 text-sm text-rose-100"
+            className="rounded-xl border border-danger/20 bg-danger/10 px-3.5 py-2.5 text-sm text-danger"
             role="alert"
           >
             {errors.form}
@@ -221,7 +221,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="relative flex-1">
               <Link2
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
                 aria-hidden="true"
               />
               <input
@@ -241,7 +241,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
               type="button"
               onClick={handleScrape}
               disabled={scraping}
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-rose-300/20 bg-rose-500/10 px-3.5 py-2.5 text-sm font-semibold text-rose-100 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-accent/20 bg-accent/10 px-3.5 py-2.5 text-sm font-semibold text-accent transition hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {scraping ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -251,11 +251,11 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
               {scraping ? t('add.fetching') : t('add.fetch')}
             </button>
           </div>
-          <p className="mt-1.5 text-xs text-slate-500">{t('add.urlHint')}</p>
+          <p className="mt-1.5 text-xs text-subtle">{t('add.urlHint')}</p>
           {errors.url ? (
             <p
               id="add-url-error"
-              className="mt-1 text-xs font-medium text-rose-300"
+              className="mt-1 text-xs font-medium text-danger"
               role="alert"
             >
               {errors.url}
@@ -264,7 +264,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
           {scrapeStatus ? (
             <p
               className={`mt-1.5 text-xs font-medium ${
-                scrapeStatus === 'success' ? 'text-emerald-300' : 'text-amber-300'
+                scrapeStatus === 'success' ? 'text-success' : 'text-warning'
               }`}
               role="status"
             >
@@ -277,7 +277,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
 
         <div>
           <label htmlFor="add-title" className={LABEL_CLASS}>
-            {t('add.titleLabel')} <span className="text-rose-300">*</span>
+            {t('add.titleLabel')} <span className="text-accent">*</span>
           </label>
           <input
             id="add-title"
@@ -294,7 +294,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
           {errors.title ? (
             <p
               id="add-title-error"
-              className="mt-1 text-xs font-medium text-rose-300"
+              className="mt-1 text-xs font-medium text-danger"
               role="alert"
             >
               {errors.title}
@@ -331,7 +331,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
             />
           </div>
         </div>
-        <p className="-mt-2 text-xs text-slate-500">{t('add.nameHelp')}</p>
+        <p className="-mt-2 text-xs text-subtle">{t('add.nameHelp')}</p>
 
         <div>
           <label htmlFor="add-notes" className={LABEL_CLASS}>
@@ -353,7 +353,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
           </label>
           <div className="relative">
             <ImagePlus
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
               aria-hidden="true"
             />
             <input
@@ -373,7 +373,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
           {errors.image_url ? (
             <p
               id="add-image-error"
-              className="mt-1 text-xs font-medium text-rose-300"
+              className="mt-1 text-xs font-medium text-danger"
               role="alert"
             >
               {errors.image_url}
@@ -381,7 +381,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
           ) : null}
 
           {form.image_url.trim() ? (
-            <div className="relative mt-3 overflow-hidden rounded-xl border border-white/10 bg-slate-900">
+            <div className="relative mt-3 overflow-hidden rounded-xl border border-line bg-surface-strong">
               {showImagePreview ? (
                 <img
                   src={imageUrl}
@@ -390,7 +390,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
                   onError={() => setImageFailed(true)}
                 />
               ) : (
-                <div className="flex h-32 items-center justify-center px-4 text-center text-xs text-slate-500">
+                <div className="flex h-32 items-center justify-center px-4 text-center text-xs text-muted">
                   {t('add.imageUnavailable')}
                 </div>
               )}
@@ -400,7 +400,7 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
                   setForm((current) => ({ ...current, image_url: '' }));
                   setImageFailed(false);
                 }}
-                className="absolute right-2 top-2 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-slate-950/80 px-2.5 py-1.5 text-[11px] font-semibold text-white backdrop-blur transition hover:bg-slate-950"
+                className="absolute right-2 top-2 inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-panel-glass px-2.5 py-1.5 text-[11px] font-semibold text-ink backdrop-blur transition hover:bg-panel"
               >
                 <Trash2 className="h-3 w-3" aria-hidden="true" />
                 {t('add.removeImage')}

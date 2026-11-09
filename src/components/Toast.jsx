@@ -6,18 +6,18 @@ import { useI18n } from '../i18n/I18nProvider';
 const TONES = {
   success: {
     icon: CheckCircle2,
-    wrapper: 'border-emerald-400/30 bg-emerald-950/90 text-emerald-50',
-    iconColor: 'text-emerald-300',
+    wrapper: 'border-success/30 bg-panel text-ink',
+    iconColor: 'text-success',
   },
   error: {
     icon: AlertCircle,
-    wrapper: 'border-rose-400/30 bg-rose-950/90 text-rose-50',
-    iconColor: 'text-rose-300',
+    wrapper: 'border-danger/30 bg-panel text-ink',
+    iconColor: 'text-danger',
   },
   info: {
     icon: Info,
-    wrapper: 'border-sky-400/30 bg-sky-950/90 text-sky-50',
-    iconColor: 'text-sky-300',
+    wrapper: 'border-info/30 bg-panel text-ink',
+    iconColor: 'text-info',
   },
 };
 
@@ -42,7 +42,7 @@ export default function Toast({ toast, onDismiss }) {
       aria-live="polite"
     >
       <div
-        className={`pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl border px-4 py-3 shadow-2xl shadow-black/40 backdrop-blur-md animate-slide-up ${tone.wrapper}`}
+        className={`pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl border px-4 py-3 shadow-2xl shadow-black/15 backdrop-blur-md animate-slide-up ${tone.wrapper}`}
       >
         <Icon
           className={`mt-0.5 h-5 w-5 shrink-0 ${tone.iconColor}`}
@@ -54,7 +54,7 @@ export default function Toast({ toast, onDismiss }) {
         <button
           type="button"
           onClick={onDismiss}
-          className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-current/70 transition hover:bg-white/10 hover:text-current"
+          className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-muted transition hover:bg-surface-strong hover:text-ink"
           aria-label={t('toast.dismiss')}
         >
           <X className="h-4 w-4" aria-hidden="true" />

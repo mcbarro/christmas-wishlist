@@ -64,11 +64,11 @@ const en = {
   "card.addedAnonymously": "Added anonymously",
   "card.addedOn": "Added {date}",
   "card.reserve": "I'll give this!",
-  "card.reserveAria": "Reserve {title}",
+  "card.reserveAria": "I'll give this! — {title}",
   "card.release": "Release",
   "card.releaseAria": "Release the reservation for {title}",
   "card.viewProduct": "View product",
-  "card.openAria": "Open the product page for {title}",
+  "card.openAria": "View product — {title}",
   "card.imageAlt": "{title} product image",
 
   "add.title": "Add a wish",
@@ -142,6 +142,9 @@ const en = {
   "language.en": "English",
   "language.it": "Italiano",
   "language.switchTo": "Switch to {language}",
+
+  "theme.switchToLight": "Switch to light mode",
+  "theme.switchToDark": "Switch to dark mode",
 
   "install.iosHint":
     "To install on iPhone or iPad, tap Share and choose “Add to Home Screen”.",

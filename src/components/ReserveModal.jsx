@@ -5,7 +5,7 @@ import { useI18n } from '../i18n/I18nProvider';
 import { getProfileName, setProfileName } from '../lib/profile';
 
 const INPUT_CLASS =
-  'w-full rounded-xl border border-white/10 bg-white/5 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-rose-400/60 focus:bg-white/[0.07] focus:ring-2 focus:ring-rose-500/20';
+  'w-full rounded-xl border border-line bg-field px-3.5 py-2.5 text-sm text-ink placeholder:text-subtle outline-none transition focus:border-accent/60 focus:bg-panel focus:ring-2 focus:ring-accent/20';
 
 export default function ReserveModal({
   open,
@@ -85,7 +85,7 @@ export default function ReserveModal({
             type="button"
             onClick={onClose}
             disabled={submitting}
-            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-200 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface-strong disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isRelease ? t('release.cancel') : t('reserve.cancel')}
           </button>
@@ -93,10 +93,10 @@ export default function ReserveModal({
             type="submit"
             form="reserve-form"
             disabled={submitting}
-            className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${
+            className={`inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg transition disabled:cursor-not-allowed disabled:opacity-60 ${
               isRelease
-                ? 'bg-gradient-to-r from-amber-600 to-orange-500 shadow-amber-950/30 hover:from-amber-500 hover:to-orange-400'
-                : 'bg-gradient-to-r from-rose-600 to-red-500 shadow-rose-950/30 hover:from-rose-500 hover:to-red-400'
+                ? 'bg-gradient-to-r from-amber-500 to-orange-400 text-amber-950 shadow-black/10 hover:from-amber-400 hover:to-orange-300'
+                : 'bg-gradient-to-r from-rose-600 to-red-500 text-white shadow-rose-950/20 hover:from-rose-500 hover:to-red-400'
             }`}
           >
             {submitting ? (
@@ -121,7 +121,7 @@ export default function ReserveModal({
     >
       <form id="reserve-form" onSubmit={handleSubmit} className="space-y-4">
         {isRelease ? (
-          <div className="flex items-center gap-2 rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3.5 py-2.5 text-sm text-emerald-200">
+          <div className="flex items-center gap-2 rounded-xl border border-success/20 bg-success/10 px-3.5 py-2.5 text-sm text-success">
             <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>
               {t('card.reservedBy', {
@@ -133,9 +133,9 @@ export default function ReserveModal({
           <div>
             <label
               htmlFor="reserve-name"
-              className="mb-1.5 block text-xs font-semibold text-slate-300"
+              className="mb-1.5 block text-xs font-semibold text-muted"
             >
-              {t('reserve.nameLabel')} <span className="text-rose-300">*</span>
+              {t('reserve.nameLabel')} <span className="text-accent">*</span>
             </label>
             <input
               id="reserve-name"
@@ -159,7 +159,7 @@ export default function ReserveModal({
         {error ? (
           <div
             id="reserve-error"
-            className="rounded-xl border border-rose-400/20 bg-rose-500/10 px-3.5 py-2.5 text-sm text-rose-100"
+            className="rounded-xl border border-danger/20 bg-danger/10 px-3.5 py-2.5 text-sm text-danger"
             role="alert"
           >
             {error}

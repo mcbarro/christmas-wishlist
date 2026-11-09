@@ -8,6 +8,7 @@ Pinterest-style masonry layout, real-time sync and native mobile sharing.
 - Reserve gifts with your name so nobody buys the same present twice.
 - Real-time updates across family devices through Supabase.
 - English and Italian UI, detected from the browser language.
+- Light theme by default, with a dark-mode toggle and a saved preference.
 - Deployable to GitHub Pages with a single push to `main`.
 
 ## Tech stack
@@ -196,6 +197,14 @@ All user-facing strings live in `src/i18n/en.js` and `src/i18n/it.js`. Adding a
 new language requires adding a dictionary with the same keys and registering it
 in `src/i18n/I18nProvider.jsx`.
 
+## Theme
+
+The app starts in **light mode**. The sun/moon button in the header switches to
+dark mode, and the choice is saved in `localStorage` under
+`christmas-wishlist:theme`. The palette is implemented with semantic CSS
+variables, so both themes stay consistent across cards, dialogs, forms and
+status messages.
+
 ## Scripts
 
 | Command | Description |
@@ -232,6 +241,7 @@ in `src/i18n/I18nProvider.jsx`.
 │   │   ├── Navbar.jsx
 │   │   ├── ReserveModal.jsx
 │   │   ├── ShareReceiver.jsx
+│   │   ├── ThemeToggle.jsx
 │   │   ├── Toast.jsx
 │   │   ├── WishCard.jsx
 │   │   └── WishGrid.jsx
@@ -240,6 +250,7 @@ in `src/i18n/I18nProvider.jsx`.
 │   │   └── useWishlist.js
 │   ├── i18n/
 │   │   ├── I18nProvider.jsx
+│   │   ├── config.js
 │   │   ├── en.js
 │   │   └── it.js
 │   ├── lib/
@@ -253,6 +264,8 @@ in `src/i18n/I18nProvider.jsx`.
 │   ├── pages/
 │   │   ├── HomePage.jsx
 │   │   └── NotFoundPage.jsx
+│   ├── theme/
+│   │   └── ThemeProvider.jsx
 │   ├── App.jsx
 │   ├── index.css
 │   ├── main.jsx

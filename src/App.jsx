@@ -190,10 +190,10 @@ export default function App() {
         </Routes>
       </main>
 
-      <footer className="mx-auto mt-auto w-full max-w-7xl px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 text-center text-xs text-slate-600 sm:px-6 lg:px-8">
+      <footer className="mx-auto mt-auto w-full max-w-7xl px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-8 text-center text-xs text-subtle sm:px-6 lg:px-8">
         <p>
           {t('app.footerMadeFor')}{' '}
-          <span className="text-rose-500" aria-hidden="true">
+          <span className="text-accent" aria-hidden="true">
             ♥
           </span>{' '}
           {t('app.footerNoAccounts')}

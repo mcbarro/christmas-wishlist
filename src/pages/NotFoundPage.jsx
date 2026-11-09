@@ -7,13 +7,13 @@ export default function NotFoundPage() {
 
   return (
     <section className="mx-auto flex min-h-[55dvh] max-w-md flex-col items-center justify-center text-center">
-      <div className="mb-6 grid h-20 w-20 place-items-center rounded-3xl border border-white/10 bg-white/5">
-        <Compass className="h-9 w-9 text-rose-200" aria-hidden="true" />
+      <div className="mb-6 grid h-20 w-20 place-items-center rounded-3xl border border-line bg-surface">
+        <Compass className="h-9 w-9 text-accent" aria-hidden="true" />
       </div>
-      <h1 className="font-display text-3xl font-semibold text-white">
+      <h1 className="font-display text-3xl font-semibold text-ink">
         {t('notFound.title')}
       </h1>
-      <p className="mt-2 text-sm leading-relaxed text-slate-400">
+      <p className="mt-2 text-sm leading-relaxed text-muted">
         {t('notFound.description')}
       </p>
       <Link

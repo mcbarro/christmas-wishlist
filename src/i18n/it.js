@@ -65,11 +65,11 @@ const it = {
   "card.addedAnonymously": "Aggiunto in anonimo",
   "card.addedOn": "Aggiunto {date}",
   "card.reserve": "Lo regalo io!",
-  "card.reserveAria": "Prenota {title}",
+  "card.reserveAria": "Lo regalo io! — {title}",
   "card.release": "Libera",
   "card.releaseAria": "Libera la prenotazione di {title}",
   "card.viewProduct": "Vedi prodotto",
-  "card.openAria": "Apri la pagina del prodotto {title}",
+  "card.openAria": "Vedi prodotto — {title}",
   "card.imageAlt": "Immagine del prodotto {title}",
 
   "add.title": "Aggiungi un desiderio",
@@ -143,6 +143,9 @@ const it = {
   "language.en": "English",
   "language.it": "Italiano",
   "language.switchTo": "Passa a {language}",
+
+  "theme.switchToLight": "Passa alla modalità chiara",
+  "theme.switchToDark": "Passa alla modalità scura",
 
   "install.iosHint":
     "Per installare su iPhone o iPad, tocca Condividi e scegli “Aggiungi a Home”.",

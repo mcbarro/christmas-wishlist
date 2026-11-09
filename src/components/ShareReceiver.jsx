@@ -80,18 +80,18 @@ export default function ShareReceiver({ onShared }) {
 
   return (
     <section className="mx-auto flex min-h-[55dvh] max-w-xl flex-col items-center justify-center text-center">
-      <div className="relative mb-6 grid h-20 w-20 place-items-center rounded-3xl border border-white/10 bg-white/5">
-        <div className="absolute inset-0 animate-pulse rounded-3xl bg-rose-500/10 blur-xl" />
-        <Gift className="animate-float relative h-9 w-9 text-rose-200" aria-hidden="true" />
+      <div className="relative mb-6 grid h-20 w-20 place-items-center rounded-3xl border border-line bg-surface">
+        <div className="absolute inset-0 animate-pulse rounded-3xl bg-accent/10 blur-xl" />
+        <Gift className="animate-float relative h-9 w-9 text-accent" aria-hidden="true" />
       </div>
       <Loader2
-        className="mb-3 h-5 w-5 animate-spin text-rose-300"
+        className="mb-3 h-5 w-5 animate-spin text-accent"
         aria-hidden="true"
       />
-      <h1 className="font-display text-2xl font-semibold text-white">
+      <h1 className="font-display text-2xl font-semibold text-ink">
         {t('share.loadingTitle')}
       </h1>
-      <p className="mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
+      <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
         {t('share.loadingDescription')}
       </p>
     </section>

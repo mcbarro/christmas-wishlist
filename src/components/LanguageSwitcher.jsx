@@ -7,12 +7,12 @@ export default function LanguageSwitcher() {
 
   return (
     <div
-      className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1"
+      className="inline-flex items-center gap-1 rounded-full border border-line bg-surface p-1"
       role="group"
       aria-label={t('language.label')}
     >
       <Languages
-        className="ml-1 hidden h-3.5 w-3.5 text-slate-500 sm:block"
+        className="ml-1 hidden h-3.5 w-3.5 text-subtle sm:block"
         aria-hidden="true"
       />
       {SUPPORTED_LOCALES.map((code) => {
@@ -29,8 +29,8 @@ export default function LanguageSwitcher() {
             title={t(`language.${code}`)}
             className={`rounded-full px-2 py-1 text-[11px] font-bold uppercase tracking-wide transition ${
               selected
-                ? 'bg-white text-slate-950 shadow-sm'
-                : 'text-slate-400 hover:bg-white/10 hover:text-white'
+                ? 'bg-ink text-page shadow-sm'
+                : 'text-muted hover:bg-surface-strong hover:text-ink'
             }`}
           >
             {code}

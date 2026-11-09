@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => {
             'A family wishlist with no accounts. Add wishes, share product links and reserve gifts.',
           lang: 'en',
           theme_color: '#dc2626',
-          background_color: '#0b1020',
+          background_color: '#f7f3ec',
           display: 'standalone',
           start_url: base,
           scope: base,

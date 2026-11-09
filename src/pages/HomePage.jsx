@@ -22,13 +22,13 @@ function SkeletonGrid() {
       {Array.from({ length: 6 }, (_, index) => (
         <div
           key={index}
-          className="mb-4 break-inside-avoid rounded-3xl border border-white/5 bg-white/[0.025] p-4"
+          className="mb-4 break-inside-avoid rounded-3xl border border-line bg-surface p-4"
         >
           <div className="animate-pulse space-y-3">
-            <div className="aspect-[4/3] rounded-2xl bg-white/5" />
-            <div className="h-5 w-3/4 rounded bg-white/5" />
-            <div className="h-4 w-full rounded bg-white/5" />
-            <div className="h-9 w-full rounded-xl bg-white/5" />
+            <div className="aspect-[4/3] rounded-2xl bg-surface-strong" />
+            <div className="h-5 w-3/4 rounded bg-surface-strong" />
+            <div className="h-4 w-full rounded bg-surface-strong" />
+            <div className="h-9 w-full rounded-xl bg-surface-strong" />
           </div>
         </div>
       ))}
@@ -38,8 +38,8 @@ function SkeletonGrid() {
 
 function StatPill({ icon: Icon, children }) {
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-300">
-      <Icon className="h-3.5 w-3.5 text-slate-500" aria-hidden="true" />
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-muted">
+      <Icon className="h-3.5 w-3.5 text-subtle" aria-hidden="true" />
       {children}
     </span>
   );
@@ -73,23 +73,20 @@ export default function HomePage({
     return (
       <>
         {pageTitle}
-        <div className="mx-auto flex max-w-md flex-col items-center rounded-3xl border border-rose-400/20 bg-rose-500/5 px-6 py-14 text-center">
-          <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-rose-400/20 bg-rose-500/10">
-            <AlertTriangle
-              className="h-7 w-7 text-rose-300"
-              aria-hidden="true"
-            />
+        <div className="mx-auto flex max-w-md flex-col items-center rounded-3xl border border-danger/20 bg-danger/5 px-6 py-14 text-center">
+          <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl border border-danger/20 bg-danger/10">
+            <AlertTriangle className="h-7 w-7 text-danger" aria-hidden="true" />
           </div>
-          <h2 className="font-display text-2xl font-semibold text-white">
+          <h2 className="font-display text-2xl font-semibold text-ink">
             {t('error.boundaryTitle')}
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          <p className="mt-2 text-sm leading-relaxed text-muted">
             {t('error.load')}
           </p>
           <button
             type="button"
             onClick={onRetry}
-            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface-strong"
           >
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
             {t('error.retry')}
@@ -124,7 +121,7 @@ export default function HomePage({
           {tn('stats.reserved', allCounts.reserved)}
         </StatPill>
         {hasFilters ? (
-          <span className="text-xs text-slate-500">
+          <span className="text-xs text-subtle">
             {t('stats.filtered', {
               shown: items.length,
               total: allCounts.all,

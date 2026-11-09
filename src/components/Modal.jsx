@@ -114,7 +114,7 @@ export default function Modal({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
       <div
-        className="absolute inset-0 animate-fade-in bg-slate-950/80 backdrop-blur-sm"
+        className="absolute inset-0 animate-fade-in bg-overlay backdrop-blur-sm"
         aria-hidden="true"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget && !closeDisabled) {
@@ -129,14 +129,14 @@ export default function Modal({
         aria-labelledby={titleIdAttribute}
         aria-describedby={descriptionIdAttribute}
         tabIndex={-1}
-        className={`relative flex max-h-[92dvh] w-full ${SIZES[size]} flex-col overflow-hidden rounded-t-3xl border border-white/10 bg-[#0e1526] shadow-2xl shadow-black/60 animate-slide-up sm:rounded-3xl`}
+        className={`relative flex max-h-[92dvh] w-full ${SIZES[size]} flex-col overflow-hidden rounded-t-3xl border border-line bg-panel shadow-2xl shadow-black/20 animate-slide-up sm:rounded-3xl`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
+        <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4 sm:px-6">
           <div className="min-w-0">
             {title ? (
               <h2
                 id={titleId}
-                className="font-display text-xl font-semibold text-white sm:text-2xl"
+                className="font-display text-xl font-semibold text-ink sm:text-2xl"
               >
                 {title}
               </h2>
@@ -144,7 +144,7 @@ export default function Modal({
             {description ? (
               <p
                 id={descriptionId}
-                className="mt-1 text-sm leading-relaxed text-slate-400"
+                className="mt-1 text-sm leading-relaxed text-muted"
               >
                 {description}
               </p>
@@ -154,7 +154,7 @@ export default function Modal({
             type="button"
             onClick={onClose}
             disabled={closeDisabled}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10 bg-white/5 text-slate-400 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
             aria-label={t('common.close')}
           >
             <X className="h-4 w-4" aria-hidden="true" />
@@ -164,7 +164,7 @@ export default function Modal({
         <div className="overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
 
         {footer ? (
-          <div className="border-t border-white/10 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
+          <div className="border-t border-line px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
             {footer}
           </div>
         ) : null}
