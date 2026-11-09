@@ -14,12 +14,15 @@ import {
   generateSecret,
   getGroupBySecret,
   getSession,
+  GroupError,
   joinGroup as joinGroupInStore,
   parseSessionParams,
+  probeGroupSchema,
   readStoredSession,
+  setDataMode as setStoreDataMode,
   writeStoredSession,
 } from '../lib/groupStore';
-import { GroupError } from '../lib/groupStore';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 const GroupContext = createContext(null);
 
@@ -55,6 +58,10 @@ export function GroupProvider({ children }) {
   const [errorCode, setErrorCode] = useState('');
   const [checking, setChecking] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
+  const [dataMode, setDataModeState] = useState(
+    isSupabaseConfigured ? 'checking' : 'demo'
+  );
+  const [fallbackReason, setFallbackReason] = useState(null);
 
   const applyResolved = useCallback((result, nextSession) => {
     if (!result) {
@@ -82,6 +89,25 @@ export function GroupProvider({ children }) {
     async function resolve() {
       setStatus('loading');
       setErrorCode('');
+      setFallbackReason(null);
+
+      let mode = 'demo';
+      let fallback = null;
+
+      if (isSupabaseConfigured) {
+        const probe = await probeGroupSchema();
+        if (cancelled) return;
+
+        if (probe === 'supabase') {
+          mode = 'supabase';
+        } else {
+          fallback = probe === 'missing' ? 'schema' : 'network';
+        }
+      }
+
+      setStoreDataMode(mode);
+      setDataModeState(mode);
+      setFallbackReason(fallback);
 
       const urlSession = parseSessionParams(window.location.search);
       const storedSession = readStoredSession();
@@ -240,7 +266,7 @@ export function GroupProvider({ children }) {
   );
 
   useEffect(() => {
-    if (status !== 'pending') return undefined;
+    if (status !== 'pending' || dataMode !== 'demo') return undefined;
 
     const handleChange = () => {
       void refreshSession({ silent: true });
@@ -253,7 +279,7 @@ export function GroupProvider({ children }) {
       window.removeEventListener(DEMO_GROUP_EVENT, handleChange);
       window.removeEventListener('storage', handleChange);
     };
-  }, [status, refreshSession]);
+  }, [status, dataMode, refreshSession]);
 
   const leaveDevice = useCallback(() => {
     clearStoredSession();
@@ -299,6 +325,8 @@ export function GroupProvider({ children }) {
       inviteGroup,
       errorCode,
       checking,
+      dataMode,
+      fallbackReason,
       personalLink,
       groupInviteLink,
       createGroup,
@@ -315,6 +343,8 @@ export function GroupProvider({ children }) {
       inviteGroup,
       errorCode,
       checking,
+      dataMode,
+      fallbackReason,
       personalLink,
       groupInviteLink,
       createGroup,

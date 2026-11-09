@@ -5,7 +5,58 @@ export const DEMO_GROUPS_KEY = 'christmas-wishlist:demo-groups:v1';
 export const DEMO_GROUP_EVENT = 'christmas-wishlist:demo-group-change';
 export const LEGACY_DEMO_ITEMS_KEY = 'christmas-wishlist:demo-items:v1';
 
-export const isDemoMode = !isSupabaseConfigured;
+let currentDataMode = isSupabaseConfigured ? 'supabase' : 'demo';
+
+export function getDataMode() {
+  return currentDataMode;
+}
+
+export function setDataMode(mode) {
+  currentDataMode = mode === 'demo' ? 'demo' : 'supabase';
+}
+
+function isDemo() {
+  return currentDataMode === 'demo';
+}
+
+/**
+ * Probes the group RPC without exposing any data. A missing function means the
+ * database migration has not been applied yet; the app can then fall back to
+ * local demo mode instead of showing an unusable empty state.
+ */
+export async function probeGroupSchema() {
+  if (!isSupabaseConfigured || !supabase) return 'missing';
+
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('SCHEMA_PROBE_TIMEOUT')), 6000);
+  });
+
+  try {
+    const request = supabase.rpc('get_session', {
+      p_group_secret: '__schema_probe__',
+      p_user_secret: '__schema_probe__',
+    });
+    const { error } = await Promise.race([request, timeout]);
+
+    if (!error) return 'supabase';
+
+    const message = String(error.message || '');
+    if (
+      error.code === 'PGRST202' ||
+      message.includes('Could not find the function') ||
+      message.includes('schema cache')
+    ) {
+      return 'missing';
+    }
+
+    return 'unavailable';
+  } catch {
+    return 'unavailable';
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 export class GroupError extends Error {
   constructor(code, options = {}) {
@@ -290,7 +341,7 @@ function demoSession({ groupSecret, userSecret }) {
 
 export async function getSession({ groupSecret, userSecret }) {
   if (!groupSecret || !userSecret) return null;
-  if (isDemoMode) return demoSession({ groupSecret, userSecret });
+  if (isDemo()) return demoSession({ groupSecret, userSecret });
 
   const data = await rpc('get_session', {
     p_group_secret: groupSecret,
@@ -302,7 +353,7 @@ export async function getSession({ groupSecret, userSecret }) {
 
 export async function getGroupBySecret(groupSecret) {
   if (!groupSecret) return null;
-  if (isDemoMode) {
+  if (isDemo()) {
     const state = readDemoState();
     const group = state.groups.find(
       (candidate) => candidate.group_secret === groupSecret
@@ -331,7 +382,7 @@ export async function createGroup({
     throw new GroupError('INVALID_NAME');
   }
 
-  if (isDemoMode) {
+  if (isDemo()) {
     const state = readDemoState();
     if (
       state.groups.some((candidate) => candidate.group_secret === groupSecret)
@@ -384,7 +435,7 @@ export async function joinGroup({
 }) {
   const cleanDisplayName = trim(displayName);
 
-  if (isDemoMode) {
+  if (isDemo()) {
     const state = readDemoState();
     const group = state.groups.find(
       (candidate) => candidate.group_secret === groupSecret
@@ -443,7 +494,7 @@ export async function loadGroupData({ group, member, session }) {
     throw new GroupError('NOT_APPROVED');
   }
 
-  if (isDemoMode) {
+  if (isDemo()) {
     const state = readDemoState();
     const currentMember = state.members.find(
       (candidate) =>
@@ -555,7 +606,7 @@ export async function addItem({
   const cleanTitle = trim(title);
   if (!cleanTitle) throw new GroupError('TITLE_REQUIRED');
 
-  if (isDemoMode) {
+  if (isDemo()) {
     const state = readDemoState();
     const currentMember = state.members.find(
       (candidate) =>
@@ -600,7 +651,7 @@ export async function addItem({
 }
 
 export async function reserveItem({ group, session, itemId }) {
-  if (isDemoMode) {
+  if (isDemo()) {
     const state = readDemoState();
     const currentMember = state.members.find(
       (candidate) =>
@@ -642,7 +693,7 @@ export async function reserveItem({ group, session, itemId }) {
 }
 
 export async function releaseItem({ group, session, itemId }) {
-  if (isDemoMode) {
+  if (isDemo()) {
     const state = readDemoState();
     const currentMember = state.members.find(
       (candidate) =>
@@ -679,7 +730,7 @@ export async function approveMember({
   memberId,
   approve,
 }) {
-  if (isDemoMode) {
+  if (isDemo()) {
     const state = readDemoState();
     const admin = state.members.find(
       (candidate) =>

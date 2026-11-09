@@ -36,6 +36,11 @@ const it = {
 
   "demo.banner":
     "Modalità demo: questo gruppo famiglia e i suoi desideri sono salvati solo in questo browser. Collega Supabase per sincronizzarli tra dispositivi.",
+  "demo.schemaMissing":
+    "Supabase è configurato, ma la migrazione del database per i gruppi famiglia non è stata applicata. Questo browser usa la modalità demo locale. Applica la migrazione dei gruppi per abilitare la sincronizzazione.",
+  "demo.syncUnavailable":
+    "Il servizio di sincronizzazione della famiglia non è disponibile in questo momento. Questo browser usa la modalità demo locale. Controlla la connessione o riprova.",
+  "demo.retrySync": "Riprova la sincronizzazione",
 
   "error.load":
     "Non siamo riusciti a caricare la wishlist. Controlla la connessione e riprova.",

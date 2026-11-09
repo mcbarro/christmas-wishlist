@@ -5,21 +5,19 @@ import {
   approveMember as approveMemberInStore,
   DEMO_GROUP_EVENT,
   DEMO_GROUPS_KEY,
-  isDemoMode,
   loadGroupData,
   releaseItem as releaseItemInStore,
   reserveItem as reserveItemInStore,
 } from '../lib/groupStore';
 
 export function useGroupWishlist() {
-  const { group, member, session } = useGroup();
+  const { group, member, session, dataMode } = useGroup();
+  const isDemo = dataMode === 'demo';
   const [items, setItems] = useState([]);
   const [pendingMembers, setPendingMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [connection, setConnection] = useState(
-    isDemoMode ? 'demo' : 'connecting'
-  );
+  const [connection, setConnection] = useState(isDemo ? 'demo' : 'connecting');
   const mountedRef = useRef(true);
 
   const load = useCallback(
@@ -33,17 +31,17 @@ export function useGroupWishlist() {
         setItems(data.items);
         setPendingMembers(data.pendingMembers);
         setError(null);
-        setConnection(isDemoMode ? 'demo' : 'live');
+        setConnection(isDemo ? 'demo' : 'live');
       } catch (nextError) {
         if (!mountedRef.current) return;
         console.error('Could not load the family wishlist:', nextError);
         setError(nextError);
-        setConnection(isDemoMode ? 'demo' : 'offline');
+        setConnection(isDemo ? 'demo' : 'offline');
       } finally {
         if (mountedRef.current) setLoading(false);
       }
     },
-    [group, member, session]
+    [group, member, session, isDemo]
   );
 
   useEffect(() => {
@@ -63,7 +61,7 @@ export function useGroupWishlist() {
     };
 
     const handleDemoChange = (event) => {
-      if (!isDemoMode) return;
+      if (!isDemo) return;
       if (
         event.type === 'storage' &&
         event.key &&
@@ -76,7 +74,7 @@ export function useGroupWishlist() {
 
     document.addEventListener('visibilitychange', handleVisibility);
 
-    if (isDemoMode) {
+    if (isDemo) {
       window.addEventListener(DEMO_GROUP_EVENT, handleDemoChange);
       window.addEventListener('storage', handleDemoChange);
     }
@@ -85,12 +83,12 @@ export function useGroupWishlist() {
       mountedRef.current = false;
       window.clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibility);
-      if (isDemoMode) {
+      if (isDemo) {
         window.removeEventListener(DEMO_GROUP_EVENT, handleDemoChange);
         window.removeEventListener('storage', handleDemoChange);
       }
     };
-  }, [load]);
+  }, [load, isDemo]);
 
   const addItem = useCallback(
     async (payload) => {

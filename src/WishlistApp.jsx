@@ -1,7 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import AddWishModal from './components/AddWishModal';
-import { DemoBanner, ErrorBanner } from './components/Banners';
+import {
+  DemoBanner,
+  ErrorBanner,
+  SyncFallbackBanner,
+} from './components/Banners';
 import MembersModal from './components/MembersModal';
 import Navbar from './components/Navbar';
 import ReserveModal from './components/ReserveModal';
@@ -24,6 +28,8 @@ export default function WishlistApp() {
     personalLink,
     groupInviteLink,
     leaveDevice,
+    dataMode,
+    fallbackReason,
   } = useGroup();
   const {
     items,
@@ -200,7 +206,10 @@ export default function WishlistApp() {
       />
 
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 pb-4 pt-5 sm:px-6 lg:px-8">
-        {connection === 'demo' ? <DemoBanner /> : null}
+        {dataMode === 'demo' && fallbackReason ? (
+          <SyncFallbackBanner reason={fallbackReason} />
+        ) : null}
+        {dataMode === 'demo' && !fallbackReason ? <DemoBanner /> : null}
         {error && items.length > 0 ? (
           <ErrorBanner onRetry={handleRetry} />
         ) : null}

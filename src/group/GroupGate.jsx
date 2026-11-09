@@ -10,6 +10,7 @@ import {
   Users,
 } from 'lucide-react';
 import CopyLinkButton from '../components/CopyLinkButton';
+import { SyncFallbackBanner } from '../components/Banners';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import ThemeToggle from '../components/ThemeToggle';
 import { useI18n } from '../i18n/I18nProvider';
@@ -422,6 +423,7 @@ export default function GroupGate() {
     status,
     inviteGroup,
     errorCode,
+    fallbackReason,
   } = useGroup();
 
   let content = null;
@@ -435,5 +437,14 @@ export default function GroupGate() {
   else if (status === 'invalid') content = <InvalidGroup errorCode={errorCode} />;
   else if (status === 'error') content = <GateError errorCode={errorCode} />;
 
-  return <GateShell>{content}</GateShell>;
+  return (
+    <GateShell>
+      <div className="w-full max-w-xl space-y-3">
+        {fallbackReason ? (
+          <SyncFallbackBanner reason={fallbackReason} />
+        ) : null}
+        {content}
+      </div>
+    </GateShell>
+  );
 }

@@ -35,6 +35,11 @@ const en = {
 
   "demo.banner":
     "Demo mode: this family group and its wishes are saved only in this browser. Connect Supabase to sync them across devices.",
+  "demo.schemaMissing":
+    "Supabase is configured, but the family-group database migration has not been applied. This browser is using local demo mode. Apply the group migration to enable family sync.",
+  "demo.syncUnavailable":
+    "The family sync service is unavailable right now. This browser is using local demo mode. Check your connection or retry.",
+  "demo.retrySync": "Retry family sync",
 
   "error.load":
     "We couldn't load the wishlist. Check your connection and try again.",
