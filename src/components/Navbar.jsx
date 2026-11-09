@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Download, Gift, Plus, Search, X } from 'lucide-react';
+import { Bell, Download, Gift, Plus, Search, UserRound, X } from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
 import LanguageSwitcher from './LanguageSwitcher';
 import ThemeToggle from './ThemeToggle';
@@ -14,6 +14,11 @@ export default function Navbar({
   onInstall,
   canInstall,
   connection,
+  groupName,
+  isAdmin,
+  pendingCount,
+  onMembers,
+  onSession,
   onRefresh,
 }) {
   const { t } = useI18n();
@@ -74,7 +79,7 @@ export default function Navbar({
                 {t('app.title')}
               </span>
               <span className="hidden truncate text-xs text-muted sm:block">
-                {t('app.subtitle')}
+                {groupName || t('app.subtitle')}
               </span>
             </span>
           </Link>
@@ -98,13 +103,38 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={onInstall}
-                className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+                className="hidden h-9 w-9 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink sm:grid"
                 aria-label={t('nav.install')}
                 title={t('nav.install')}
               >
                 <Download className="h-4 w-4" aria-hidden="true" />
               </button>
             ) : null}
+
+            {isAdmin && pendingCount > 0 ? (
+              <button
+                type="button"
+                onClick={onMembers}
+                className="relative grid h-9 w-9 place-items-center rounded-full border border-warning/20 bg-warning/10 text-warning transition hover:bg-warning/20"
+                aria-label={t('members.pendingAria', { count: pendingCount })}
+                title={t('members.title')}
+              >
+                <Bell className="h-4 w-4" aria-hidden="true" />
+                <span className="absolute -right-1 -top-1 grid min-w-[17px] place-items-center rounded-full bg-warning px-1 text-[10px] font-bold leading-4 text-amber-950">
+                  {pendingCount}
+                </span>
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={onSession}
+              className="grid h-9 w-9 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+              aria-label={t('session.open')}
+              title={t('session.open')}
+            >
+              <UserRound className="h-4 w-4" aria-hidden="true" />
+            </button>
 
             <LanguageSwitcher />
             <ThemeToggle />

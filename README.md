@@ -1,12 +1,14 @@
 # Christmas Wishlist
 
 A zero-account family Christmas wishlist, built as an installable PWA with a
-Pinterest-style masonry layout, real-time sync and native mobile sharing.
+Pinterest-style masonry layout, closed family groups and native mobile sharing.
 
 - No sign-up, no email and no password.
+- Closed family groups with invite links and admin approval of new members.
 - Add wishes manually or share a product link from a phone.
-- Reserve gifts with your name so nobody buys the same present twice.
-- Real-time updates across family devices through Supabase.
+- Reserve gifts as your approved member identity so nobody buys the same present twice.
+- Reservations on your own wishes are hidden to preserve the surprise.
+- Family sync across devices through Supabase.
 - English and Italian UI, detected from the browser language.
 - Light theme by default, with a dark-mode toggle and a saved preference.
 - Deployable to GitHub Pages with a single push to `main`.
@@ -15,7 +17,7 @@ Pinterest-style masonry layout, real-time sync and native mobile sharing.
 
 - React 19 + Vite
 - Tailwind CSS 4
-- Supabase (PostgreSQL, Row Level Security and Realtime)
+- Supabase (PostgreSQL, Row Level Security and SECURITY DEFINER RPCs)
 - `vite-plugin-pwa` + Workbox
 - Microlink API for OpenGraph metadata
 - GitHub Actions + GitHub Pages
@@ -33,9 +35,12 @@ npm run dev
 On Windows PowerShell, create the environment file with
 `Copy-Item .env.example .env.local`.
 
-If Supabase is not configured, the app runs in **demo mode** and keeps wishes in
-`localStorage`. This is useful for trying the UI locally. The app displays a
-clear demo banner so nobody mistakes local data for shared family data.
+If Supabase is not configured, the app runs in **demo mode** and keeps the
+family group, members and wishes in `localStorage`. This is useful for trying
+the full join/approval flow locally: create a group, copy the group invite link
+from the session dialog, leave the device, rejoin as another member and approve
+the request as the admin. The app displays a clear demo banner so nobody
+mistakes local data for shared family data.
 
 To use a real database, fill in `.env.local`:
 
@@ -44,16 +49,20 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-The Supabase anon key is public by design. Security is enforced by the database
-policies described below.
+The Supabase anon key is public by design. Security is enforced by the RPC
+functions and Row Level Security described below.
 
 ## Supabase setup
 
 ### Option A: automated migrations (recommended)
 
-The repository contains the initial migration in
-`supabase/migrations/20261109000000_init_wishlist.sql`. The GitHub Actions
-workflow applies it with `supabase db push` before building the site.
+The repository contains two migrations:
+
+- `supabase/migrations/20261109000000_init_wishlist.sql`
+- `supabase/migrations/20261109010000_group_logic.sql`
+
+The GitHub Actions workflow applies them with `supabase db push` before
+building the site.
 
 1. Create a free project at [supabase.com](https://supabase.com).
 2. Copy the project URL and the public anon key from **Project settings → API**.
@@ -71,29 +80,69 @@ idempotent and can be executed again safely.
 
 ### Database schema
 
-The `public.wishlist_items` table contains:
+The group migration creates or extends these tables:
 
-| Column        | Type          | Purpose                                  |
-| ------------- | ------------- | ---------------------------------------- |
-| `id`          | `uuid`        | Primary key                              |
-| `created_at`  | `timestamptz` | Creation date                            |
-| `title`       | `text`        | Gift name                                |
-| `url`         | `text`        | Product page                             |
-| `image_url`   | `text`        | Product image                            |
-| `notes`       | `text`        | Size, color or other notes               |
-| `price`       | `text`        | Optional price, kept as text             |
-| `added_by`    | `text`        | Optional name of the person who added it |
-| `reserved_by` | `text`        | Name of the person buying the gift       |
+| Table | Purpose |
+| ----- | ------- |
+| `groups` | Group id, unique `group_secret`, name and creation date |
+| `group_members` | Member id, `group_id`, unique `user_secret` per group, display name, admin flag, `pending`/`approved` status |
+| `wishlist_items` | Group id, owner member id, title, URL, image, notes, price and creation date |
+| `item_reservations` | One reservation per item, with the reserving member id |
 
-Row Level Security is enabled with open policies for `SELECT`, `INSERT`,
-`UPDATE` and `DELETE`. Realtime is enabled for the table and real-time changes
-are broadcast to every open client.
+Direct table access is denied to `anon` and `authenticated`. All operations go
+through SECURITY DEFINER functions that validate the group and member secrets:
+
+- `create_group`, `join_group`, `get_session`, `get_group_by_secret`
+- `get_group_items`, `add_item`
+- `reserve_item`, `release_item`, `get_safe_reservations`
+- `get_pending_members`, `approve_member`
+
+The privacy rule is implemented in `get_safe_reservations`: reservations whose
+item belongs to the requesting member are omitted from the result. The frontend
+never queries `item_reservations` directly, so the list owner sees their own
+wishes as if nobody had reserved them.
 
 > [!WARNING]
-> This is intentionally a trusted-family app. Anyone who knows the deployed URL
-> can read and modify the wishlist. Do not store sensitive information and do
-> not reuse this schema for private data. The site sends a `noindex` directive
-> and a restrictive `robots.txt`, but those are not security controls.
+> The `group_secret` and `user_secret` values are credentials. The group invite
+> link lets a relative request access, but the admin must approve them. The
+> personal link is more powerful: anyone with it can act as that member. Share
+> it carefully. The site sends a `noindex` directive and a restrictive
+> `robots.txt`, but those are not security controls.
+
+## Family groups and privacy
+
+### Create a group
+
+On first access the app asks for a group name and your name. The creator becomes
+the approved admin. The personal link and the group invite link are available
+from the **session** button in the header.
+
+- **Personal link**: `?group=<GROUP_SECRET>&user=<USER_SECRET>`. Reopens the
+  same member session on another device. Keep it private.
+- **Group invite link**: `?group=<GROUP_SECRET>`. Share it with relatives; they
+  will request access as a pending member.
+
+The session is stored in `localStorage` and mirrored in the URL so it can be
+copied to another device.
+
+### Join and approval
+
+1. A relative opens the group invite link.
+2. The app asks for their name and creates a `pending` member.
+3. The relative sees the **Waiting for approval** screen and can copy their
+   personal link to reopen the session later.
+4. The admin sees a bell with the pending count, opens the member requests
+   dialog and chooses **Approve** or **Reject**.
+5. The pending screen checks again automatically every few seconds, or
+   immediately with **Check again**.
+
+### Privacy of reservations
+
+The frontend loads reservations through the `get_safe_reservations` RPC. Own
+wishes are omitted from that result, so the list owner always sees them as
+unreserved and cannot reserve their own gift. The owner sees a **Your wish**
+state with a privacy hint; other members see the real reservation and can
+reserve available gifts.
 
 ## GitHub Pages deployment
 
@@ -174,9 +223,11 @@ domain.
 4. The app opens `/share`, fetches the product title, image and price through
    Microlink, and pre-fills the add-wish dialog.
 
-The `/add-item` route is also supported as an alias for compatibility. The
-route is declared in the manifest as `/share` and is adjusted automatically for
-GitHub Pages project sites and custom domains.
+The active group session is stored locally, so sharing a product from the
+installed PWA keeps the current family group. The `/add-item` route is also
+supported as an alias for compatibility. The route is declared in the manifest
+as `/share` and is adjusted automatically for GitHub Pages project sites and
+custom domains.
 
 > [!NOTE]
 > iOS Safari does not expose the Web Share Target API to installed web apps.
@@ -234,20 +285,26 @@ status messages.
 │   ├── components/
 │   │   ├── AddWishModal.jsx
 │   │   ├── Banners.jsx
+│   │   ├── CopyLinkButton.jsx
 │   │   ├── EmptyState.jsx
 │   │   ├── ErrorBoundary.jsx
 │   │   ├── LanguageSwitcher.jsx
+│   │   ├── MembersModal.jsx
 │   │   ├── Modal.jsx
 │   │   ├── Navbar.jsx
 │   │   ├── ReserveModal.jsx
+│   │   ├── SessionModal.jsx
 │   │   ├── ShareReceiver.jsx
 │   │   ├── ThemeToggle.jsx
 │   │   ├── Toast.jsx
 │   │   ├── WishCard.jsx
 │   │   └── WishGrid.jsx
+│   ├── group/
+│   │   ├── GroupGate.jsx
+│   │   └── GroupProvider.jsx
 │   ├── hooks/
-│   │   ├── useInstallPrompt.js
-│   │   └── useWishlist.js
+│   │   ├── useGroupWishlist.js
+│   │   └── useInstallPrompt.js
 │   ├── i18n/
 │   │   ├── I18nProvider.jsx
 │   │   ├── config.js
@@ -255,24 +312,26 @@ status messages.
 │   │   └── it.js
 │   ├── lib/
 │   │   ├── date.js
+│   │   ├── groupStore.js
 │   │   ├── ogScraper.js
-│   │   ├── profile.js
 │   │   ├── supabase.js
 │   │   ├── text.js
-│   │   ├── url.js
-│   │   └── wishlistStore.js
+│   │   └── url.js
 │   ├── pages/
 │   │   ├── HomePage.jsx
 │   │   └── NotFoundPage.jsx
 │   ├── theme/
 │   │   └── ThemeProvider.jsx
 │   ├── App.jsx
+│   ├── WishlistApp.jsx
 │   ├── index.css
 │   ├── main.jsx
 │   └── sw.js                  # Custom Workbox service worker
 ├── supabase/
 │   ├── config.toml
-│   └── migrations/20261109000000_init_wishlist.sql
+│   └── migrations/
+│       ├── 20261109000000_init_wishlist.sql
+│       └── 20261109010000_group_logic.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json
@@ -283,21 +342,37 @@ status messages.
 
 ### Data layer
 
-`src/lib/wishlistStore.js` exposes a single API for both modes:
+`src/lib/groupStore.js` exposes a single API for both modes:
 
-- **Supabase mode**: reads and writes `public.wishlist_items`, subscribes to
-  Postgres changes and uses a conditional update (`.is('reserved_by', null)`)
-  to prevent two family members from reserving the same gift at the same time.
-- **Demo mode**: uses `localStorage`, the same UI and cross-tab storage events.
+- **Supabase mode**: calls SECURITY DEFINER RPCs with the group and member
+  secrets. The database rejects unapproved members and never exposes the
+  `item_reservations` table directly.
+- **Demo mode**: stores groups, members, wishes and reservations in
+  `localStorage` and emits a local change event.
 
 The rest of the app does not need to know which mode is active.
 
-### Real-time updates
+### Group session
 
-`App.jsx` uses `useWishlist`, which subscribes to the `wishlist_items` table.
-When another device adds, reserves or releases a gift, the list refreshes
-automatically. The header shows `Live`, `Demo` or `Offline` so the state is
-always visible.
+`GroupProvider` resolves the URL and the saved session on startup. It renders
+one of these states through `GroupGate`:
+
+- create a group
+- join a group with an invite link
+- waiting for admin approval
+- invalid group link or network error
+- approved application
+
+`WishlistApp` is only mounted for approved members. Changing the session or
+leaving the device re-renders the gate without reloading the page.
+
+### Sync
+
+`useGroupWishlist` loads the group data and refreshes it on mount, every 15
+seconds while the tab is visible, when the tab becomes visible again, and after
+local mutations. The header shows `Live`, `Demo` or `Offline`; it is also a
+manual refresh button. This avoids exposing table rows directly while keeping
+the family list reasonably up to date.
 
 ### Share Target flow
 
@@ -320,7 +395,10 @@ both project sites and custom domains.
 | Symptom | Fix |
 | ------- | --- |
 | The app shows **Demo** after deployment | Add `SUPABASE_URL` / `SUPABASE_ANON_KEY` (or the `VITE_` variants) to repository secrets and redeploy. |
-| Realtime does not update | Run the migration again or check that `wishlist_items` is in the `supabase_realtime` publication. |
+| A group invite link says **Group not found** | Check that the `group` parameter is complete and that the latest Supabase migration has been applied. |
+| A new member stays on the waiting screen | The admin must open the bell and approve the request, or the member can tap **Check again**. |
+| My own wishes never show reservations | This is intentional: `get_safe_reservations` hides reservations on the requesting member's own wishes. |
+| Another device does not update immediately | The list refreshes every 15 seconds and when the tab becomes visible; use the status pill to refresh manually. |
 | A shared link opens a 404 | Make sure GitHub Pages uses **GitHub Actions** as its source and that the latest build contains `404.html`. |
 | Share Target does not appear | Install the PWA over HTTPS, then share from a compatible Android browser. iOS does not support Web Share Target. |
 | Product details are empty | Microlink may be rate-limited or blocked by the store. The user can enter the details manually. |

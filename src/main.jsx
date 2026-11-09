@@ -6,6 +6,7 @@ import '@fontsource-variable/fraunces';
 import './index.css';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
+import { GroupProvider } from './group/GroupProvider';
 import { I18nProvider } from './i18n/I18nProvider';
 import { ThemeProvider } from './theme/ThemeProvider';
 
@@ -17,9 +18,11 @@ createRoot(document.getElementById('root')).render(
     <ThemeProvider>
       <I18nProvider>
         <ErrorBoundary>
-          <BrowserRouter basename={basename}>
-            <App />
-          </BrowserRouter>
+          <GroupProvider>
+            <BrowserRouter basename={basename}>
+              <App />
+            </BrowserRouter>
+          </GroupProvider>
         </ErrorBoundary>
       </I18nProvider>
     </ThemeProvider>

@@ -1,28 +1,20 @@
 import { useId, useState } from 'react';
-import { Check, ExternalLink, Gift, Undo2 } from 'lucide-react';
+import { Check, ExternalLink, EyeOff, Gift, Undo2 } from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
-import { useProfileName } from '../lib/profile';
-
-function sameName(first, second) {
-  return (
-    String(first || '').trim().toLowerCase() ===
-    String(second || '').trim().toLowerCase()
-  );
-}
 
 export default function WishCard({ item, index = 0, onReserve, onRelease }) {
   const { t, locale } = useI18n();
-  const profileName = useProfileName();
   const [imageFailed, setImageFailed] = useState(false);
   const titleId = useId();
 
   const hasImage = Boolean(item.image_url) && !imageFailed;
-  const reserved = Boolean(item.reserved_by);
-  const reservedByMe = reserved && sameName(item.reserved_by, profileName);
-  const addedByMe = Boolean(item.added_by) && sameName(item.added_by, profileName);
+  const isOwnItem = Boolean(item.is_own_item);
+  const reservation = item.reservation;
+  const reserved = Boolean(reservation?.reserved_by_name);
+  const reservedByMe = Boolean(reservation?.is_mine);
 
-  const addedByLabel = addedByMe
+  const addedByLabel = isOwnItem
     ? t('card.addedByYou')
     : item.added_by
       ? t('card.addedBy', { name: item.added_by })
@@ -57,7 +49,12 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
 
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-image-shade via-transparent to-transparent" />
 
-        {reserved ? (
+        {isOwnItem ? (
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-panel-glass px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-accent backdrop-blur">
+            <Gift className="h-3 w-3" aria-hidden="true" />
+            {t('card.yourWishBadge')}
+          </span>
+        ) : reserved ? (
           <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-panel-glass px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-success backdrop-blur">
             <Check className="h-3 w-3" aria-hidden="true" />
             {t('card.reservedBadge')}
@@ -116,25 +113,42 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
           ) : null}
         </div>
 
-        {reserved ? (
+        {isOwnItem ? (
+          <div className="flex items-start gap-2 rounded-xl border border-accent/20 bg-accent/10 px-3 py-2 text-xs leading-relaxed text-muted">
+            <EyeOff
+              className="mt-0.5 h-4 w-4 shrink-0 text-accent"
+              aria-hidden="true"
+            />
+            <span>
+              <span className="font-semibold text-accent">
+                {t('card.yourWish')}
+              </span>{' '}
+              — {t('card.privacyHint')}
+            </span>
+          </div>
+        ) : reserved ? (
           <div className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-success/10 px-3 py-2">
             <div className="flex min-w-0 items-center gap-2 text-sm text-success">
               <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span className="truncate">
                 {reservedByMe
                   ? t('card.reservedByYou')
-                  : t('card.reservedBy', { name: item.reserved_by })}
+                  : t('card.reservedBy', {
+                      name: reservation.reserved_by_name,
+                    })}
               </span>
             </div>
-            <button
-              type="button"
-              onClick={() => onRelease(item)}
-              className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-success/80 transition hover:text-success"
-              aria-label={t('card.releaseAria', { title: item.title })}
-            >
-              <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('card.release')}
-            </button>
+            {reservedByMe ? (
+              <button
+                type="button"
+                onClick={() => onRelease(item)}
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-success/80 transition hover:text-success"
+                aria-label={t('card.releaseAria', { title: item.title })}
+              >
+                <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                {t('card.release')}
+              </button>
+            ) : null}
           </div>
         ) : (
           <button

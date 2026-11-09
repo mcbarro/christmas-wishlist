@@ -59,7 +59,6 @@ export default function ShareReceiver({ onShared }) {
           image_url: metadata.image_url,
           notes: sharedNotes || metadata.description,
           price: metadata.price,
-          added_by: '',
         },
         {
           hadUrl: Boolean(sharedUrl),

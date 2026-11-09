@@ -10,7 +10,6 @@ import {
 import Modal from './Modal';
 import { useI18n } from '../i18n/I18nProvider';
 import { fetchUrlMetadata } from '../lib/ogScraper';
-import { getProfileName, setProfileName } from '../lib/profile';
 import { isValidHttpUrl, normalizeUrl } from '../lib/url';
 
 const EMPTY_FORM = {
@@ -19,7 +18,6 @@ const EMPTY_FORM = {
   image_url: '',
   notes: '',
   price: '',
-  added_by: '',
 };
 
 const INPUT_CLASS =
@@ -40,7 +38,6 @@ function seedForm(initial) {
     seed.notes = initial.description.trim();
   }
 
-  seed.added_by = initial?.added_by?.trim() || getProfileName();
   return seed;
 }
 
@@ -150,10 +147,8 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
         image_url: normalizeUrl(form.image_url),
         notes: form.notes.trim(),
         price: form.price.trim(),
-        added_by: form.added_by.trim(),
       });
 
-      if (form.added_by.trim()) setProfileName(form.added_by.trim());
       onClose();
     } catch (error) {
       console.error('Could not add the wish:', error);
@@ -302,36 +297,19 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
           ) : null}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="add-price" className={LABEL_CLASS}>
-              {t('add.priceLabel')}
-            </label>
-            <input
-              id="add-price"
-              type="text"
-              value={form.price}
-              onChange={updateField('price')}
-              placeholder={t('add.pricePlaceholder')}
-              className={INPUT_CLASS}
-            />
-          </div>
-          <div>
-            <label htmlFor="add-name" className={LABEL_CLASS}>
-              {t('add.nameLabel')}
-            </label>
-            <input
-              id="add-name"
-              type="text"
-              value={form.added_by}
-              onChange={updateField('added_by')}
-              placeholder={t('add.namePlaceholder')}
-              autoComplete="name"
-              className={INPUT_CLASS}
-            />
-          </div>
+        <div>
+          <label htmlFor="add-price" className={LABEL_CLASS}>
+            {t('add.priceLabel')}
+          </label>
+          <input
+            id="add-price"
+            type="text"
+            value={form.price}
+            onChange={updateField('price')}
+            placeholder={t('add.pricePlaceholder')}
+            className={INPUT_CLASS}
+          />
         </div>
-        <p className="-mt-2 text-xs text-subtle">{t('add.nameHelp')}</p>
 
         <div>
           <label htmlFor="add-notes" className={LABEL_CLASS}>
