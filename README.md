@@ -97,7 +97,8 @@ are broadcast to every open client.
 ## GitHub Pages deployment
 
 1. In the repository, open **Settings → Pages** and set the source to
-   **GitHub Actions**.
+   **GitHub Actions** (the workflow also attempts to enable Pages
+   automatically; manual setup is the fallback if your organization blocks it).
 2. Add the required repository secrets under
    **Settings → Secrets and variables → Actions**.
 3. Push to `main`. The workflow tests the project, pushes database migrations,
