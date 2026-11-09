@@ -174,8 +174,8 @@ begin
 
   select *
   into v_group
-  from public.groups
-  where group_secret = trim(p_group_secret);
+  from public.groups g
+  where g.group_secret = trim(p_group_secret);
 
   if not found then
     raise exception 'GROUP_NOT_FOUND';
@@ -184,8 +184,8 @@ begin
   select *
   into v_member
   from public.group_members
-  where group_id = v_group.id
-    and user_secret = trim(p_user_secret);
+  where group_members.group_id = v_group.id
+    and group_members.user_secret = trim(p_user_secret);
 
   if found then
     if coalesce(trim(p_display_name), '') <> ''
