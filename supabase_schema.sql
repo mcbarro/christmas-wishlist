@@ -419,7 +419,7 @@ begin
     nullif(trim(p_price), ''),
     v_member_name
   )
-  returning id into v_item_id;
+  returning wishlist_items.id into v_item_id;
 
   return query
   select
