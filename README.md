@@ -78,6 +78,12 @@ Open the Supabase SQL Editor, paste the contents of
 [`supabase_schema.sql`](./supabase_schema.sql) and run it once. The script is
 idempotent and can be executed again safely.
 
+If the deployed app shows a **family sync unavailable** or **database migration
+not applied** warning, the group RPCs are missing from the remote project. Apply
+the migration (or add the database secrets so the workflow can apply it), then
+use **Retry family sync** in the warning banner. The fallback result is cached
+for five minutes to avoid repeated slow probes.
+
 ### Database schema
 
 The group migration creates or extends these tables:
@@ -395,6 +401,8 @@ both project sites and custom domains.
 | Symptom | Fix |
 | ------- | --- |
 | The app shows **Demo** after deployment | Add `SUPABASE_URL` / `SUPABASE_ANON_KEY` (or the `VITE_` variants) to repository secrets and redeploy. |
+| A sync warning appears even though Supabase is configured | Apply `20261109010000_group_logic.sql` (or run `supabase_schema.sql`), then click **Retry family sync**. The fallback probe is cached for five minutes. |
+| The Supabase project is paused or unreachable | Wake the project in the Supabase dashboard, then click **Retry family sync**. Until then the app keeps working in local demo mode. |
 | A group invite link says **Group not found** | Check that the `group` parameter is complete and that the latest Supabase migration has been applied. |
 | A new member stays on the waiting screen | The admin must open the bell and approve the request, or the member can tap **Check again**. |
 | My own wishes never show reservations | This is intentional: `get_safe_reservations` hides reservations on the requesting member's own wishes. |

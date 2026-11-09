@@ -5,6 +5,9 @@ export const DEMO_GROUPS_KEY = 'christmas-wishlist:demo-groups:v1';
 export const DEMO_GROUP_EVENT = 'christmas-wishlist:demo-group-change';
 export const LEGACY_DEMO_ITEMS_KEY = 'christmas-wishlist:demo-items:v1';
 
+const SCHEMA_FALLBACK_KEY = 'christmas-wishlist:schema-fallback:v1';
+const SCHEMA_FALLBACK_TTL_MS = 5 * 60 * 1000;
+
 let currentDataMode = isSupabaseConfigured ? 'supabase' : 'demo';
 
 export function getDataMode() {
@@ -13,6 +16,48 @@ export function getDataMode() {
 
 export function setDataMode(mode) {
   currentDataMode = mode === 'demo' ? 'demo' : 'supabase';
+}
+
+export function clearSchemaProbeCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(SCHEMA_FALLBACK_KEY);
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+function readSchemaProbeCache() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(SCHEMA_FALLBACK_KEY);
+    if (!raw) return null;
+    const cached = JSON.parse(raw);
+    if (
+      (cached?.result === 'missing' || cached?.result === 'unavailable') &&
+      Number(cached.expiresAt) > Date.now()
+    ) {
+      return cached.result;
+    }
+  } catch {
+    // Ignore invalid caches.
+  }
+  return null;
+}
+
+function writeSchemaProbeCache(result) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      SCHEMA_FALLBACK_KEY,
+      JSON.stringify({
+        result,
+        expiresAt: Date.now() + SCHEMA_FALLBACK_TTL_MS,
+      })
+    );
+  } catch {
+    // Ignore storage failures.
+  }
 }
 
 function isDemo() {
@@ -27,6 +72,9 @@ function isDemo() {
 export async function probeGroupSchema() {
   if (!isSupabaseConfigured || !supabase) return 'missing';
 
+  const cached = readSchemaProbeCache();
+  if (cached) return cached;
+
   let timer;
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(() => reject(new Error('SCHEMA_PROBE_TIMEOUT')), 6000);
@@ -39,7 +87,10 @@ export async function probeGroupSchema() {
     });
     const { error } = await Promise.race([request, timeout]);
 
-    if (!error) return 'supabase';
+    if (!error) {
+      clearSchemaProbeCache();
+      return 'supabase';
+    }
 
     const message = String(error.message || '');
     if (
@@ -47,11 +98,14 @@ export async function probeGroupSchema() {
       message.includes('Could not find the function') ||
       message.includes('schema cache')
     ) {
+      writeSchemaProbeCache('missing');
       return 'missing';
     }
 
+    writeSchemaProbeCache('unavailable');
     return 'unavailable';
   } catch {
+    writeSchemaProbeCache('unavailable');
     return 'unavailable';
   } finally {
     clearTimeout(timer);

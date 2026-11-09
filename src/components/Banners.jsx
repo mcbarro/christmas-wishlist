@@ -1,5 +1,6 @@
 import { AlertTriangle, FlaskConical, RefreshCw } from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
+import { clearSchemaProbeCache } from '../lib/groupStore';
 
 export function DemoBanner() {
   const { t } = useI18n();
@@ -37,7 +38,10 @@ export function SyncFallbackBanner({ reason }) {
       </div>
       <button
         type="button"
-        onClick={() => window.location.reload()}
+        onClick={() => {
+          clearSchemaProbeCache();
+          window.location.reload();
+        }}
         className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-warning/20 bg-warning/10 px-3 py-2 text-xs font-semibold text-warning transition hover:bg-warning/20"
       >
         <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />

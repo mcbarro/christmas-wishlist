@@ -8,6 +8,7 @@ import {
 } from 'react';
 import {
   buildSessionLink,
+  clearSchemaProbeCache,
   clearStoredSession,
   createGroup as createGroupInStore,
   DEMO_GROUP_EVENT,
@@ -293,6 +294,7 @@ export function GroupProvider({ children }) {
   }, []);
 
   const retry = useCallback(() => {
+    clearSchemaProbeCache();
     setReloadToken((current) => current + 1);
   }, []);
 
