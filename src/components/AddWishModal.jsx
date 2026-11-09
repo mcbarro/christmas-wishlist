@@ -50,6 +50,8 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
   const [scrapeStatus, setScrapeStatus] = useState(null);
   const [imageFailed, setImageFailed] = useState(false);
   const scrapeAbortRef = useRef(null);
+  const scrapingRef = useRef(false);
+  const lastScrapedRef = useRef('');
 
   useEffect(() => {
     if (!open) return undefined;
@@ -60,10 +62,16 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
     setScraping(false);
     setScrapeStatus(null);
     setImageFailed(false);
+    scrapingRef.current = false;
+    lastScrapedRef.current =
+      initial?.title || initial?.image_url
+        ? normalizeUrl(initial?.url || '')
+        : '';
 
     return () => {
       scrapeAbortRef.current?.abort();
       scrapeAbortRef.current = null;
+      scrapingRef.current = false;
     };
   }, [open, initial]);
 
@@ -89,14 +97,27 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleScrape = async () => {
-    const normalizedUrl = normalizeUrl(form.url);
+  const scrapeUrl = async (rawUrl, { force = false } = {}) => {
+    const normalizedUrl = normalizeUrl(rawUrl);
+
     if (!normalizedUrl) {
-      setErrors((current) => ({ ...current, url: t('add.errorUrl') }));
+      if (force) {
+        setErrors((current) => ({ ...current, url: t('add.errorUrl') }));
+      }
       return;
     }
 
+    if (
+      !force &&
+      (scrapingRef.current || normalizedUrl === lastScrapedRef.current)
+    ) {
+      return;
+    }
+
+    lastScrapedRef.current = normalizedUrl;
+    scrapingRef.current = true;
     scrapeAbortRef.current?.abort();
+
     const controller = new AbortController();
     scrapeAbortRef.current = controller;
 
@@ -104,33 +125,62 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
     setScrapeStatus(null);
     setErrors((current) => ({ ...current, url: undefined }));
 
-    const metadata = await fetchUrlMetadata(normalizedUrl, {
-      signal: controller.signal,
-    });
+    try {
+      const metadata = await fetchUrlMetadata(normalizedUrl, {
+        signal: controller.signal,
+      });
 
-    if (controller.signal.aborted) return;
+      if (controller.signal.aborted) return;
 
-    setScraping(false);
+      if (!metadata.title && !metadata.image_url) {
+        setScrapeStatus('error');
+        return;
+      }
 
-    if (!metadata.title && !metadata.image_url) {
-      setScrapeStatus('error');
-      return;
+      setForm((current) => ({
+        ...current,
+        url: metadata.url || normalizedUrl,
+        title: current.title.trim() ? current.title : metadata.title,
+        notes: current.notes.trim()
+          ? current.notes
+          : metadata.description || '',
+        image_url: current.image_url.trim()
+          ? current.image_url
+          : metadata.image_url,
+        price: current.price.trim() ? current.price : metadata.price,
+      }));
+      setImageFailed(false);
+      setScrapeStatus('success');
+    } finally {
+      if (!controller.signal.aborted) {
+        scrapingRef.current = false;
+        setScraping(false);
+      }
     }
+  };
 
-    setForm((current) => ({
+  const handleScrape = () => {
+    void scrapeUrl(form.url, { force: true });
+  };
+
+  const handleUrlPaste = (event) => {
+    const pasted = event.clipboardData?.getData('text') || '';
+    const normalizedUrl = normalizeUrl(pasted);
+    if (!normalizedUrl) return;
+
+    event.preventDefault();
+    setForm((current) => ({ ...current, url: normalizedUrl }));
+    setErrors((current) => ({
       ...current,
-      url: metadata.url || normalizedUrl,
-      title: current.title.trim() ? current.title : metadata.title,
-      notes: current.notes.trim()
-        ? current.notes
-        : metadata.description || '',
-      image_url: current.image_url.trim()
-        ? current.image_url
-        : metadata.image_url,
-      price: current.price.trim() ? current.price : metadata.price,
+      url: undefined,
+      form: undefined,
     }));
-    setImageFailed(false);
-    setScrapeStatus('success');
+    void scrapeUrl(normalizedUrl);
+  };
+
+  const handleUrlBlur = () => {
+    if (!form.url.trim()) return;
+    void scrapeUrl(form.url);
   };
 
   const handleSubmit = async (event) => {
@@ -225,6 +275,8 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
                 inputMode="url"
                 value={form.url}
                 onChange={updateField('url')}
+                onPaste={handleUrlPaste}
+                onBlur={handleUrlBlur}
                 placeholder={t('add.urlPlaceholder')}
                 className={`${INPUT_CLASS} pl-9`}
                 data-autofocus={!form.url ? true : undefined}

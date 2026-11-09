@@ -19,6 +19,56 @@ function normalizePriceCandidate(value) {
   return '';
 }
 
+const CURRENCY_AMOUNT =
+  '(?:\\d{1,3}(?:[.\\s]\\d{3})+|\\d+)(?:[.,]\\d{1,2})?';
+
+const PRICE_IN_TEXT_PATTERNS = [
+  new RegExp(`(?:€|eur\\b)\\s*${CURRENCY_AMOUNT}`, 'i'),
+  new RegExp(`${CURRENCY_AMOUNT}\\s*(?:€|eur\\b)`, 'i'),
+];
+
+/**
+ * Finds a price inside free text. Some shops (for example Lidl) expose the
+ * price in the OpenGraph description instead of a structured price field.
+ */
+export function extractPriceFromText(value) {
+  if (typeof value !== 'string' || !value.trim()) return '';
+
+  for (const pattern of PRICE_IN_TEXT_PATTERNS) {
+    const match = value.match(pattern);
+    if (match) return match[0].replace(/\s+/g, ' ').trim();
+  }
+
+  return '';
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Removes the shop name that many pages append to the title, and the brand
+ * prefix used by some product pages, without touching the product name.
+ */
+export function cleanTitle(title, publisher, author) {
+  const original = String(title || '').trim();
+  let value = original;
+  if (!value) return '';
+
+  for (const candidate of [publisher, author]) {
+    const name = String(candidate || '').trim();
+    if (!name) continue;
+
+    const escaped = escapeRegExp(name);
+    value = value
+      .replace(new RegExp(`\\s+[-–—|]\\s+${escaped}\\s*$`, 'i'), '')
+      .replace(new RegExp(`^${escaped}\\s*[-–—|]\\s*`, 'i'), '')
+      .trim();
+  }
+
+  return value || original;
+}
+
 export function extractPrice(data) {
   if (!data || typeof data !== 'object') return '';
 
@@ -36,6 +86,11 @@ export function extractPrice(data) {
 
   for (const candidate of candidates) {
     const price = normalizePriceCandidate(candidate);
+    if (price) return price;
+  }
+
+  for (const text of [data.description, data.title]) {
+    const price = extractPriceFromText(text);
     if (price) return price;
   }
 
@@ -90,7 +145,11 @@ export async function fetchUrlMetadata(targetUrl, { signal } = {}) {
 
     const data = payload.data;
     return {
-      title: firstNonEmpty(data.title),
+      title: cleanTitle(
+        firstNonEmpty(data.title),
+        firstNonEmpty(data.publisher),
+        firstNonEmpty(data.author)
+      ),
       description: firstNonEmpty(data.description),
       image_url: firstNonEmpty(
         data.image?.url,
