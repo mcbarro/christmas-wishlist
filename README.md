@@ -97,8 +97,11 @@ are broadcast to every open client.
 ## GitHub Pages deployment
 
 1. In the repository, open **Settings → Pages** and set the source to
-   **GitHub Actions** (the workflow also attempts to enable Pages
-   automatically; manual setup is the fallback if your organization blocks it).
+   **GitHub Actions**.
+   - Optional: add a `PAGES_TOKEN` secret (a PAT with Pages/administration
+     write permissions) and the workflow will try to enable Pages by itself.
+   - `GITHUB_TOKEN` alone cannot enable Pages on a repository where Pages has
+     never been configured, so the manual one-time setup is the reliable path.
 2. Add the required repository secrets under
    **Settings → Secrets and variables → Actions**.
 3. Push to `main`. The workflow tests the project, pushes database migrations,
@@ -114,6 +117,7 @@ are broadcast to every open client.
 | `SUPABASE_ACCESS_TOKEN` | Yes for migrations | Personal Access Token for the Supabase CLI |
 | `SUPABASE_DB_PASSWORD` | Yes for migrations | Database password used by `supabase db push` |
 | `CUSTOM_DOMAIN` | No | Custom domain written to `dist/CNAME` |
+| `PAGES_TOKEN` | No | PAT with Pages/admin permissions used to enable Pages automatically |
 
 Both secret naming conventions are supported for the URL and anon key, so you
 can use the names from the original specification or the `VITE_`-prefixed
