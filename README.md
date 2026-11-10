@@ -1,7 +1,7 @@
 # Christmas Wishlist
 
 A zero-account family Christmas wishlist, built as an installable PWA with a
-Pinterest-style masonry layout, closed family groups and native mobile sharing.
+Responsive card grid, closed family groups and native mobile sharing.
 
 - No sign-up, no email and no password.
 - Closed family groups with invite links and admin approval of new members.
@@ -252,9 +252,9 @@ for them.
   to the lowest.
 - The five rating icons are stars in the light and dark themes and small gift
   boxes in the Christmas theme.
-- The header toggle switches between the masonry grid and a compact list with a
-  preview on the left and details on the right. The choice is saved in the
-  browser.
+- The header toggle switches between the card grid and a compact list with a
+  preview on the left and details on the right. The grid fills left to right and
+  then moves to the next row. The choice is saved in the browser.
 
 ### Member filter and budget
 

@@ -14,7 +14,7 @@ function SkeletonGrid() {
 
   return (
     <div
-      className="columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-4"
+      className="grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
       role="status"
       aria-busy="true"
       aria-label={t('loading.wishes')}
@@ -22,7 +22,7 @@ function SkeletonGrid() {
       {Array.from({ length: 6 }, (_, index) => (
         <div
           key={index}
-          className="mb-4 break-inside-avoid rounded-3xl border border-line bg-surface p-4"
+          className="rounded-3xl border border-line bg-surface p-4"
         >
           <div className="animate-pulse space-y-3">
             <div className="aspect-[4/3] rounded-2xl bg-surface-strong" />

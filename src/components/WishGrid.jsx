@@ -20,14 +20,11 @@ export default function WishGrid({
       className={
         list
           ? 'flex flex-col gap-3'
-          : 'columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-4'
+          : 'grid grid-cols-1 items-start gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
       }
     >
       {items.map((item, index) => (
-        <div
-          key={item.id}
-          className={list ? '' : 'mb-4 break-inside-avoid'}
-        >
+        <div key={item.id}>
           <WishCard
             item={item}
             index={index}
