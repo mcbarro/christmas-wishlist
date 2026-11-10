@@ -1,27 +1,11 @@
 import { useEffect, useRef } from 'react';
+import treeImage from '../assets/christmas-tree.svg';
 import { useTheme } from '../theme/ThemeProvider';
 
 function ChristmasTree() {
   return (
     <div className="christmas-tree" aria-hidden="true">
-      <svg viewBox="0 0 240 330" role="presentation">
-        <rect x="108" y="262" width="24" height="58" rx="4" fill="#5b3a1e" />
-        <polygon points="120,28 205,160 35,160" fill="#14532d" />
-        <polygon points="120,92 220,230 20,230" fill="#166534" />
-        <polygon points="120,160 234,305 6,305" fill="#15803d" />
-        <path
-          d="M120 6 L128 28 L151 28 L133 43 L140 66 L120 52 L100 66 L107 43 L89 28 L112 28 Z"
-          fill="#fbbf24"
-        />
-        <circle cx="92" cy="132" r="5" fill="#fca5a5" />
-        <circle cx="150" cy="118" r="4" fill="#fde68a" />
-        <circle cx="74" cy="206" r="5" fill="#fca5a5" />
-        <circle cx="160" cy="196" r="4" fill="#fef3c7" />
-        <circle cx="118" cy="222" r="5" fill="#fca5a5" />
-        <circle cx="62" cy="280" r="4" fill="#fde68a" />
-        <circle cx="178" cy="274" r="5" fill="#fca5a5" />
-        <circle cx="118" cy="292" r="4" fill="#fef3c7" />
-      </svg>
+      <img src={treeImage} alt="" draggable="false" />
     </div>
   );
 }
@@ -64,6 +48,7 @@ export default function ChristmasDecor() {
 
       for (const flake of flakes) {
         context.beginPath();
+        context.shadowBlur = flake.big ? 7 : 2;
         context.arc(flake.x, flake.y, flake.r, 0, Math.PI * 2);
         context.fillStyle = `rgba(255, 255, 255, ${flake.alpha})`;
         context.fill();
@@ -76,26 +61,31 @@ export default function ChristmasDecor() {
 
     const resetSnow = () => {
       const count = Math.min(
-        90,
-        Math.max(32, Math.floor(width / 20))
+        280,
+        Math.max(110, Math.floor(width / 5))
       );
-      flakes = Array.from({ length: count }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        r: 0.7 + Math.random() * 1.8,
-        speed: 0.25 + Math.random() * 0.75,
-        drift: (Math.random() - 0.5) * 0.35,
-        alpha: 0.3 + Math.random() * 0.55,
-        phase: Math.random() * Math.PI * 2,
-      }));
+      flakes = Array.from({ length: count }, () => {
+        const big = Math.random() < 0.24;
+
+        return {
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: big ? 2.4 + Math.random() * 1.7 : 0.8 + Math.random() * 1.5,
+          speed: big ? 0.16 + Math.random() * 0.34 : 0.28 + Math.random() * 0.78,
+          drift: (Math.random() - 0.5) * 0.45,
+          alpha: big ? 0.28 + Math.random() * 0.3 : 0.42 + Math.random() * 0.5,
+          phase: Math.random() * Math.PI * 2,
+          big,
+        };
+      });
 
       settled = Array.from(
-        { length: Math.max(18, Math.floor(width / 12)) },
+        { length: Math.max(72, Math.floor(width / 5)) },
         () => ({
           x: Math.random() * width,
-          y: height - 2 - Math.random() * 9,
-          r: 1 + Math.random() * 3,
-          alpha: 0.18 + Math.random() * 0.35,
+          y: height - 2 - Math.random() * 11,
+          r: 1.2 + Math.random() * 3.8,
+          alpha: 0.25 + Math.random() * 0.4,
         })
       );
     };
@@ -129,7 +119,7 @@ export default function ChristmasDecor() {
             r: flake.r * 0.9,
             alpha: 0.18 + Math.random() * 0.3,
           });
-          if (settled.length > 260) settled.shift();
+          if (settled.length > 360) settled.shift();
 
           flake.y = -6 - Math.random() * 24;
           flake.x = Math.random() * width;

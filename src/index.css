@@ -157,7 +157,7 @@ html[data-theme="christmas"] body {
 .christmas-decor {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  z-index: 25;
   overflow: hidden;
   pointer-events: none;
 }
@@ -175,13 +175,12 @@ html[data-theme="christmas"] body {
   right: 2.5vw;
   bottom: -0.5rem;
   z-index: 20;
-  width: min(20rem, 30vw);
-  opacity: 0.08;
+  width: min(24rem, 34vw);
+  opacity: 0.14;
   pointer-events: none;
-  filter: saturate(0.5) brightness(1.05);
 }
 
-.christmas-tree svg {
+.christmas-tree img {
   display: block;
   width: 100%;
   height: auto;
@@ -260,8 +259,8 @@ html[data-theme="christmas"] article::after {
 @media (max-width: 640px) {
   .christmas-tree {
     right: -1.5rem;
-    width: 10rem;
-    opacity: 0.06;
+    width: 11rem;
+    opacity: 0.11;
   }
 }
 

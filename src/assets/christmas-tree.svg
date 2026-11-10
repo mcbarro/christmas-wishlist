@@ -1,0 +1,276 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1230" role="img" aria-label="Christmas tree with gifts">
+  <defs>
+    <linearGradient id="tree" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#45AD5C" />
+      <stop offset="0.5" stop-color="#238A45" />
+      <stop offset="1" stop-color="#0C5E2C" />
+    </linearGradient>
+    <linearGradient id="star" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFE66D" />
+      <stop offset="0.55" stop-color="#FFC107" />
+      <stop offset="1" stop-color="#E89B00" />
+    </linearGradient>
+    <linearGradient id="trunk" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8A5424" />
+      <stop offset="0.5" stop-color="#6B3D18" />
+      <stop offset="1" stop-color="#4A2810" />
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFE066" />
+      <stop offset="0.5" stop-color="#F9C513" />
+      <stop offset="1" stop-color="#D99A00" />
+    </linearGradient>
+    <linearGradient id="pink" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F4687A" />
+      <stop offset="0.55" stop-color="#E23A4E" />
+      <stop offset="1" stop-color="#C21E36" />
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4FB3E8" />
+      <stop offset="0.55" stop-color="#2183C4" />
+      <stop offset="1" stop-color="#12629B" />
+    </linearGradient>
+    <linearGradient id="candleRed" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#F26D6D" />
+      <stop offset="0.5" stop-color="#D92D2D" />
+      <stop offset="1" stop-color="#A31616" />
+    </linearGradient>
+    <linearGradient id="candleBlue" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#64B8E8" />
+      <stop offset="0.5" stop-color="#2D8CC9" />
+      <stop offset="1" stop-color="#14608F" />
+    </linearGradient>
+    <linearGradient id="holly" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2FAE57" />
+      <stop offset="1" stop-color="#0B6B2E" />
+    </linearGradient>
+    <radialGradient id="bauble" cx="0.35" cy="0.28" r="0.8">
+      <stop offset="0" stop-color="#FF8A8A" />
+      <stop offset="0.42" stop-color="#E11D1D" />
+      <stop offset="1" stop-color="#8E0B0B" />
+    </radialGradient>
+    <radialGradient id="baubleGold" cx="0.35" cy="0.28" r="0.8">
+      <stop offset="0" stop-color="#FFF3A6" />
+      <stop offset="0.5" stop-color="#F5B800" />
+      <stop offset="1" stop-color="#B97900" />
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFD75E" stop-opacity="0.9" />
+      <stop offset="1" stop-color="#FFD75E" stop-opacity="0" />
+    </radialGradient>
+
+    <g id="bauble">
+      <circle r="40" fill="url(#bauble)" />
+      <ellipse cx="-12" cy="-15" rx="12" ry="8" fill="#fff" opacity="0.55" />
+      <path d="M-27 15 A31 31 0 0 0 27 15" fill="none" stroke="#6E0808" stroke-width="5" opacity="0.22" />
+    </g>
+    <g id="sparkle">
+      <path d="M0 -22 C3 -7 7 -3 22 0 C7 3 3 7 0 22 C-3 7 -7 3 -22 0 C-7 -3 -3 -7 0 -22Z" fill="#fff" />
+    </g>
+    <g id="leaf">
+      <path d="M0 62 C-18 24 -10 -28 22 -62 C48 -26 46 26 20 62 C12 44 8 26 6 8 C2 30 -4 48 -12 60Z" fill="url(#holly)" />
+      <path d="M12 54 C18 18 22 -18 24 -46" fill="none" stroke="#0A5A27" stroke-width="3" opacity="0.55" />
+    </g>
+  </defs>
+
+  <ellipse cx="512" cy="1128" rx="448" ry="48" fill="#132418" opacity="0.16" />
+
+  <path d="M478 960 L556 960 L552 1112 L482 1112Z" fill="url(#trunk)" />
+
+  <path
+    d="M512 245
+       L600 395
+       C640 410 690 442 725 470
+       C760 498 775 522 764 542
+       C756 557 735 563 706 566
+       C745 592 790 626 824 662
+       C858 698 864 724 842 740
+       C825 752 795 755 766 758
+       C810 792 858 834 892 874
+       C922 910 918 938 886 950
+       C862 959 826 962 790 963
+       C812 988 822 1014 806 1036
+       C786 1062 726 1072 660 1070
+       C600 1082 560 1084 512 1084
+       C464 1084 424 1082 364 1070
+       C298 1072 238 1062 218 1036
+       C202 1014 212 988 234 963
+       C198 962 162 959 138 950
+       C106 938 102 910 132 874
+       C166 834 214 792 258 758
+       C229 755 199 752 182 740
+       C160 724 166 698 200 662
+       C234 626 279 592 318 566
+       C289 563 268 557 260 542
+       C249 522 264 498 299 470
+       C334 442 384 410 424 395Z"
+    fill="url(#tree)"
+  />
+
+  <g opacity="0.32">
+    <path d="M270 545 C360 590 430 600 512 600 C594 600 664 590 754 545 C730 600 650 628 512 628 C374 628 294 600 270 545Z" fill="#064B22" />
+    <path d="M180 742 C300 790 410 800 512 800 C614 800 724 790 844 742 C810 810 690 840 512 840 C334 840 214 810 180 742Z" fill="#064B22" />
+    <path d="M100 950 C260 1000 390 1010 512 1010 C634 1010 764 1000 924 950 C860 1030 700 1052 512 1052 C324 1052 164 1030 100 950Z" fill="#064B22" />
+  </g>
+
+  <g opacity="0.82">
+    <path d="M235 520 C300 480 380 470 450 500 C400 520 340 535 280 535 C260 532 244 528 235 520Z" fill="#79D68B" />
+    <path d="M165 720 C250 670 350 660 430 692 C370 720 300 735 220 738 C190 735 175 730 165 720Z" fill="#6CCB80" />
+    <path d="M95 930 C200 875 330 865 430 895 C360 930 270 948 170 950 C130 948 108 942 95 930Z" fill="#5FC275" />
+    <path d="M650 585 C690 570 730 570 760 585 C730 600 690 605 660 600Z" fill="#8ADF9A" opacity="0.65" />
+    <path d="M620 800 C664 786 706 788 740 802 C706 816 664 818 632 812Z" fill="#8ADF9A" opacity="0.55" />
+    <path d="M560 1000 C630 984 700 988 760 1004 C700 1024 630 1028 572 1018Z" fill="#8ADF9A" opacity="0.5" />
+  </g>
+
+  <g opacity="0.38" fill="#F4FFF6">
+    <path d="M424 400 C398 455 378 505 360 545 C328 522 350 466 392 416Z" />
+    <path d="M312 568 C280 625 254 676 236 722 C200 700 226 640 276 590Z" />
+    <path d="M222 760 C190 820 164 876 148 922 C110 900 140 834 188 782Z" />
+  </g>
+
+  <g fill="#fff">
+    <circle cx="478" cy="348" r="5" opacity="0.9" />
+    <circle cx="552" cy="328" r="4" opacity="0.8" />
+    <circle cx="604" cy="455" r="6" opacity="0.85" />
+    <circle cx="370" cy="508" r="4" opacity="0.7" />
+    <circle cx="452" cy="596" r="5" opacity="0.8" />
+    <circle cx="586" cy="566" r="4" opacity="0.75" />
+    <circle cx="678" cy="662" r="5" opacity="0.8" />
+    <circle cx="350" cy="706" r="4" opacity="0.7" />
+    <circle cx="520" cy="738" r="5" opacity="0.8" />
+    <circle cx="742" cy="790" r="4" opacity="0.7" />
+    <circle cx="260" cy="850" r="5" opacity="0.8" />
+    <circle cx="400" cy="872" r="4" opacity="0.75" />
+    <circle cx="612" cy="930" r="5" opacity="0.8" />
+    <circle cx="820" cy="958" r="4" opacity="0.7" />
+    <circle cx="160" cy="972" r="4" opacity="0.65" />
+    <circle cx="700" cy="1016" r="4" opacity="0.7" />
+  </g>
+
+  <g>
+    <use href="#sparkle" transform="translate(500 300) scale(1.15)" />
+    <use href="#sparkle" transform="translate(596 355) scale(0.55)" />
+    <use href="#sparkle" transform="translate(402 372) scale(0.5)" />
+    <use href="#sparkle" transform="translate(640 505) scale(0.85)" />
+    <use href="#sparkle" transform="translate(720 565) scale(0.45)" />
+    <use href="#sparkle" transform="translate(378 560) scale(0.45)" />
+    <use href="#sparkle" transform="translate(530 620) scale(1.05)" />
+    <use href="#sparkle" transform="translate(660 700) scale(0.6)" />
+    <use href="#sparkle" transform="translate(438 690) scale(0.45)" />
+    <use href="#sparkle" transform="translate(560 790) scale(0.9)" />
+    <use href="#sparkle" transform="translate(706 840) scale(0.55)" />
+    <use href="#sparkle" transform="translate(330 785) scale(0.5)" />
+    <use href="#sparkle" transform="translate(470 880) scale(1)" />
+    <use href="#sparkle" transform="translate(640 936) scale(0.7)" />
+    <use href="#sparkle" transform="translate(280 936) scale(0.55)" />
+    <use href="#sparkle" transform="translate(836 900) scale(0.5)" />
+    <use href="#sparkle" transform="translate(548 1004) scale(0.75)" />
+    <use href="#sparkle" transform="translate(380 1012) scale(0.5)" />
+    <use href="#sparkle" transform="translate(760 996) scale(0.45)" />
+  </g>
+
+  <g>
+    <g transform="translate(625 372) scale(0.9)"><use href="#bauble" /></g>
+    <g transform="translate(455 408) scale(1)"><use href="#bauble" /></g>
+    <g transform="translate(318 640) scale(0.85)"><use href="#bauble" /></g>
+    <g transform="translate(612 690) scale(1.05)"><use href="#bauble" /></g>
+    <g transform="translate(432 762) scale(1.05)"><use href="#bauble" /></g>
+    <g transform="translate(632 878) scale(1.1)"><use href="#bauble" /></g>
+    <g transform="translate(272 918) scale(0.95)"><use href="#bauble" /></g>
+    <g transform="translate(790 898) scale(1)"><use href="#bauble" /></g>
+    <g transform="translate(462 996) scale(1.1)"><use href="#bauble" /></g>
+    <g transform="translate(742 1032) scale(0.95)"><use href="#bauble" /></g>
+    <g transform="translate(188 956) scale(0.78)"><use href="#bauble" /></g>
+    <g transform="translate(872 942) scale(0.78)"><use href="#bauble" /></g>
+    <g transform="translate(906 690) scale(0.65)"><use href="#bauble" /></g>
+    <g transform="translate(812 622) scale(0.55)"><use href="#bauble" /></g>
+  </g>
+
+  <g>
+    <ellipse cx="240" cy="1012" rx="48" ry="60" fill="url(#glow)" />
+    <ellipse cx="292" cy="1032" rx="40" ry="52" fill="url(#glow)" />
+
+    <g>
+      <rect x="206" y="1014" width="64" height="146" rx="10" fill="url(#candleRed)" />
+      <rect x="206" y="1036" width="64" height="12" fill="#fff4ee" opacity="0.85" />
+      <rect x="206" y="1076" width="64" height="12" fill="#fff4ee" opacity="0.85" />
+      <rect x="206" y="1116" width="64" height="12" fill="#fff4ee" opacity="0.85" />
+      <ellipse cx="238" cy="1014" rx="32" ry="10" fill="#E86A6A" />
+      <rect x="236" y="1002" width="4" height="14" rx="2" fill="#5B3A1E" />
+      <path d="M238 952 C222 978 226 998 238 1004 C250 998 254 978 238 952Z" fill="#FFB300" />
+      <path d="M238 972 C232 985 234 995 238 999 C242 995 244 985 238 972Z" fill="#FFF3B0" />
+    </g>
+
+    <g>
+      <rect x="272" y="1034" width="54" height="126" rx="9" fill="url(#candleBlue)" />
+      <ellipse cx="299" cy="1034" rx="27" ry="9" fill="#5FA8D8" />
+      <rect x="297" y="1023" width="4" height="13" rx="2" fill="#5B3A1E" />
+      <path d="M299 988 C287 1008 290 1022 299 1027 C308 1022 311 1008 299 988Z" fill="#FFB300" />
+      <path d="M299 1003 C294 1013 296 1021 299 1024 C302 1021 304 1013 299 1003Z" fill="#FFF3B0" />
+    </g>
+  </g>
+
+  <g>
+    <rect x="520" y="1034" width="196" height="132" rx="8" fill="url(#gold)" />
+    <rect x="592" y="1034" width="44" height="132" fill="#D92D2D" />
+    <rect x="520" y="1088" width="196" height="10" fill="#B97900" opacity="0.35" />
+    <g>
+      <ellipse cx="598" cy="1022" rx="30" ry="18" transform="rotate(-18 598 1022)" fill="#E23A4E" />
+      <ellipse cx="634" cy="1022" rx="30" ry="18" transform="rotate(18 634 1022)" fill="#C21E36" />
+      <circle cx="616" cy="1028" r="10" fill="#F4687A" />
+    </g>
+
+    <rect x="710" y="1012" width="212" height="156" rx="8" fill="url(#blue)" />
+    <rect x="790" y="1012" width="44" height="156" fill="#D92D2D" />
+    <rect x="710" y="1072" width="212" height="10" fill="#0C4E7B" opacity="0.3" />
+    <g>
+      <ellipse cx="798" cy="1000" rx="32" ry="19" transform="rotate(-18 798 1000)" fill="#E23A4E" />
+      <ellipse cx="836" cy="1000" rx="32" ry="19" transform="rotate(18 836 1000)" fill="#C21E36" />
+      <circle cx="817" cy="1006" r="10" fill="#F4687A" />
+    </g>
+
+    <rect x="300" y="1015" width="220" height="152" rx="8" fill="url(#pink)" />
+    <rect x="390" y="1015" width="46" height="152" fill="url(#gold)" />
+    <rect x="300" y="1076" width="220" height="10" fill="#8E0E1E" opacity="0.25" />
+    <g>
+      <ellipse cx="394" cy="1002" rx="34" ry="20" transform="rotate(-18 394 1002)" fill="#F9C513" />
+      <ellipse cx="436" cy="1002" rx="34" ry="20" transform="rotate(18 436 1002)" fill="#E0A400" />
+      <circle cx="415" cy="1009" r="11" fill="#FFE066" />
+    </g>
+  </g>
+
+  <g transform="translate(112 1088) rotate(-24)">
+    <use href="#leaf" transform="rotate(-42) scale(1.05)" />
+    <use href="#leaf" transform="rotate(4) scale(1.1)" />
+    <use href="#leaf" transform="rotate(46) scale(1)" />
+    <circle cx="-18" cy="34" r="12" fill="#D7263D" />
+    <circle cx="8" cy="52" r="11" fill="#B81C31" />
+    <circle cx="34" cy="36" r="10" fill="#D7263D" />
+  </g>
+
+  <g transform="translate(912 1080) scale(-1 1) rotate(-24)">
+    <use href="#leaf" transform="rotate(-42) scale(1.05)" />
+    <use href="#leaf" transform="rotate(4) scale(1.1)" />
+    <use href="#leaf" transform="rotate(46) scale(1)" />
+    <circle cx="-18" cy="34" r="12" fill="#D7263D" />
+    <circle cx="8" cy="52" r="11" fill="#B81C31" />
+    <circle cx="34" cy="36" r="10" fill="#D7263D" />
+  </g>
+
+  <g>
+    <path d="M500 200 L524 200 L518 250 L506 250Z" fill="#E0A400" />
+    <path
+      d="M512 13 L537.3 83.2 L611.9 85.5 L552.9 131.3 L573.7 203 L512 161 L450.3 203 L471.1 131.3 L412.1 85.5 L487.7 83.2Z"
+      fill="url(#star)"
+      stroke="#E0A400"
+      stroke-width="4"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M512 13 L537.3 83.2 L552.9 131.3 L573.7 203 L512 161Z"
+      fill="#E8A400"
+      opacity="0.45"
+    />
+    <path d="M512 20 L512 161" stroke="#FFE88A" stroke-width="4" opacity="0.7" />
+  </g>
+</svg>
