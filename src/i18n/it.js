@@ -255,6 +255,123 @@ const it = {
   "notFound.description": "Questa pagina non esiste o il link non è valido.",
   "notFound.cta": "Torna alla wishlist",
 
+  "inbox.open": "Apri inbox",
+  "inbox.openWithCount": "Apri inbox ({count} nuovi)",
+  "inbox.title": "Inbox",
+  "inbox.description":
+    "Richieste dei membri e aggiornamenti sulle tue prenotazioni.",
+  "inbox.tabsLabel": "Sezioni inbox",
+  "inbox.requests": "Richieste",
+  "inbox.notifications": "Notifiche",
+  "inbox.empty": "Nessuna notifica",
+  "inbox.emptyDescription":
+    "Qui appariranno gli aggiornamenti sui desideri eliminati.",
+  "inbox.wishDeleted":
+    "Il desiderio “{title}” che avevi prenotato è stato eliminato da {name}.",
+  "inbox.unread": "Notifica non letta",
+
+  "members.filterLabel": "Filtra per membro",
+  "members.filterAll": "Tutti",
+  "members.filterBy": "Filtra per {name}",
+  "members.you": "tu",
+
+  "card.ideaFor": "Idea regalo per {name}",
+  "card.suggestedBy": "Suggerito da {name}",
+  "card.suggestedByYou": "Suggerito da te",
+  "card.suggestedBySomeone": "Suggerito da un membro",
+  "card.suggestionPrivate": "{name} non vede questa idea.",
+  "card.delete": "Elimina desiderio",
+  "card.deleteAria": "Elimina desiderio — {title}",
+
+  "delete.title": "Eliminare questo desiderio?",
+  "delete.description": "Questa azione non può essere annullata.",
+  "delete.confirm": "Elimina desiderio",
+  "delete.deleting": "Eliminazione...",
+  "delete.cancel": "Annulla",
+  "delete.ownerWarning":
+    "Se qualcuno aveva già deciso di regalarlo, riceverà un avviso.",
+  "delete.suggestionWarning":
+    "Questa idea per {name} verrà rimossa. Chi l'aveva prenotata riceverà un avviso.",
+  "delete.irreversible":
+    "Il desiderio, i suoi dettagli e l'eventuale prenotazione verranno rimossi definitivamente.",
+  "delete.success": "Desiderio eliminato.",
+  "delete.error": "Non siamo riusciti a eliminare il desiderio. Riprova.",
+
+  "add.importAmazon": "Importa da Amazon",
+  "add.forWhom": "Per chi è?",
+  "add.forMe": "Io",
+  "add.suggestionHint":
+    "{name} non vedrà questa idea. Gli altri membri la vedranno come un suggerimento da parte tua.",
+
+  "amazon.title": "Importa una wishlist Amazon",
+  "amazon.description":
+    "Incolla il link di una wishlist Amazon pubblica. Scegli quali elementi aggiungere come tuoi desideri.",
+  "amazon.urlLabel": "Link wishlist Amazon",
+  "amazon.urlPlaceholder": "https://www.amazon.it/hz/wishlist/ls/...",
+  "amazon.urlHint":
+    "La lista deve essere pubblica. Viene letta tramite un servizio di lettura esterno.",
+  "amazon.analyze": "Leggi la lista",
+  "amazon.analyzing": "Lettura...",
+  "amazon.analyzingTitle": "Lettura della lista Amazon",
+  "amazon.analyzingDescription": "Può richiedere qualche secondo.",
+  "amazon.found": "{count} elementi trovati",
+  "amazon.selected": "{count} selezionati",
+  "amazon.selectAll": "Seleziona tutti",
+  "amazon.selectNone": "Deseleziona tutti",
+  "amazon.cancel": "Annulla",
+  "amazon.importCount": "Importa {count} desideri",
+  "amazon.importing": "Importazione...",
+  "amazon.noPrice": "Senza prezzo",
+  "amazon.alreadyPresent": "Già presente",
+  "amazon.viewProduct": "Vedi prodotto",
+  "amazon.truncated":
+    "La lista è molto lunga. Vengono mostrati solo i primi 100 elementi.",
+  "amazon.imported": "{count} desideri importati.",
+  "amazon.errors.INVALID_URL":
+    "Incolla un link valido di una wishlist Amazon pubblica.",
+  "amazon.errors.PRIVATE_LIST":
+    "Questa wishlist non è pubblica o richiede l'accesso. Rendila pubblica e riprova.",
+  "amazon.errors.NO_ITEMS": "Nessun elemento trovato in questa wishlist.",
+  "amazon.errors.NETWORK":
+    "Non siamo riusciti a raggiungere il servizio di lettura. Controlla la connessione e riprova.",
+  "amazon.errors.UNAVAILABLE":
+    "Il servizio di lettura non è disponibile in questo momento. Riprova tra poco.",
+  "amazon.errors.IMPORT_LIMIT":
+    "Puoi importare al massimo 100 elementi alla volta.",
+  "amazon.errors.INVALID_IMPORT": "Non ci sono elementi validi da importare.",
+  "amazon.errors.UNKNOWN":
+    "Qualcosa è andato storto durante la lettura della lista. Riprova.",
+  "amazon.errors.RPC_MISSING":
+    "Questa funzione non è ancora disponibile. Riprova dopo l'aggiornamento del database.",
+  "amazon.errors.NOT_APPROVED":
+    "La tua iscrizione non è più approvata. Riapri il tuo link personale.",
+
+  "budget.button": "Budget",
+  "budget.open": "Filtro budget: {range}",
+  "budget.title": "Filtro budget",
+  "budget.description":
+    "Mostra i regali all'interno dell'intervallo di prezzo selezionato.",
+  "budget.range": "Intervallo selezionato",
+  "budget.min": "Minimo",
+  "budget.max": "Massimo",
+  "budget.minAria": "Budget minimo",
+  "budget.maxAria": "Budget massimo",
+  "budget.includeMissing": "Includi i desideri senza prezzo",
+  "budget.includeMissingHint":
+    "Quando il filtro è attivo, i desideri senza un prezzo leggibile restano nascosti finché questa opzione non è selezionata.",
+  "budget.reset": "Azzera",
+  "budget.apply": "Applica",
+
+  "group.errors.MEMBER_NOT_FOUND":
+    "Questo membro non è più disponibile nel gruppo.",
+  "group.errors.NOT_ALLOWED":
+    "Solo chi ha inserito questo desiderio può eliminarlo.",
+  "group.errors.INVALID_IMPORT": "I dati dell'import non sono validi.",
+  "group.errors.IMPORT_LIMIT":
+    "Puoi importare al massimo 100 desideri alla volta.",
+  "group.errors.RPC_MISSING":
+    "Questa funzione non è ancora disponibile. Riprova dopo l'aggiornamento del database.",
+
   "common.close": "Chiudi",
   "common.someone": "qualcuno",
   "common.copied": "Copiato!",

@@ -5,9 +5,15 @@ Pinterest-style masonry layout, closed family groups and native mobile sharing.
 
 - No sign-up, no email and no password.
 - Closed family groups with invite links and admin approval of new members.
-- Add wishes manually or share a product link from a phone.
+- Add wishes manually, share a product link from a phone, or import a public
+  Amazon wishlist.
 - Reserve gifts as your approved member identity so nobody buys the same present twice.
 - Reservations on your own wishes are hidden to preserve the surprise.
+- Suggest gift ideas for another member without revealing them to that member.
+- Filter by member and by budget range; both filters combine with the search
+  and availability filters.
+- Delete your own wishes; members who had reserved them receive an in-app
+  notification.
 - Family sync across devices through Supabase.
 - English and Italian UI, detected from the browser language.
 - Light theme by default, with a dark-mode toggle and a saved preference.
@@ -20,6 +26,7 @@ Pinterest-style masonry layout, closed family groups and native mobile sharing.
 - Supabase (PostgreSQL, Row Level Security and SECURITY DEFINER RPCs)
 - `vite-plugin-pwa` + Workbox
 - Microlink API for OpenGraph metadata
+- Jina Reader for public Amazon wishlist imports
 - GitHub Actions + GitHub Pages
 
 ## Quick start
@@ -62,6 +69,9 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261109010000_group_logic.sql`
 - `supabase/migrations/20261109020000_fix_add_item_returning.sql`
 - `supabase/migrations/20261109030000_fix_join_group_ambiguity.sql`
+- `supabase/migrations/20261110010000_suggestions_and_members.sql`
+- `supabase/migrations/20261110020000_delete_and_notifications.sql`
+- `supabase/migrations/20261110030000_bulk_import_and_capabilities.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -94,21 +104,29 @@ The group migration creates or extends these tables:
 | ----- | ------- |
 | `groups` | Group id, unique `group_secret`, name and creation date |
 | `group_members` | Member id, `group_id`, unique `user_secret` per group, display name, admin flag, `pending`/`approved` status |
-| `wishlist_items` | Group id, owner member id, title, URL, image, notes, price and creation date |
+| `wishlist_items` | Group id, owner member id, creator member id, title, URL, image, notes, price and creation date |
 | `item_reservations` | One reservation per item, with the reserving member id |
+| `notifications` | Private per-member notifications, with a JSON payload and a read timestamp |
 
 Direct table access is denied to `anon` and `authenticated`. All operations go
 through SECURITY DEFINER functions that validate the group and member secrets:
 
 - `create_group`, `join_group`, `get_session`, `get_group_by_secret`
-- `get_group_items`, `add_item`
+- `get_group_items`, `add_item`, `add_items`
 - `reserve_item`, `release_item`, `get_safe_reservations`
-- `get_pending_members`, `approve_member`
+- `get_pending_members`, `approve_member`, `get_group_members`
+- `delete_item`, `get_notifications`, `mark_notifications_read`
+- `get_app_capabilities`
 
-The privacy rule is implemented in `get_safe_reservations`: reservations whose
-item belongs to the requesting member are omitted from the result. The frontend
-never queries `item_reservations` directly, so the list owner sees their own
-wishes as if nobody had reserved them.
+Two privacy rules are enforced in the database:
+
+- `get_safe_reservations` omits reservations on the requesting member's own
+  wishes, so the list owner sees them as unreserved.
+- `get_group_items` omits gift ideas that another member created for the
+  requesting member, so the surprise is preserved even if the owner calls the
+  API directly.
+
+The frontend never queries `item_reservations` or the other tables directly.
 
 > [!WARNING]
 > The `group_secret` and `user_secret` values are credentials. The group invite
@@ -139,8 +157,8 @@ copied to another device.
 2. The app asks for their name and creates a `pending` member.
 3. The relative sees the **Waiting for approval** screen and can copy their
    personal link to reopen the session later.
-4. The admin sees a bell with the pending count, opens the member requests
-   dialog and chooses **Approve** or **Reject**.
+4. The admin sees the inbox bell with the pending count, opens the **Requests**
+   tab and chooses **Approve** or **Reject**.
 5. The pending screen checks again automatically every few seconds, or
    immediately with **Check again**.
 
@@ -151,6 +169,59 @@ wishes are omitted from that result, so the list owner always sees them as
 unreserved and cannot reserve their own gift. The owner sees a **Your wish**
 state with a privacy hint; other members see the real reservation and can
 reserve available gifts.
+
+### Gift ideas for other members
+
+In the add dialog, choose a member in **Who is it for?** to create a gift idea
+for them.
+
+- The item belongs to the selected member (`owner_member_id`) but records the
+  creator (`created_by_member_id`).
+- The selected member never sees the idea. Everyone else does.
+- The card shows a **Gift idea for …** badge and **Suggested by …**.
+- Filtering by a member shows both their own wishes and the ideas suggested for
+  them. The member themselves sees only their own wishes, because the server
+  filters suggestions for the owner.
+- Only the creator can delete the suggestion; the owner and other members
+  cannot.
+- The creator can reserve their own suggestion if they want to buy it.
+
+### Member filter and budget
+
+- The approved members appear in a dedicated header row with a stable color
+  derived from the member UUID and an initial.
+- Selecting a member filters by recipient; **Everyone** clears the member filter.
+- The budget button opens a min/max slider. You can include wishes without a
+  parsable price with the dedicated checkbox.
+- Member, budget, availability and text search all combine with AND.
+- If no price can be parsed, the budget slider is disabled.
+
+### Delete a wish and notifications
+
+- Only the member who created a wish can delete it. Admins cannot delete other
+  members' wishes.
+- The trash button is shown only to the creator, with a confirmation dialog.
+- The confirmation does not reveal whether the wish was reserved or by whom.
+- If someone had reserved the wish, they receive an in-app notification in the
+  bell/inbox. The notification is created in the same database transaction as
+  the deletion.
+
+### Import an Amazon wishlist
+
+1. Open **Add a wish → Import from Amazon**.
+2. Paste a public Amazon wishlist link.
+3. Review the parsed items and choose which ones to import.
+4. The selected items become the current member's own wishes.
+
+The importer uses **Jina Reader** to read the public Amazon page, because Amazon
+blocks direct browser requests with CORS and bot protection. Limitations:
+
+- the wishlist must be public;
+- the reader service can be rate-limited or temporarily unavailable;
+- some items may not expose a price or image;
+- imports are capped at 100 items (and at most 5 pages);
+- items already present in the group (same ASIN) are marked and skipped by
+  default.
 
 ## GitHub Pages deployment
 
@@ -292,12 +363,16 @@ status messages.
 ├── src/
 │   ├── components/
 │   │   ├── AddWishModal.jsx
+│   │   ├── AmazonImportModal.jsx
 │   │   ├── Banners.jsx
+│   │   ├── BudgetFilter.jsx
 │   │   ├── CopyLinkButton.jsx
+│   │   ├── DeleteWishModal.jsx
 │   │   ├── EmptyState.jsx
 │   │   ├── ErrorBoundary.jsx
+│   │   ├── InboxModal.jsx
 │   │   ├── LanguageSwitcher.jsx
-│   │   ├── MembersModal.jsx
+│   │   ├── MemberFilter.jsx
 │   │   ├── Modal.jsx
 │   │   ├── Navbar.jsx
 │   │   ├── ReserveModal.jsx
@@ -319,9 +394,13 @@ status messages.
 │   │   ├── en.js
 │   │   └── it.js
 │   ├── lib/
+│   │   ├── amazonImport.js
 │   │   ├── date.js
+│   │   ├── filters.js
 │   │   ├── groupStore.js
+│   │   ├── memberColor.js
 │   │   ├── ogScraper.js
+│   │   ├── price.js
 │   │   ├── supabase.js
 │   │   ├── text.js
 │   │   └── url.js
@@ -341,7 +420,10 @@ status messages.
 │       ├── 20261109000000_init_wishlist.sql
 │       ├── 20261109010000_group_logic.sql
 │       ├── 20261109020000_fix_add_item_returning.sql
-│       └── 20261109030000_fix_join_group_ambiguity.sql
+│       ├── 20261109030000_fix_join_group_ambiguity.sql
+│       ├── 20261110010000_suggestions_and_members.sql
+│       ├── 20261110020000_delete_and_notifications.sql
+│       └── 20261110030000_bulk_import_and_capabilities.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json
@@ -356,9 +438,9 @@ status messages.
 
 - **Supabase mode**: calls SECURITY DEFINER RPCs with the group and member
   secrets. The database rejects unapproved members and never exposes the
-  `item_reservations` table directly.
-- **Demo mode**: stores groups, members, wishes and reservations in
-  `localStorage` and emits a local change event.
+  `item_reservations` or `notifications` tables directly.
+- **Demo mode**: stores groups, members, wishes, reservations and notifications
+  in `localStorage` and emits a local change event.
 
 The rest of the app does not need to know which mode is active.
 
@@ -378,11 +460,12 @@ leaving the device re-renders the gate without reloading the page.
 
 ### Sync
 
-`useGroupWishlist` loads the group data and refreshes it on mount, every 15
-seconds while the tab is visible, when the tab becomes visible again, and after
-local mutations. The header shows `Live`, `Demo` or `Offline`; it is also a
-manual refresh button. This avoids exposing table rows directly while keeping
-the family list reasonably up to date.
+`useGroupWishlist` loads the group data (wishes, safe reservations, approved
+members, pending requests and notifications) and refreshes it on mount, every
+15 seconds while the tab is visible, when the tab becomes visible again, and
+after local mutations. The header shows `Live`, `Demo` or `Offline`; it is also
+a manual refresh button. This avoids exposing table rows directly while keeping
+the family list and inbox reasonably up to date.
 
 ### Share Target flow
 
@@ -391,6 +474,15 @@ extracts the first URL from the shared text when necessary, calls
 `fetchUrlMetadata` and opens the add dialog with the fetched fields. If the
 metadata request fails, the dialog still opens with the shared URL and text so
 the user can complete it manually.
+
+### Amazon import flow
+
+`src/lib/amazonImport.js` validates the Amazon host and wishlist path, fetches
+the public page through Jina Reader one page at a time, parses product links,
+titles, prices and images, deduplicates by ASIN and returns a preview list.
+`AmazonImportModal` lets the user select the items; `add_items` inserts the
+selected items in one RPC (with a sequential `add_item` fallback for older
+databases).
 
 ### GitHub Pages routing
 
@@ -410,6 +502,14 @@ both project sites and custom domains.
 | A group invite link says **Group not found** | Check that the `group` parameter is complete and that the latest Supabase migration has been applied. |
 | A new member stays on the waiting screen | The admin must open the bell and approve the request, or the member can tap **Check again**. |
 | My own wishes never show reservations | This is intentional: `get_safe_reservations` hides reservations on the requesting member's own wishes. |
+| A gift idea is missing for the member it is for | This is intentional: `get_group_items` hides suggestions from their owner to preserve the surprise. Other members see them. |
+| The trash button is missing | Only the member who created the wish can delete it. Admins cannot delete other members' wishes. |
+| A reservation notification does not appear immediately | Notifications refresh with the 15-second polling, on tab focus or with the status refresh button. |
+| The budget filter hides a wish with no price | Enable **Include wishes without a price** in the budget dialog. |
+| Member chips or the inbox are missing | Apply the latest migrations and redeploy. The capability probe disables features that the database does not expose yet. |
+| The Amazon import says the list is private | Make the Amazon wishlist public; the reader service cannot access lists that require a login. |
+| The Amazon import fails or times out | Jina Reader may be rate-limited or temporarily unavailable. Wait a moment and try again; the rest of the app is unaffected. |
+| Amazon items have no price or image | Amazon does not always expose them in the public page. The item is still imported and can be edited manually. |
 | Another device does not update immediately | The list refreshes every 15 seconds and when the tab becomes visible; use the status pill to refresh manually. |
 | A shared link opens a 404 | Make sure GitHub Pages uses **GitHub Actions** as its source and that the latest build contains `404.html`. |
 | Share Target does not appear | Install the PWA over HTTPS, then share from a compatible Android browser. iOS does not support Web Share Target. |

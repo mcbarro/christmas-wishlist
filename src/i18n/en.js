@@ -252,6 +252,119 @@ const en = {
   "notFound.description": "This page doesn't exist or the link is invalid.",
   "notFound.cta": "Back to the wishlist",
 
+  "inbox.open": "Open inbox",
+  "inbox.openWithCount": "Open inbox ({count} new)",
+  "inbox.title": "Inbox",
+  "inbox.description": "Member requests and updates about your reservations.",
+  "inbox.tabsLabel": "Inbox sections",
+  "inbox.requests": "Requests",
+  "inbox.notifications": "Notifications",
+  "inbox.empty": "No notifications",
+  "inbox.emptyDescription":
+    "Updates about deleted wishes will appear here.",
+  "inbox.wishDeleted":
+    "The wish “{title}” you had reserved was deleted by {name}.",
+  "inbox.unread": "Unread notification",
+
+  "members.filterLabel": "Filter by member",
+  "members.filterAll": "Everyone",
+  "members.filterBy": "Filter by {name}",
+  "members.you": "you",
+
+  "card.ideaFor": "Gift idea for {name}",
+  "card.suggestedBy": "Suggested by {name}",
+  "card.suggestedByYou": "Suggested by you",
+  "card.suggestedBySomeone": "Suggested by a member",
+  "card.suggestionPrivate": "{name} cannot see this idea.",
+  "card.delete": "Delete wish",
+  "card.deleteAria": "Delete wish — {title}",
+
+  "delete.title": "Delete this wish?",
+  "delete.description": "This action cannot be undone.",
+  "delete.confirm": "Delete wish",
+  "delete.deleting": "Deleting...",
+  "delete.cancel": "Cancel",
+  "delete.ownerWarning":
+    "If someone had already offered to buy it, they will receive a notification.",
+  "delete.suggestionWarning":
+    "This idea for {name} will be removed. Anyone who reserved it will be notified.",
+  "delete.irreversible":
+    "The wish, its details and any reservation will be permanently removed.",
+  "delete.success": "Wish deleted.",
+  "delete.error": "We couldn't delete this wish. Please try again.",
+
+  "add.importAmazon": "Import from Amazon",
+  "add.forWhom": "Who is it for?",
+  "add.forMe": "Me",
+  "add.suggestionHint":
+    "{name} won't see this idea. Other members will see it as a suggestion from you.",
+
+  "amazon.title": "Import an Amazon wishlist",
+  "amazon.description":
+    "Paste a public Amazon wishlist link. Choose which items to add as your wishes.",
+  "amazon.urlLabel": "Amazon wishlist link",
+  "amazon.urlPlaceholder": "https://www.amazon.it/hz/wishlist/ls/...",
+  "amazon.urlHint":
+    "The list must be public. It is read through a third-party reader service.",
+  "amazon.analyze": "Read the list",
+  "amazon.analyzing": "Reading...",
+  "amazon.analyzingTitle": "Reading your Amazon list",
+  "amazon.analyzingDescription": "This can take a few seconds.",
+  "amazon.found": "{count} items found",
+  "amazon.selected": "{count} selected",
+  "amazon.selectAll": "Select all",
+  "amazon.selectNone": "Clear selection",
+  "amazon.cancel": "Cancel",
+  "amazon.importCount": "Import {count} wishes",
+  "amazon.importing": "Importing...",
+  "amazon.noPrice": "No price",
+  "amazon.alreadyPresent": "Already present",
+  "amazon.viewProduct": "View product",
+  "amazon.truncated":
+    "This list is very long. Only the first 100 items are shown.",
+  "amazon.imported": "{count} wishes imported.",
+  "amazon.errors.INVALID_URL":
+    "Paste a valid public Amazon wishlist link.",
+  "amazon.errors.PRIVATE_LIST":
+    "This wishlist is not public or requires a login. Make it public and try again.",
+  "amazon.errors.NO_ITEMS": "No items were found in this wishlist.",
+  "amazon.errors.NETWORK":
+    "We couldn't reach the reader service. Check your connection and try again.",
+  "amazon.errors.UNAVAILABLE":
+    "The reader service is unavailable right now. Try again in a moment.",
+  "amazon.errors.IMPORT_LIMIT": "You can import at most 100 items at a time.",
+  "amazon.errors.INVALID_IMPORT": "There are no valid items to import.",
+  "amazon.errors.UNKNOWN":
+    "Something went wrong while reading the list. Please try again.",
+  "amazon.errors.RPC_MISSING":
+    "This feature is not available yet. Try again after the database update.",
+  "amazon.errors.NOT_APPROVED":
+    "Your membership is no longer approved. Reopen your personal link.",
+
+  "budget.button": "Budget",
+  "budget.open": "Budget filter: {range}",
+  "budget.title": "Budget filter",
+  "budget.description": "Show gifts within the selected price range.",
+  "budget.range": "Selected range",
+  "budget.min": "Minimum",
+  "budget.max": "Maximum",
+  "budget.minAria": "Minimum budget",
+  "budget.maxAria": "Maximum budget",
+  "budget.includeMissing": "Include wishes without a price",
+  "budget.includeMissingHint":
+    "When the filter is active, wishes without a parsable price are hidden unless this option is on.",
+  "budget.reset": "Reset",
+  "budget.apply": "Apply",
+
+  "group.errors.MEMBER_NOT_FOUND":
+    "This member is no longer available in the group.",
+  "group.errors.NOT_ALLOWED":
+    "Only the person who added this wish can delete it.",
+  "group.errors.INVALID_IMPORT": "The import data is not valid.",
+  "group.errors.IMPORT_LIMIT": "You can import at most 100 wishes at a time.",
+  "group.errors.RPC_MISSING":
+    "This feature is not available yet. Try again after the database update.",
+
   "common.close": "Close",
   "common.someone": "someone",
   "common.copied": "Copied!",

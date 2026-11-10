@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useGroup } from '../group/GroupProvider';
 import {
   addItem as addItemInStore,
+  addItems as addItemsInStore,
   approveMember as approveMemberInStore,
+  deleteItem as deleteItemInStore,
   DEMO_GROUP_EVENT,
   DEMO_GROUPS_KEY,
   loadGroupData,
+  markNotificationsRead as markNotificationsReadInStore,
   releaseItem as releaseItemInStore,
   reserveItem as reserveItemInStore,
 } from '../lib/groupStore';
@@ -15,6 +18,8 @@ export function useGroupWishlist() {
   const isDemo = dataMode === 'demo';
   const [items, setItems] = useState([]);
   const [pendingMembers, setPendingMembers] = useState([]);
+  const [members, setMembers] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [connection, setConnection] = useState(isDemo ? 'demo' : 'connecting');
@@ -30,6 +35,8 @@ export function useGroupWishlist() {
         if (!mountedRef.current) return;
         setItems(data.items);
         setPendingMembers(data.pendingMembers);
+        setMembers(data.members || []);
+        setNotifications(data.notifications || []);
         setError(null);
         setConnection(isDemo ? 'demo' : 'live');
       } catch (nextError) {
@@ -43,6 +50,17 @@ export function useGroupWishlist() {
     },
     [group, member, session, isDemo]
   );
+
+  useEffect(() => {
+    // Never show the previous member's data while the new session loads.
+    setItems([]);
+    setMembers([]);
+    setNotifications([]);
+    setPendingMembers([]);
+    setError(null);
+    setLoading(true);
+    setConnection(isDemo ? 'demo' : 'connecting');
+  }, [group?.id, member?.id, isDemo]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -98,6 +116,40 @@ export function useGroupWishlist() {
     },
     [group, session, load]
   );
+
+  const addItems = useCallback(
+    async (items) => {
+      const inserted = await addItemsInStore({ group, session, items });
+      await load({ quiet: true });
+      return inserted;
+    },
+    [group, session, load]
+  );
+
+  const deleteItem = useCallback(
+    async (itemId) => {
+      await deleteItemInStore({ group, session, itemId });
+      await load({ quiet: true });
+      return true;
+    },
+    [group, session, load]
+  );
+
+  const markNotificationsRead = useCallback(async () => {
+    const count = await markNotificationsReadInStore({ group, session });
+    setNotifications((current) =>
+      current.map((notification) =>
+        notification.isRead
+          ? notification
+          : {
+              ...notification,
+              isRead: true,
+              readAt: new Date().toISOString(),
+            }
+      )
+    );
+    return count;
+  }, [group, session]);
 
   const reserveItem = useCallback(
     async (itemId) => {
@@ -155,11 +207,16 @@ export function useGroupWishlist() {
   return {
     items,
     pendingMembers,
+    members,
+    notifications,
     loading,
     error,
     connection,
     reload,
     addItem,
+    addItems,
+    deleteItem,
+    markNotificationsRead,
     reserveItem,
     releaseItem,
     approveMember,

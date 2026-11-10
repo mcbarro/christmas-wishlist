@@ -11,12 +11,15 @@ const SQL_FILES = [
   'supabase/migrations/20261109010000_group_logic.sql',
   'supabase/migrations/20261109020000_fix_add_item_returning.sql',
   'supabase/migrations/20261109030000_fix_join_group_ambiguity.sql',
+  'supabase/migrations/20261110010000_suggestions_and_members.sql',
+  'supabase/migrations/20261110020000_delete_and_notifications.sql',
+  'supabase/migrations/20261110030000_bulk_import_and_capabilities.sql',
   'supabase_schema.sql',
 ];
 
 function parseTableFunctions(sql) {
   const pattern =
-    /create or replace function public\.(\w+)\s*\([\s\S]*?\)\s*returns\s+(table\s*\(([\s\S]*?)\)|boolean)\s*language\s+plpgsql[\s\S]*?as \$\$([\s\S]*?)\$\$;/gi;
+    /create or replace function public\.(\w+)\s*\([\s\S]*?\)\s*returns\s+(table\s*\(([\s\S]*?)\)|boolean|integer|jsonb)\s*language\s+(?:plpgsql|sql)[\s\S]*?as \$\$([\s\S]*?)\$\$;/gi;
 
   const functions = [];
   let match = pattern.exec(sql);

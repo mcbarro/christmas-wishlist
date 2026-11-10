@@ -56,6 +56,7 @@ export default function HomePage({
   onClearFilters,
   onReserve,
   onRelease,
+  onDelete,
 }) {
   const { t, tn } = useI18n();
   const pageTitle = <h1 className="sr-only">{t('app.title')}</h1>;
@@ -131,7 +132,12 @@ export default function HomePage({
       </div>
 
       <h2 className="sr-only">{t('home.wishesTitle')}</h2>
-      <WishGrid items={items} onReserve={onReserve} onRelease={onRelease} />
+      <WishGrid
+        items={items}
+        onReserve={onReserve}
+        onRelease={onRelease}
+        onDelete={onDelete}
+      />
     </div>
   );
 }

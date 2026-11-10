@@ -1,12 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import AddWishModal from './components/AddWishModal';
+import AmazonImportModal from './components/AmazonImportModal';
 import {
   DemoBanner,
   ErrorBanner,
   SyncFallbackBanner,
 } from './components/Banners';
-import MembersModal from './components/MembersModal';
+import DeleteWishModal from './components/DeleteWishModal';
+import InboxModal from './components/InboxModal';
 import Navbar from './components/Navbar';
 import ReserveModal from './components/ReserveModal';
 import SessionModal from './components/SessionModal';
@@ -16,7 +18,7 @@ import { useGroup } from './group/GroupProvider';
 import { useGroupWishlist } from './hooks/useGroupWishlist';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { useI18n } from './i18n/I18nProvider';
-import { normalizeSearch } from './lib/text';
+import { filterWishes, getPriceBounds } from './lib/filters';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -30,15 +32,21 @@ export default function WishlistApp() {
     leaveDevice,
     dataMode,
     fallbackReason,
+    capabilities,
   } = useGroup();
   const {
     items,
     pendingMembers,
+    members,
+    notifications,
     loading,
     error,
     connection,
     reload,
     addItem,
+    addItems,
+    deleteItem,
+    markNotificationsRead,
     reserveItem,
     releaseItem,
     approveMember,
@@ -48,12 +56,43 @@ export default function WishlistApp() {
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [memberFilter, setMemberFilter] = useState('all');
+  const [budget, setBudget] = useState({
+    active: false,
+    min: 0,
+    max: 0,
+    includeMissing: false,
+  });
   const [addOpen, setAddOpen] = useState(false);
   const [addInitial, setAddInitial] = useState(null);
+  const [amazonOpen, setAmazonOpen] = useState(false);
   const [reservation, setReservation] = useState(null);
-  const [membersOpen, setMembersOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [inboxOpen, setInboxOpen] = useState(false);
   const [sessionOpen, setSessionOpen] = useState(false);
   const [toast, setToast] = useState(null);
+
+  const budgetBounds = useMemo(() => getPriceBounds(items), [items]);
+  const featureSet = useMemo(
+    () => new Set(capabilities?.features || []),
+    [capabilities]
+  );
+  const hasFeature = useCallback(
+    (name) => featureSet.has(name),
+    [featureSet]
+  );
+  const unreadCount = notifications.filter(
+    (notification) => !notification.isRead
+  ).length;
+
+  useEffect(() => {
+    if (
+      memberFilter !== 'all' &&
+      !members.some((member) => member.id === memberFilter)
+    ) {
+      setMemberFilter('all');
+    }
+  }, [members, memberFilter]);
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ id: `${Date.now()}-${Math.random()}`, message, type });
@@ -70,25 +109,22 @@ export default function WishlistApp() {
     };
   }, [items]);
 
-  const filteredItems = useMemo(() => {
-    const query = normalizeSearch(search);
+  const filteredItems = useMemo(
+    () =>
+      filterWishes(items, {
+        memberId: memberFilter,
+        budget,
+        status: filter,
+        query: search,
+      }),
+    [items, memberFilter, budget, filter, search]
+  );
 
-    return items.filter((item) => {
-      if (filter === 'available' && item.reservation) return false;
-      if (filter === 'reserved' && !item.reservation) return false;
-      if (!query) return true;
-
-      return [
-        item.title,
-        item.notes,
-        item.added_by,
-        item.price,
-        item.reservation?.reserved_by_name,
-      ].some((value) => normalizeSearch(value).includes(query));
-    });
-  }, [items, filter, search]);
-
-  const hasFilters = filter !== 'all' || Boolean(search.trim());
+  const hasFilters =
+    filter !== 'all' ||
+    Boolean(search.trim()) ||
+    memberFilter !== 'all' ||
+    Boolean(budget.active);
 
   const openAdd = useCallback(() => {
     setAddInitial(null);
@@ -98,6 +134,12 @@ export default function WishlistApp() {
   const closeAdd = useCallback(() => {
     setAddOpen(false);
     setAddInitial(null);
+  }, []);
+
+  const openAmazonImport = useCallback(() => {
+    setAddOpen(false);
+    setAddInitial(null);
+    setAmazonOpen(true);
   }, []);
 
   const handleAdd = useCallback(
@@ -162,7 +204,48 @@ export default function WishlistApp() {
   const clearFilters = useCallback(() => {
     setSearch('');
     setFilter('all');
+    setMemberFilter('all');
+    setBudget({
+      active: false,
+      min: budgetBounds.min,
+      max: budgetBounds.max,
+      includeMissing: false,
+    });
+  }, [budgetBounds]);
+
+  const resetBudget = useCallback(() => {
+    setBudget({
+      active: false,
+      min: budgetBounds.min,
+      max: budgetBounds.max,
+      includeMissing: false,
+    });
+  }, [budgetBounds]);
+
+  const handleAmazonImport = useCallback(
+    async (amazonItems) => {
+      const inserted = await addItems(amazonItems);
+      showToast(t('amazon.imported', { count: inserted }), 'success');
+    },
+    [addItems, showToast, t]
+  );
+
+  const handleDeleteRequest = useCallback((item) => {
+    setDeleteTarget(item);
   }, []);
+
+  const handleConfirmDelete = useCallback(
+    async (item) => {
+      await deleteItem(item.id);
+      setDeleteTarget(null);
+      showToast(t('delete.success'), 'success');
+    },
+    [deleteItem, showToast, t]
+  );
+
+  const handleMarkNotificationsRead = useCallback(async () => {
+    await markNotificationsRead();
+  }, [markNotificationsRead]);
 
   const handleApprove = useCallback(
     async (memberId) => {
@@ -198,9 +281,17 @@ export default function WishlistApp() {
         canInstall={canInstall}
         connection={connection}
         groupName={group?.name}
-        isAdmin={member?.isAdmin}
         pendingCount={pendingMembers.length}
-        onMembers={() => setMembersOpen(true)}
+        unreadCount={unreadCount}
+        members={hasFeature('suggestions') ? members : []}
+        memberFilter={memberFilter}
+        onMemberFilterChange={setMemberFilter}
+        currentMemberId={member?.id}
+        budgetBounds={budgetBounds}
+        budget={budget}
+        onBudgetChange={setBudget}
+        onBudgetReset={resetBudget}
+        onInbox={() => setInboxOpen(true)}
         onSession={() => setSessionOpen(true)}
         onRefresh={handleRetry}
       />
@@ -229,6 +320,11 @@ export default function WishlistApp() {
                 onClearFilters={clearFilters}
                 onReserve={handleReserve}
                 onRelease={handleRelease}
+                onDelete={
+                  hasFeature('delete_notifications')
+                    ? handleDeleteRequest
+                    : undefined
+                }
               />
             }
           />
@@ -254,8 +350,18 @@ export default function WishlistApp() {
       <AddWishModal
         open={addOpen}
         initial={addInitial}
+        members={hasFeature('suggestions') ? members : []}
+        currentMemberId={member?.id}
+        onAmazonImport={openAmazonImport}
         onClose={closeAdd}
         onSubmit={handleAdd}
+      />
+
+      <AmazonImportModal
+        open={amazonOpen}
+        onClose={() => setAmazonOpen(false)}
+        existingItems={items}
+        onImport={handleAmazonImport}
       />
 
       <ReserveModal
@@ -267,12 +373,22 @@ export default function WishlistApp() {
         onConfirm={handleReservation}
       />
 
-      <MembersModal
-        open={membersOpen}
-        onClose={() => setMembersOpen(false)}
-        members={pendingMembers}
+      <InboxModal
+        open={inboxOpen}
+        onClose={() => setInboxOpen(false)}
+        pendingMembers={pendingMembers}
+        notifications={notifications}
+        isAdmin={member?.isAdmin}
         onApprove={handleApprove}
         onReject={handleReject}
+        onMarkRead={handleMarkNotificationsRead}
+      />
+
+      <DeleteWishModal
+        open={Boolean(deleteTarget)}
+        item={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
       />
 
       <SessionModal

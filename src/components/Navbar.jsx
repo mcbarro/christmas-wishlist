@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Bell, Download, Gift, Plus, Search, UserRound, X } from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
+import BudgetFilter from './BudgetFilter';
 import LanguageSwitcher from './LanguageSwitcher';
+import MemberFilter from './MemberFilter';
 import ThemeToggle from './ThemeToggle';
 
 export default function Navbar({
@@ -15,13 +17,22 @@ export default function Navbar({
   canInstall,
   connection,
   groupName,
-  isAdmin,
   pendingCount,
-  onMembers,
+  unreadCount,
+  members,
+  memberFilter,
+  onMemberFilterChange,
+  currentMemberId,
+  budgetBounds,
+  budget,
+  onBudgetChange,
+  onBudgetReset,
+  onInbox,
   onSession,
   onRefresh,
 }) {
   const { t } = useI18n();
+  const inboxCount = (pendingCount || 0) + (unreadCount || 0);
 
   const status =
     connection === 'demo'
@@ -111,20 +122,30 @@ export default function Navbar({
               </button>
             ) : null}
 
-            {isAdmin && pendingCount > 0 ? (
-              <button
-                type="button"
-                onClick={onMembers}
-                className="relative grid h-9 w-9 place-items-center rounded-full border border-warning/20 bg-warning/10 text-warning transition hover:bg-warning/20"
-                aria-label={t('members.pendingAria', { count: pendingCount })}
-                title={t('members.title')}
-              >
-                <Bell className="h-4 w-4" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={onInbox}
+              className={`relative h-9 w-9 place-items-center rounded-full border transition ${
+                inboxCount > 0 ? 'grid' : 'hidden sm:grid'
+              } ${
+                inboxCount > 0
+                  ? 'border-warning/20 bg-warning/10 text-warning hover:bg-warning/20'
+                  : 'border-line bg-surface text-muted hover:bg-surface-strong hover:text-ink'
+              }`}
+              aria-label={
+                inboxCount > 0
+                  ? t('inbox.openWithCount', { count: inboxCount })
+                  : t('inbox.open')
+              }
+              title={t('inbox.title')}
+            >
+              <Bell className="h-4 w-4" aria-hidden="true" />
+              {inboxCount > 0 ? (
                 <span className="absolute -right-1 -top-1 grid min-w-[17px] place-items-center rounded-full bg-warning px-1 text-[10px] font-bold leading-4 text-amber-950">
-                  {pendingCount}
+                  {inboxCount > 9 ? '9+' : inboxCount}
                 </span>
-              </button>
-            ) : null}
+              ) : null}
+            </button>
 
             <button
               type="button"
@@ -152,7 +173,7 @@ export default function Navbar({
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative min-w-0 flex-1">
+          <div className="relative min-w-0 flex-1 sm:max-w-md">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
               aria-hidden="true"
@@ -179,40 +200,60 @@ export default function Navbar({
             ) : null}
           </div>
 
-          <div
-            className="no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-0.5"
-            role="group"
-            aria-label={t('nav.filterLabel')}
-          >
-            {filters.map((entry) => {
-              const selected = filter === entry.id;
-              return (
-                <button
-                  key={entry.id}
-                  type="button"
-                  onClick={() => onFilterChange(entry.id)}
-                  aria-pressed={selected}
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                    selected
-                      ? 'border-line-strong bg-ink text-page'
-                      : 'border-line bg-surface text-muted hover:bg-surface-strong hover:text-ink'
-                  }`}
-                >
-                  {entry.label}
-                  <span
-                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+          <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-0.5">
+            <div
+              className="flex items-center gap-1.5"
+              role="group"
+              aria-label={t('nav.filterLabel')}
+            >
+              {filters.map((entry) => {
+                const selected = filter === entry.id;
+                return (
+                  <button
+                    key={entry.id}
+                    type="button"
+                    onClick={() => onFilterChange(entry.id)}
+                    aria-pressed={selected}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
                       selected
-                        ? 'bg-page/15 text-page'
-                        : 'bg-surface-strong text-subtle'
+                        ? 'border-line-strong bg-ink text-page'
+                        : 'border-line bg-surface text-muted hover:bg-surface-strong hover:text-ink'
                     }`}
                   >
-                    {entry.count}
-                  </span>
-                </button>
-              );
-            })}
+                    {entry.label}
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                        selected
+                          ? 'bg-page/15 text-page'
+                          : 'bg-surface-strong text-subtle'
+                      }`}
+                    >
+                      {entry.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <BudgetFilter
+              bounds={budgetBounds}
+              value={budget}
+              onChange={onBudgetChange}
+              onReset={onBudgetReset}
+            />
           </div>
         </div>
+
+        {members?.length > 1 ? (
+          <div className="border-t border-line/60 pt-2">
+            <MemberFilter
+              members={members}
+              selectedId={memberFilter}
+              currentMemberId={currentMemberId}
+              onSelect={onMemberFilterChange}
+            />
+          </div>
+        ) : null}
       </div>
     </header>
   );

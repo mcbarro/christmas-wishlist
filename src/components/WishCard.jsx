@@ -1,24 +1,46 @@
 import { useId, useState } from 'react';
-import { Check, ExternalLink, EyeOff, Gift, Undo2 } from 'lucide-react';
+import {
+  Check,
+  ExternalLink,
+  EyeOff,
+  Gift,
+  Trash2,
+  Undo2,
+} from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
 
-export default function WishCard({ item, index = 0, onReserve, onRelease }) {
+export default function WishCard({
+  item,
+  index = 0,
+  onReserve,
+  onRelease,
+  onDelete,
+}) {
   const { t, locale } = useI18n();
   const [imageFailed, setImageFailed] = useState(false);
   const titleId = useId();
 
   const hasImage = Boolean(item.image_url) && !imageFailed;
   const isOwnItem = Boolean(item.is_own_item);
+  const isSuggestion = Boolean(item.is_suggestion);
+  const isOwnSuggestion = Boolean(item.is_own_suggestion);
+  const canDelete = Boolean(item.can_delete) && typeof onDelete === 'function';
   const reservation = item.reservation;
   const reserved = Boolean(reservation?.reserved_by_name);
   const reservedByMe = Boolean(reservation?.is_mine);
 
-  const addedByLabel = isOwnItem
-    ? t('card.addedByYou')
-    : item.added_by
-      ? t('card.addedBy', { name: item.added_by })
-      : t('card.addedAnonymously');
+  const addedByLabel = isSuggestion
+    ? isOwnSuggestion
+      ? t('card.suggestedByYou')
+      : item.created_by_name
+        ? t('card.suggestedBy', { name: item.created_by_name })
+        : t('card.suggestedBySomeone')
+    : isOwnItem
+      ? t('card.addedByYou')
+      : item.owner_name
+        ? t('card.addedBy', { name: item.owner_name })
+        : t('card.addedAnonymously');
 
   const relativeDate = formatRelativeDate(item.created_at, locale);
   const dateLabel = relativeDate
@@ -53,6 +75,13 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
           <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-panel-glass px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-accent backdrop-blur">
             <Gift className="h-3 w-3" aria-hidden="true" />
             {t('card.yourWishBadge')}
+          </span>
+        ) : isSuggestion ? (
+          <span className="absolute left-3 top-3 inline-flex max-w-[70%] items-center gap-1.5 truncate rounded-full border border-accent/30 bg-panel-glass px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-accent backdrop-blur">
+            <Gift className="h-3 w-3 shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              {t('card.ideaFor', { name: item.owner_name })}
+            </span>
           </span>
         ) : reserved ? (
           <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-panel-glass px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-success backdrop-blur">
@@ -113,6 +142,12 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
           ) : null}
         </div>
 
+        {isSuggestion && isOwnSuggestion ? (
+          <p className="text-xs leading-relaxed text-subtle">
+            {t('card.suggestionPrivate', { name: item.owner_name })}
+          </p>
+        ) : null}
+
         {isOwnItem ? (
           <div className="flex items-start gap-2 rounded-xl border border-accent/20 bg-accent/10 px-3 py-2 text-xs leading-relaxed text-muted">
             <EyeOff
@@ -162,18 +197,34 @@ export default function WishCard({ item, index = 0, onReserve, onRelease }) {
           </button>
         )}
 
-        {item.url ? (
-          <a
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-subtle transition hover:text-accent"
-            aria-label={t('card.openAria', { title: item.title })}
-          >
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-            {t('card.viewProduct')}
-          </a>
-        ) : null}
+        <div className="flex items-center justify-between gap-3">
+          {item.url ? (
+            <a
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-subtle transition hover:text-accent"
+              aria-label={t('card.openAria', { title: item.title })}
+            >
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('card.viewProduct')}
+            </a>
+          ) : (
+            <span />
+          )}
+
+          {canDelete ? (
+            <button
+              type="button"
+              onClick={() => onDelete(item)}
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-danger/20 bg-danger/10 text-danger transition hover:bg-danger/20"
+              aria-label={t('card.deleteAria', { title: item.title })}
+              title={t('card.delete')}
+            >
+              <Trash2 className="h-4 w-4" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
       </div>
     </article>
   );

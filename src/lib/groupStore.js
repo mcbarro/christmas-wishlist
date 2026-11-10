@@ -120,6 +120,51 @@ export class GroupError extends Error {
   }
 }
 
+const DEMO_CAPABILITIES = {
+  schema_version: 2,
+  features: [
+    'suggestions',
+    'delete_notifications',
+    'member_filter',
+    'budget_filter',
+    'amazon_import',
+  ],
+};
+
+const BASE_CAPABILITIES = {
+  schema_version: 1,
+  features: [],
+};
+
+export async function getCapabilities() {
+  if (isDemo()) return DEMO_CAPABILITIES;
+  if (!supabase) return BASE_CAPABILITIES;
+
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error('CAPABILITIES_TIMEOUT')),
+      5000
+    );
+  });
+
+  try {
+    const { data, error } = await Promise.race([
+      supabase.rpc('get_app_capabilities'),
+      timeout,
+    ]);
+    if (error || !data) return BASE_CAPABILITIES;
+    return {
+      schema_version: Number(data.schema_version) || 1,
+      features: Array.isArray(data.features) ? data.features : [],
+    };
+  } catch {
+    return BASE_CAPABILITIES;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export function generateSecret() {
   if (globalThis.crypto?.randomUUID) {
     return globalThis.crypto.randomUUID().replaceAll('-', '');
@@ -204,7 +249,13 @@ function createId() {
 }
 
 function emptyDemoState() {
-  return { groups: [], members: [], items: [], reservations: [] };
+  return {
+    groups: [],
+    members: [],
+    items: [],
+    reservations: [],
+    notifications: [],
+  };
 }
 
 function readDemoState() {
@@ -216,9 +267,18 @@ function readDemoState() {
     return {
       groups: Array.isArray(parsed.groups) ? parsed.groups : [],
       members: Array.isArray(parsed.members) ? parsed.members : [],
-      items: Array.isArray(parsed.items) ? parsed.items : [],
+      items: Array.isArray(parsed.items)
+        ? parsed.items.map((item) => ({
+            ...item,
+            created_by_member_id:
+              item.created_by_member_id || item.owner_member_id,
+          }))
+        : [],
       reservations: Array.isArray(parsed.reservations)
         ? parsed.reservations
+        : [],
+      notifications: Array.isArray(parsed.notifications)
+        ? parsed.notifications
         : [],
     };
   } catch {
@@ -252,6 +312,7 @@ function migrateLegacyDemoItems(state, groupId, memberId) {
         id: createId(),
         group_id: groupId,
         owner_member_id: memberId,
+        created_by_member_id: memberId,
         title: trim(item.title) || 'Wish',
         url: trim(item.url),
         image_url: trim(item.image_url),
@@ -303,7 +364,10 @@ function mapItem(row) {
     group_id: row.group_id,
     owner_member_id: row.owner_member_id,
     owner_name: row.owner_name || '',
-    added_by: row.owner_name || '',
+    created_by_member_id:
+      row.created_by_member_id || row.owner_member_id || '',
+    created_by_name: row.created_by_name || row.owner_name || '',
+    added_by: row.created_by_name || row.owner_name || '',
     created_at: row.created_at,
     title: row.title || '',
     url: row.url || '',
@@ -326,10 +390,18 @@ function mergeItems(items, reservations, memberId) {
   );
 
   return (items || []).map((item) => {
+    const createdById = item.created_by_member_id || item.owner_member_id;
     const isOwnItem = item.owner_member_id === memberId;
+    const isSuggestion = createdById !== item.owner_member_id;
+
     return {
       ...item,
+      created_by_member_id: createdById,
+      created_by_name: item.created_by_name || item.owner_name || '',
       is_own_item: isOwnItem,
+      is_suggestion: isSuggestion,
+      is_own_suggestion: createdById === memberId,
+      can_delete: createdById === memberId,
       reservation: isOwnItem ? null : reservationsByItem.get(item.id) || null,
     };
   });
@@ -349,6 +421,10 @@ function mapSupabaseError(error) {
     'ALREADY_RESERVED',
     'NOT_RESERVED',
     'MEMBER_NOT_PENDING',
+    'MEMBER_NOT_FOUND',
+    'NOT_ALLOWED',
+    'INVALID_IMPORT',
+    'IMPORT_LIMIT',
     'TITLE_REQUIRED',
     'SESSION_REVOKED',
     'STORAGE_FAILED',
@@ -358,6 +434,14 @@ function mapSupabaseError(error) {
   let code = codes.find((candidate) => message.includes(candidate));
   if (!code && message.toLowerCase().includes('duplicate key')) {
     code = 'GROUP_EXISTS';
+  }
+  if (
+    !code &&
+    (error?.code === 'PGRST202' ||
+      message.includes('Could not find the function') ||
+      message.includes('schema cache'))
+  ) {
+    code = 'RPC_MISSING';
   }
 
   return new GroupError(code || 'UNKNOWN', {
@@ -543,6 +627,17 @@ export async function joinGroup({
   return mapGroupRow(row, groupSecret);
 }
 
+function mapNotification(row) {
+  return {
+    id: row.id,
+    type: row.type,
+    payload: row.payload || {},
+    createdAt: row.created_at || row.createdAt,
+    readAt: row.read_at || row.readAt || null,
+    isRead: Boolean(row.read_at || row.readAt),
+  };
+}
+
 export async function loadGroupData({ group, member, session }) {
   if (!group || !member || !session) {
     throw new GroupError('NOT_APPROVED');
@@ -558,20 +653,34 @@ export async function loadGroupData({ group, member, session }) {
     );
     if (!currentMember) throw new GroupError('NOT_APPROVED');
 
+    const groupMembers = state.members.filter(
+      (candidate) =>
+        candidate.group_id === group.id && candidate.status === 'approved'
+    );
     const membersById = new Map(
-      state.members
-        .filter((candidate) => candidate.group_id === group.id)
-        .map((candidate) => [candidate.id, candidate])
+      groupMembers.map((candidate) => [candidate.id, candidate])
     );
 
     const items = state.items
-      .filter((item) => item.group_id === group.id)
-      .map((item) =>
-        mapItem({
-          ...item,
-          owner_name: membersById.get(item.owner_member_id)?.display_name || '',
-        })
+      .filter(
+        (item) =>
+          item.group_id === group.id &&
+          !(
+            item.owner_member_id === member.id &&
+            (item.created_by_member_id || item.owner_member_id) !== member.id
+          )
       )
+      .map((item) => {
+        const owner = membersById.get(item.owner_member_id);
+        const creator = membersById.get(
+          item.created_by_member_id || item.owner_member_id
+        );
+        return mapItem({
+          ...item,
+          owner_name: owner?.display_name || '',
+          created_by_name: creator?.display_name || owner?.display_name || '',
+        });
+      })
       .sort(
         (first, second) =>
           new Date(second.created_at).getTime() -
@@ -611,40 +720,99 @@ export async function loadGroupData({ group, member, session }) {
           )
       : [];
 
+    const members = groupMembers
+      .map((candidate) => ({
+        id: candidate.id,
+        displayName: candidate.display_name,
+        isAdmin: Boolean(candidate.is_admin),
+        createdAt: candidate.created_at,
+      }))
+      .sort((first, second) =>
+        first.displayName.localeCompare(second.displayName)
+      );
+
+    const notifications = state.notifications
+      .filter(
+        (notification) =>
+          notification.group_id === group.id &&
+          notification.member_id === member.id
+      )
+      .sort(
+        (first, second) =>
+          new Date(second.created_at).getTime() -
+          new Date(first.created_at).getTime()
+      )
+      .slice(0, 50)
+      .map(mapNotification);
+
     return {
       items: mergeItems(items, reservations, member.id),
       pendingMembers,
+      members,
+      notifications,
     };
   }
 
-  const [itemRows, reservationRows, pendingRows] = await Promise.all([
-    rpc('get_group_items', {
-      p_group_secret: group.groupSecret,
-      p_user_secret: session.userSecret,
-    }),
-    rpc('get_safe_reservations', {
-      p_group_id: group.id,
-      p_user_secret: session.userSecret,
-    }),
-    member.isAdmin
-      ? rpc('get_pending_members', {
-          p_group_id: group.id,
-          p_user_secret: session.userSecret,
-        })
-      : Promise.resolve([]),
-  ]);
+  const [itemsResult, reservationsResult, pendingResult, membersResult, notificationsResult] =
+    await Promise.allSettled([
+      rpc('get_group_items', {
+        p_group_secret: group.groupSecret,
+        p_user_secret: session.userSecret,
+      }),
+      rpc('get_safe_reservations', {
+        p_group_id: group.id,
+        p_user_secret: session.userSecret,
+      }),
+      member.isAdmin
+        ? rpc('get_pending_members', {
+            p_group_id: group.id,
+            p_user_secret: session.userSecret,
+          })
+        : Promise.resolve([]),
+      rpc('get_group_members', {
+        p_group_secret: group.groupSecret,
+        p_user_secret: session.userSecret,
+      }),
+      rpc('get_notifications', {
+        p_group_id: group.id,
+        p_user_secret: session.userSecret,
+      }),
+    ]);
+
+  if (itemsResult.status === 'rejected') throw itemsResult.reason;
+  if (reservationsResult.status === 'rejected') {
+    throw reservationsResult.reason;
+  }
+
+  const itemRows = itemsResult.value || [];
+  const reservationRows = reservationsResult.value || [];
+  const pendingRows =
+    pendingResult.status === 'fulfilled' ? pendingResult.value || [] : [];
+  const memberRows =
+    membersResult.status === 'fulfilled' ? membersResult.value || [] : [];
+  const notificationRows =
+    notificationsResult.status === 'fulfilled'
+      ? notificationsResult.value || []
+      : [];
 
   return {
     items: mergeItems(
-      (itemRows || []).map(mapItem),
-      reservationRows || [],
+      itemRows.map(mapItem),
+      reservationRows,
       member.id
     ),
-    pendingMembers: (pendingRows || []).map((row) => ({
+    pendingMembers: pendingRows.map((row) => ({
       id: row.member_id,
       displayName: row.display_name,
       createdAt: row.created_at,
     })),
+    members: memberRows.map((row) => ({
+      id: row.member_id,
+      displayName: row.display_name,
+      isAdmin: Boolean(row.is_admin),
+      createdAt: row.created_at,
+    })),
+    notifications: notificationRows.map(mapNotification),
   };
 }
 
@@ -656,6 +824,7 @@ export async function addItem({
   image_url,
   notes,
   price,
+  ownerMemberId = null,
 }) {
   const cleanTitle = trim(title);
   if (!cleanTitle) throw new GroupError('TITLE_REQUIRED');
@@ -670,10 +839,23 @@ export async function addItem({
     );
     if (!currentMember) throw new GroupError('NOT_APPROVED');
 
+    let owner = currentMember;
+    if (ownerMemberId) {
+      const target = state.members.find(
+        (candidate) =>
+          candidate.id === ownerMemberId &&
+          candidate.group_id === group.id &&
+          candidate.status === 'approved'
+      );
+      if (!target) throw new GroupError('MEMBER_NOT_FOUND');
+      owner = target;
+    }
+
     const item = {
       id: createId(),
       group_id: group.id,
-      owner_member_id: currentMember.id,
+      owner_member_id: owner.id,
+      created_by_member_id: currentMember.id,
       title: cleanTitle,
       url: trim(url),
       image_url: trim(image_url),
@@ -686,11 +868,12 @@ export async function addItem({
 
     return mapItem({
       ...item,
-      owner_name: currentMember.display_name,
+      owner_name: owner.display_name,
+      created_by_name: currentMember.display_name,
     });
   }
 
-  const data = await rpc('add_item', {
+  const params = {
     p_group_secret: group.groupSecret,
     p_user_secret: session.userSecret,
     p_title: cleanTitle,
@@ -698,10 +881,81 @@ export async function addItem({
     p_image_url: trim(image_url),
     p_notes: trim(notes),
     p_price: trim(price),
-  });
+  };
+
+  // Omit the parameter when not needed so an older database that still has
+  // the seven-argument function keeps working during a rolling deployment.
+  if (ownerMemberId) params.p_owner_member_id = ownerMemberId;
+
+  const data = await rpc('add_item', params);
   const row = firstRow(data);
   if (!row) throw new GroupError('UNKNOWN');
   return mapItem(row);
+}
+
+export async function addItems({ group, session, items }) {
+  const cleanItems = (items || [])
+    .map((item) => ({
+      title: trim(item.title),
+      url: trim(item.url),
+      image_url: trim(item.image_url),
+      notes: trim(item.notes),
+      price: trim(item.price),
+    }))
+    .filter((item) => item.title);
+
+  if (!cleanItems.length) {
+    throw new GroupError('INVALID_IMPORT');
+  }
+
+  if (cleanItems.length > 100) {
+    throw new GroupError('IMPORT_LIMIT');
+  }
+
+  if (isDemo()) {
+    const state = readDemoState();
+    const currentMember = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!currentMember) throw new GroupError('NOT_APPROVED');
+
+    for (const item of cleanItems) {
+      state.items.push({
+        id: createId(),
+        group_id: group.id,
+        owner_member_id: currentMember.id,
+        created_by_member_id: currentMember.id,
+        title: item.title,
+        url: item.url,
+        image_url: item.image_url,
+        notes: item.notes,
+        price: item.price,
+        created_at: new Date().toISOString(),
+      });
+    }
+    writeDemoState(state);
+    return cleanItems.length;
+  }
+
+  try {
+    const inserted = await rpc('add_items', {
+      p_group_secret: group.groupSecret,
+      p_user_secret: session.userSecret,
+      p_items: cleanItems,
+    });
+    return Number(inserted) || 0;
+  } catch (error) {
+    if (error.code === 'RPC_MISSING') {
+      for (const item of cleanItems) {
+        await addItem({ group, session, ...item });
+      }
+      return cleanItems.length;
+    }
+    throw error;
+  }
 }
 
 export async function reserveItem({ group, session, itemId }) {
@@ -776,6 +1030,101 @@ export async function releaseItem({ group, session, itemId }) {
   });
   if (data === false) throw new GroupError('NOT_RESERVED');
   return true;
+}
+
+export async function deleteItem({ group, session, itemId }) {
+  if (isDemo()) {
+    const state = readDemoState();
+    const currentMember = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!currentMember) throw new GroupError('NOT_APPROVED');
+
+    const item = state.items.find(
+      (candidate) =>
+        candidate.id === itemId && candidate.group_id === group.id
+    );
+    if (!item) throw new GroupError('ITEM_NOT_FOUND');
+
+    const creatorId =
+      item.created_by_member_id || item.owner_member_id;
+    if (creatorId !== currentMember.id) {
+      throw new GroupError('NOT_ALLOWED');
+    }
+
+    const reservations = state.reservations.filter(
+      (reservation) =>
+        reservation.item_id === itemId &&
+        reservation.reserved_by_member_id !== currentMember.id
+    );
+
+    for (const reservation of reservations) {
+      state.notifications.push({
+        id: createId(),
+        group_id: group.id,
+        member_id: reservation.reserved_by_member_id,
+        type: 'wish_deleted',
+        payload: {
+          item_title: item.title,
+          deleted_by_name: currentMember.display_name,
+        },
+        created_at: new Date().toISOString(),
+        read_at: null,
+      });
+    }
+
+    state.items = state.items.filter((candidate) => candidate.id !== itemId);
+    state.reservations = state.reservations.filter(
+      (reservation) => reservation.item_id !== itemId
+    );
+    writeDemoState(state);
+    return true;
+  }
+
+  const data = await rpc('delete_item', {
+    p_group_secret: group.groupSecret,
+    p_user_secret: session.userSecret,
+    p_item_id: itemId,
+  });
+  if (data === false) throw new GroupError('ITEM_NOT_FOUND');
+  return true;
+}
+
+export async function markNotificationsRead({ group, session }) {
+  if (isDemo()) {
+    const state = readDemoState();
+    const currentMember = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!currentMember) throw new GroupError('NOT_APPROVED');
+
+    const readAt = new Date().toISOString();
+    let count = 0;
+    for (const notification of state.notifications) {
+      if (
+        notification.group_id === group.id &&
+        notification.member_id === currentMember.id &&
+        !notification.read_at
+      ) {
+        notification.read_at = readAt;
+        count += 1;
+      }
+    }
+    writeDemoState(state);
+    return count;
+  }
+
+  const data = await rpc('mark_notifications_read', {
+    p_group_id: group.id,
+    p_user_secret: session.userSecret,
+  });
+  return Number(data) || 0;
 }
 
 export async function approveMember({

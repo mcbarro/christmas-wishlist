@@ -13,6 +13,7 @@ import {
   createGroup as createGroupInStore,
   DEMO_GROUP_EVENT,
   generateSecret,
+  getCapabilities,
   getGroupBySecret,
   getSession,
   GroupError,
@@ -63,6 +64,10 @@ export function GroupProvider({ children }) {
     isSupabaseConfigured ? 'checking' : 'demo'
   );
   const [fallbackReason, setFallbackReason] = useState(null);
+  const [capabilities, setCapabilities] = useState({
+    schema_version: 1,
+    features: [],
+  });
 
   const applyResolved = useCallback((result, nextSession) => {
     if (!result) {
@@ -109,6 +114,10 @@ export function GroupProvider({ children }) {
       setStoreDataMode(mode);
       setDataModeState(mode);
       setFallbackReason(fallback);
+
+      const nextCapabilities = await getCapabilities();
+      if (cancelled) return;
+      setCapabilities(nextCapabilities);
 
       const urlSession = parseSessionParams(window.location.search);
       const storedSession = readStoredSession();
@@ -329,6 +338,7 @@ export function GroupProvider({ children }) {
       checking,
       dataMode,
       fallbackReason,
+      capabilities,
       personalLink,
       groupInviteLink,
       createGroup,
@@ -347,6 +357,7 @@ export function GroupProvider({ children }) {
       checking,
       dataMode,
       fallbackReason,
+      capabilities,
       personalLink,
       groupInviteLink,
       createGroup,

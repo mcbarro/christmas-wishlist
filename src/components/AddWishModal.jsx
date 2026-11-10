@@ -4,6 +4,7 @@ import {
   Link2,
   Loader2,
   Plus,
+  ShoppingBasket,
   Sparkles,
   Trash2,
 } from 'lucide-react';
@@ -18,6 +19,7 @@ const EMPTY_FORM = {
   image_url: '',
   notes: '',
   price: '',
+  owner_member_id: '',
 };
 
 const INPUT_CLASS =
@@ -41,7 +43,15 @@ function seedForm(initial) {
   return seed;
 }
 
-export default function AddWishModal({ open, initial, onClose, onSubmit }) {
+export default function AddWishModal({
+  open,
+  initial,
+  members = [],
+  currentMemberId = '',
+  onAmazonImport,
+  onClose,
+  onSubmit,
+}) {
   const { t } = useI18n();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -80,6 +90,23 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
     setForm((current) => ({ ...current, [field]: value }));
     setErrors((current) => ({ ...current, [field]: undefined, form: undefined }));
     if (field === 'image_url') setImageFailed(false);
+  };
+
+  const selectedOwnerId = form.owner_member_id || currentMemberId;
+  const selectedOwner = members.find(
+    (candidate) => candidate.id === selectedOwnerId
+  );
+  const isSuggestion =
+    Boolean(form.owner_member_id) &&
+    form.owner_member_id !== currentMemberId;
+
+  const updateOwner = (event) => {
+    const value = event.target.value;
+    setForm((current) => ({
+      ...current,
+      owner_member_id: value === currentMemberId ? '' : value,
+    }));
+    setErrors((current) => ({ ...current, form: undefined }));
   };
 
   const validate = () => {
@@ -197,12 +224,23 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
         image_url: normalizeUrl(form.image_url),
         notes: form.notes.trim(),
         price: form.price.trim(),
+        ownerMemberId: form.owner_member_id || null,
       });
 
       onClose();
     } catch (error) {
       console.error('Could not add the wish:', error);
-      setErrors({ form: t('add.errorGeneric') });
+      const specificError = [
+        'MEMBER_NOT_FOUND',
+        'NOT_APPROVED',
+        'NOT_ALLOWED',
+        'RPC_MISSING',
+      ].includes(error.code);
+      setErrors({
+        form: specificError
+          ? t(`group.errors.${error.code}`)
+          : t('add.errorGeneric'),
+      });
       setSubmitting(false);
     }
   };
@@ -256,6 +294,47 @@ export default function AddWishModal({ open, initial, onClose, onSubmit }) {
             role="alert"
           >
             {errors.form}
+          </div>
+        ) : null}
+
+        {onAmazonImport ? (
+          <button
+            type="button"
+            onClick={onAmazonImport}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-accent/20 bg-accent/10 px-4 py-2.5 text-sm font-semibold text-accent transition hover:bg-accent/20"
+          >
+            <ShoppingBasket className="h-4 w-4" aria-hidden="true" />
+            {t('add.importAmazon')}
+          </button>
+        ) : null}
+
+        {members.length > 1 ? (
+          <div>
+            <label htmlFor="add-owner" className={LABEL_CLASS}>
+              {t('add.forWhom')}
+            </label>
+            <select
+              id="add-owner"
+              value={selectedOwnerId}
+              onChange={updateOwner}
+              className={INPUT_CLASS}
+            >
+              <option value={currentMemberId}>{t('add.forMe')}</option>
+              {members
+                .filter((member) => member.id !== currentMemberId)
+                .map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.displayName}
+                  </option>
+                ))}
+            </select>
+            {isSuggestion ? (
+              <p className="mt-1.5 text-xs leading-relaxed text-subtle">
+                {t('add.suggestionHint', {
+                  name: selectedOwner?.displayName || '',
+                })}
+              </p>
+            ) : null}
           </div>
         ) : null}
 
