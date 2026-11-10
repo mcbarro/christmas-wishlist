@@ -190,6 +190,8 @@ const it = {
   "group.errors.NOT_APPROVED":
     "La tua iscrizione è ancora in attesa di approvazione.",
   "group.errors.NOT_ADMIN": "Solo un amministratore del gruppo può farlo.",
+  "group.errors.CANNOT_REMOVE_SELF":
+    "Non puoi rimuovere te stesso. Usa Esci da questo gruppo.",
   "group.errors.ITEM_NOT_FOUND": "Questo desiderio non esiste più.",
   "group.errors.OWN_ITEM": "Non puoi prenotare un tuo desiderio.",
   "group.errors.ALREADY_RESERVED":
@@ -231,6 +233,16 @@ const it = {
     "Invia il link in privato. Funziona una sola volta: dopo l'accesso non può più essere usato.",
   "members.inviteCreated": "Invito monouso per {name} creato.",
   "members.inviteCopy": "Copia link",
+  "members.manageTitle": "Membri",
+  "members.manageDescription": "Rimuovi un membro da questo gruppo.",
+  "members.remove": "Rimuovi",
+  "members.removeAria": "Rimuovi {name} dal gruppo",
+  "members.removeConfirmShort": "Rimuovere?",
+  "members.removeCancel": "Annulla",
+  "members.removeHint":
+    "Il membro perde subito l'accesso. I suoi desideri e le idee restano nel gruppo.",
+  "members.removed": "{name} è stato rimosso dal gruppo.",
+  "members.adminBadge": "Admin",
 
   "session.open": "Apri sessione",
   "session.title": "La tua sessione",

@@ -5,6 +5,7 @@ import {
   Inbox,
   Loader2,
   Trash2,
+  UserMinus,
   UserPlus,
   X,
 } from 'lucide-react';
@@ -12,6 +13,7 @@ import CopyLinkButton from './CopyLinkButton';
 import Modal from './Modal';
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
+import { getMemberColor, getMemberInitial } from '../lib/memberColor';
 
 const INPUT_CLASS =
   'w-full min-w-0 rounded-xl border border-line bg-field px-3.5 py-2.5 text-sm text-ink placeholder:text-subtle outline-none transition focus:border-accent/60 focus:bg-panel focus:ring-2 focus:ring-accent/20';
@@ -20,12 +22,15 @@ export default function InboxModal({
   open,
   onClose,
   pendingMembers,
+  members = [],
+  currentMemberId,
   notifications,
   isAdmin,
   onApprove,
   onReject,
   onMarkRead,
   onCreateInvite,
+  onRemoveMember,
 }) {
   const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState('notifications');
@@ -35,6 +40,9 @@ export default function InboxModal({
   const [inviteBusy, setInviteBusy] = useState(false);
   const [inviteError, setInviteError] = useState('');
   const [inviteResult, setInviteResult] = useState(null);
+  const [removeConfirmId, setRemoveConfirmId] = useState('');
+  const [removeBusyId, setRemoveBusyId] = useState('');
+  const [removeError, setRemoveError] = useState('');
   const markedRef = useRef(false);
   const wasOpenRef = useRef(false);
 
@@ -59,6 +67,9 @@ export default function InboxModal({
     setInviteBusy(false);
     setInviteError('');
     setInviteResult(null);
+    setRemoveConfirmId('');
+    setRemoveBusyId('');
+    setRemoveError('');
     markedRef.current = false;
   }, [open, isAdmin, pendingMembers.length]);
 
@@ -113,6 +124,21 @@ export default function InboxModal({
       setInviteError(error.code || 'UNKNOWN');
     } finally {
       setInviteBusy(false);
+    }
+  };
+
+  const handleRemoveMember = async (member) => {
+    if (!onRemoveMember || removeBusyId) return;
+    setRemoveBusyId(member.id);
+    setRemoveError('');
+
+    try {
+      await onRemoveMember(member);
+      setRemoveConfirmId('');
+    } catch (error) {
+      setRemoveError(error.code || 'UNKNOWN');
+    } finally {
+      setRemoveBusyId('');
     }
   };
 
@@ -338,6 +364,120 @@ export default function InboxModal({
                 );
               })
             )}
+
+            {onRemoveMember && members.length > 0 ? (
+              <div className="rounded-2xl border border-line bg-surface p-4">
+                <h3 className="text-sm font-semibold text-ink">
+                  {t('members.manageTitle')}
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  {t('members.manageDescription')}
+                </p>
+
+                <div className="mt-3 space-y-1.5">
+                  {members.map((member) => {
+                    const color = getMemberColor(member.id);
+                    const isCurrent = member.id === currentMemberId;
+                    const confirming = removeConfirmId === member.id;
+                    const isBusy = removeBusyId === member.id;
+
+                    return (
+                      <div
+                        key={member.id}
+                        className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-field px-2.5 py-2"
+                      >
+                        <span
+                          className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] font-bold"
+                          style={{
+                            backgroundColor: color.background,
+                            color: color.foreground,
+                          }}
+                          aria-hidden="true"
+                        >
+                          {getMemberInitial(member.displayName)}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ink">
+                          {member.displayName}
+                          {isCurrent ? ` (${t('members.you')})` : ''}
+                        </span>
+                        {member.isAdmin ? (
+                          <span className="rounded-full border border-accent/20 bg-accent/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-accent">
+                            {t('members.adminBadge')}
+                          </span>
+                        ) : null}
+
+                        {confirming ? (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[11px] font-semibold text-danger">
+                              {t('members.removeConfirmShort')}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMember(member)}
+                              disabled={isBusy}
+                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-danger/20 bg-danger/10 px-2 text-[11px] font-semibold text-danger transition hover:bg-danger/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {isBusy ? (
+                                <Loader2
+                                  className="h-3.5 w-3.5 animate-spin"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <UserMinus
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              {t('members.remove')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setRemoveConfirmId('')}
+                              disabled={isBusy}
+                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-line bg-surface px-2 text-[11px] font-semibold text-muted transition hover:bg-surface-strong hover:text-ink disabled:opacity-60"
+                            >
+                              <X className="h-3.5 w-3.5" aria-hidden="true" />
+                              {t('members.removeCancel')}
+                            </button>
+                          </div>
+                        ) : isCurrent ? null : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRemoveConfirmId(member.id);
+                              setRemoveError('');
+                            }}
+                            className="inline-flex h-7 items-center gap-1 rounded-lg border border-danger/20 bg-danger/10 px-2 text-[11px] font-semibold text-danger transition hover:bg-danger/20"
+                            aria-label={t('members.removeAria', {
+                              name: member.displayName,
+                            })}
+                          >
+                            <UserMinus
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
+                            {t('members.remove')}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <p className="mt-2 text-[11px] leading-relaxed text-subtle">
+                  {t('members.removeHint')}
+                </p>
+
+                {removeError ? (
+                  <p
+                    className="mt-2 rounded-xl border border-danger/20 bg-danger/10 px-3 py-2 text-xs text-danger"
+                    role="alert"
+                  >
+                    {t(`group.errors.${removeError}`)}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         ) : null}
 

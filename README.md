@@ -8,6 +8,8 @@ Responsive card grid, closed family groups and native mobile sharing.
 - Admins can pre-create a member and share a one-time invite link, so the
   invited person can enter immediately without waiting for approval; the link
   stops working after the first use.
+- Admins can remove a member, revoking access immediately while keeping the
+  wishes and gift ideas already shared with the group.
 - Join multiple family groups and switch between them from the header.
 - Add wishes manually, share a product link from a phone, import a public
   Amazon wishlist, or save the current page with a desktop bookmarklet.
@@ -90,6 +92,7 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261110060000_one_time_invites.sql`
 - `supabase/migrations/20261110070000_fix_invite_token.sql`
 - `supabase/migrations/20261110080000_item_ratings.sql`
+- `supabase/migrations/20261110090000_member_removal.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -134,7 +137,7 @@ through SECURITY DEFINER functions that validate the group and member secrets:
 - `get_group_items`, `add_item`, `add_items`, `update_item`
 - `reserve_item`, `release_item`, `get_safe_reservations`
 - `get_pending_members`, `approve_member`, `get_group_members`,
-  `create_preapproved_member`, `get_invite`, `claim_invite`
+  `create_preapproved_member`, `get_invite`, `claim_invite`, `remove_member`
 - `delete_item`, `get_notifications`, `mark_notifications_read`
 - `hide_item`, `unhide_item`, `set_item_rating`
 - `get_app_capabilities`
@@ -216,8 +219,23 @@ previews or scanners that only open the URL.
 
 > [!WARNING]
 > The invite link is a credential until it is claimed. Share it only with the
-> intended person. There is currently no member-removal control; if an unused
-> link leaks, create a new member and stop sharing the old link.
+> intended person. If an unused link leaks, remove the invited member from the
+> group and create a new invite.
+
+### Removing a member
+
+An admin can remove a non-admin member from the **Members** section of the
+inbox:
+
+1. Open the inbox bell, then the **Requests** tab.
+2. Find the member under **Members** and click **Remove**.
+3. Confirm the removal.
+
+The member status becomes `removed`, their session secret is replaced and any
+invite token is cleared, so access is revoked immediately. Their reservations,
+hidden items and notifications are deleted. Their wishes and gift ideas stay in
+the group, so the family does not lose the ideas they contributed. Admins cannot
+remove themselves; use **Leave this group** from the profile dialog instead.
 
 ### Privacy of reservations
 
@@ -548,7 +566,8 @@ dialogs, forms and status messages.
 │       ├── 20261110050000_preapproved_members.sql
 │       ├── 20261110060000_one_time_invites.sql
 │       ├── 20261110070000_fix_invite_token.sql
-│       └── 20261110080000_item_ratings.sql
+│       ├── 20261110080000_item_ratings.sql
+│       └── 20261110090000_member_removal.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json

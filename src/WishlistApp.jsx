@@ -92,6 +92,7 @@ export default function WishlistApp() {
     approveMember,
     rejectMember,
     createPreapprovedMember,
+    removeMember,
   } = useGroupWishlist();
   const { canInstall, install } = useInstallPrompt();
 
@@ -438,6 +439,26 @@ export default function WishlistApp() {
     [createPreapprovedMember, baseHref, group, showToast, t]
   );
 
+  const handleRemoveMember = useCallback(
+    async (member) => {
+      try {
+        await removeMember(member.id);
+        showToast(
+          t('members.removed', { name: member.displayName }),
+          'success'
+        );
+      } catch (error) {
+        console.error('Could not remove the member:', error);
+        showToast(
+          t(`group.errors.${error.code || 'UNKNOWN'}`),
+          'error'
+        );
+        throw error;
+      }
+    },
+    [removeMember, showToast, t]
+  );
+
   const handleLeaveDevice = useCallback(() => {
     setSessionOpen(false);
     leaveDevice();
@@ -588,6 +609,8 @@ export default function WishlistApp() {
         open={inboxOpen}
         onClose={() => setInboxOpen(false)}
         pendingMembers={pendingMembers}
+        members={members}
+        currentMemberId={member?.id}
         notifications={notifications}
         isAdmin={member?.isAdmin}
         onApprove={handleApprove}
@@ -596,6 +619,11 @@ export default function WishlistApp() {
         onCreateInvite={
           hasFeature('one_time_invites')
             ? handleCreateInvite
+            : undefined
+        }
+        onRemoveMember={
+          hasFeature('member_removal') && member?.isAdmin
+            ? handleRemoveMember
             : undefined
         }
       />

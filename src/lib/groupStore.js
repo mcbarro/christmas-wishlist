@@ -121,7 +121,7 @@ export class GroupError extends Error {
 }
 
 const DEMO_CAPABILITIES = {
-  schema_version: 6,
+  schema_version: 7,
   features: [
     'suggestions',
     'delete_notifications',
@@ -135,6 +135,7 @@ const DEMO_CAPABILITIES = {
     'preapproved_members',
     'one_time_invites',
     'item_ratings',
+    'member_removal',
   ],
 };
 
@@ -561,6 +562,7 @@ function mapSupabaseError(error) {
     'MEMBER_NOT_PENDING',
     'MEMBER_NOT_FOUND',
     'NOT_ALLOWED',
+    'CANNOT_REMOVE_SELF',
     'INVITE_NOT_FOUND',
     'INVALID_RATING',
     'INVALID_IMPORT',
@@ -1575,6 +1577,53 @@ export async function approveMember({
     p_approve: approve,
   });
   if (data === false) throw new GroupError('MEMBER_NOT_PENDING');
+  return true;
+}
+
+export async function removeMember({ group, session, memberId }) {
+  if (isDemo()) {
+    const state = readDemoState();
+    const admin = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved' &&
+        candidate.is_admin
+    );
+    if (!admin) throw new GroupError('NOT_ADMIN');
+    if (memberId === admin.id) throw new GroupError('CANNOT_REMOVE_SELF');
+
+    const target = state.members.find(
+      (candidate) =>
+        candidate.id === memberId &&
+        candidate.group_id === group.id &&
+        candidate.status !== 'removed'
+    );
+    if (!target) throw new GroupError('MEMBER_NOT_FOUND');
+
+    state.reservations = state.reservations.filter(
+      (reservation) => reservation.reserved_by_member_id !== memberId
+    );
+    state.hidden_items = state.hidden_items.filter(
+      (hidden) => hidden.member_id !== memberId
+    );
+    state.notifications = state.notifications.filter(
+      (notification) => notification.member_id !== memberId
+    );
+
+    target.status = 'removed';
+    target.user_secret = generateSecret();
+    target.invite_token = null;
+    writeDemoState(state);
+    return true;
+  }
+
+  const data = await rpc('remove_member', {
+    p_group_secret: group.groupSecret,
+    p_admin_user_secret: session.userSecret,
+    p_member_id: memberId,
+  });
+  if (data === false) throw new GroupError('MEMBER_NOT_FOUND');
   return true;
 }
 

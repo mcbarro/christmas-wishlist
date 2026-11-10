@@ -188,6 +188,8 @@ const en = {
   "group.errors.NOT_APPROVED":
     "Your membership is still pending approval.",
   "group.errors.NOT_ADMIN": "Only a group admin can do this.",
+  "group.errors.CANNOT_REMOVE_SELF":
+    "You can't remove yourself. Use Leave this group instead.",
   "group.errors.ITEM_NOT_FOUND": "This wish no longer exists.",
   "group.errors.OWN_ITEM": "You cannot reserve your own wish.",
   "group.errors.ALREADY_RESERVED":
@@ -229,6 +231,16 @@ const en = {
     "Send this link privately. It works once: after they join, it can no longer be used.",
   "members.inviteCreated": "One-time invite for {name} created.",
   "members.inviteCopy": "Copy link",
+  "members.manageTitle": "Members",
+  "members.manageDescription": "Remove a member from this group.",
+  "members.remove": "Remove",
+  "members.removeAria": "Remove {name} from the group",
+  "members.removeConfirmShort": "Remove?",
+  "members.removeCancel": "Cancel",
+  "members.removeHint":
+    "The member loses access immediately. Their wishes and gift ideas stay in the group.",
+  "members.removed": "{name} was removed from the group.",
+  "members.adminBadge": "Admin",
 
   "session.open": "Open session",
   "session.title": "Your session",

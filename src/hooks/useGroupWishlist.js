@@ -12,6 +12,7 @@ import {
   loadGroupData,
   markNotificationsRead as markNotificationsReadInStore,
   releaseItem as releaseItemInStore,
+  removeMember as removeMemberInStore,
   reserveItem as reserveItemInStore,
   setItemRating as setItemRatingInStore,
   unhideItem as unhideItemInStore,
@@ -277,6 +278,15 @@ export function useGroupWishlist() {
     [group, session, load]
   );
 
+  const removeMember = useCallback(
+    async (memberId) => {
+      await removeMemberInStore({ group, session, memberId });
+      await load({ quiet: true });
+      return true;
+    },
+    [group, session, load]
+  );
+
   const reload = useCallback(() => load(), [load]);
 
   return {
@@ -301,5 +311,6 @@ export function useGroupWishlist() {
     approveMember,
     rejectMember,
     createPreapprovedMember,
+    removeMember,
   };
 }
