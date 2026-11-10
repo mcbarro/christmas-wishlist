@@ -111,8 +111,7 @@ export default function ChristmasDecor() {
       canvas.style.height = `${height}px`;
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
       resetSnow();
-
-      if (reduceMotion) draw();
+      draw();
     };
 
     const tick = (time) => {
