@@ -192,6 +192,8 @@ const it = {
   "group.errors.NOT_ADMIN": "Solo un amministratore del gruppo può farlo.",
   "group.errors.CANNOT_REMOVE_SELF":
     "Non puoi rimuovere te stesso. Usa Esci da questo gruppo.",
+  "group.errors.CANNOT_REINVITE_SELF":
+    "Non puoi rigenerare il tuo link da qui. Copia il link personale dal profilo.",
   "group.errors.ITEM_NOT_FOUND": "Questo desiderio non esiste più.",
   "group.errors.OWN_ITEM": "Non puoi prenotare un tuo desiderio.",
   "group.errors.ALREADY_RESERVED":
@@ -243,6 +245,14 @@ const it = {
     "Il membro perde subito l'accesso. I suoi desideri e le idee restano nel gruppo.",
   "members.removed": "{name} è stato rimosso dal gruppo.",
   "members.adminBadge": "Admin",
+  "members.reissue": "Nuovo link",
+  "members.reissueAria": "Genera un nuovo link per {name}",
+  "members.reissueConfirmShort": "Nuovo link?",
+  "members.reissueHint":
+    "Generando un nuovo link il membro viene disconnesso e il link precedente non vale più.",
+  "members.reissueLinkTitle": "Nuovo link monouso per {name}",
+  "members.reissueLinkHint":
+    "Invialo in privato. Il link precedente e le sessioni attive non funzionano più.",
 
   "session.open": "Apri sessione",
   "session.title": "La tua sessione",

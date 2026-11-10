@@ -13,6 +13,7 @@ import {
   markNotificationsRead as markNotificationsReadInStore,
   releaseItem as releaseItemInStore,
   removeMember as removeMemberInStore,
+  reissueInvite as reissueInviteInStore,
   reserveItem as reserveItemInStore,
   setItemRating as setItemRatingInStore,
   unhideItem as unhideItemInStore,
@@ -287,6 +288,19 @@ export function useGroupWishlist() {
     [group, session, load]
   );
 
+  const reissueInvite = useCallback(
+    async (memberId) => {
+      const result = await reissueInviteInStore({
+        group,
+        session,
+        memberId,
+      });
+      await load({ quiet: true });
+      return result;
+    },
+    [group, session, load]
+  );
+
   const reload = useCallback(() => load(), [load]);
 
   return {
@@ -312,5 +326,6 @@ export function useGroupWishlist() {
     rejectMember,
     createPreapprovedMember,
     removeMember,
+    reissueInvite,
   };
 }

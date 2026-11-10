@@ -93,6 +93,7 @@ export default function WishlistApp() {
     rejectMember,
     createPreapprovedMember,
     removeMember,
+    reissueInvite,
   } = useGroupWishlist();
   const { canInstall, install } = useInstallPrompt();
 
@@ -459,6 +460,19 @@ export default function WishlistApp() {
     [removeMember, showToast, t]
   );
 
+  const handleReissueInvite = useCallback(
+    async (member) => {
+      const result = await reissueInvite(member.id);
+      const link = buildSessionLink({
+        href: baseHref,
+        groupSecret: group?.groupSecret || '',
+        inviteToken: result.inviteToken,
+      });
+      return { name: result.displayName, link };
+    },
+    [reissueInvite, baseHref, group]
+  );
+
   const handleLeaveDevice = useCallback(() => {
     setSessionOpen(false);
     leaveDevice();
@@ -624,6 +638,11 @@ export default function WishlistApp() {
         onRemoveMember={
           hasFeature('member_removal') && member?.isAdmin
             ? handleRemoveMember
+            : undefined
+        }
+        onReissueInvite={
+          hasFeature('member_reinvite') && member?.isAdmin
+            ? handleReissueInvite
             : undefined
         }
       />

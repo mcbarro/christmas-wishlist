@@ -121,7 +121,7 @@ export class GroupError extends Error {
 }
 
 const DEMO_CAPABILITIES = {
-  schema_version: 7,
+  schema_version: 8,
   features: [
     'suggestions',
     'delete_notifications',
@@ -136,6 +136,7 @@ const DEMO_CAPABILITIES = {
     'one_time_invites',
     'item_ratings',
     'member_removal',
+    'member_reinvite',
   ],
 };
 
@@ -563,6 +564,7 @@ function mapSupabaseError(error) {
     'MEMBER_NOT_FOUND',
     'NOT_ALLOWED',
     'CANNOT_REMOVE_SELF',
+    'CANNOT_REINVITE_SELF',
     'INVITE_NOT_FOUND',
     'INVALID_RATING',
     'INVALID_IMPORT',
@@ -1625,6 +1627,55 @@ export async function removeMember({ group, session, memberId }) {
   });
   if (data === false) throw new GroupError('MEMBER_NOT_FOUND');
   return true;
+}
+
+export async function reissueInvite({ group, session, memberId }) {
+  if (isDemo()) {
+    const state = readDemoState();
+    const admin = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved' &&
+        candidate.is_admin
+    );
+    if (!admin) throw new GroupError('NOT_ADMIN');
+    if (memberId === admin.id) throw new GroupError('CANNOT_REINVITE_SELF');
+
+    const target = state.members.find(
+      (candidate) =>
+        candidate.id === memberId && candidate.group_id === group.id
+    );
+    if (!target) throw new GroupError('MEMBER_NOT_FOUND');
+
+    const inviteToken = generateSecret();
+    target.status = 'invited';
+    target.user_secret = generateSecret();
+    target.invite_token = inviteToken;
+    target.invite_created_at = new Date().toISOString();
+    target.invite_used_at = null;
+    writeDemoState(state);
+
+    return {
+      memberId: target.id,
+      displayName: target.display_name,
+      inviteToken,
+    };
+  }
+
+  const data = await rpc('reissue_invite', {
+    p_group_secret: group.groupSecret,
+    p_admin_user_secret: session.userSecret,
+    p_member_id: memberId,
+  });
+  const row = firstRow(data);
+  if (!row) throw new GroupError('MEMBER_NOT_FOUND');
+
+  return {
+    memberId: row.member_id,
+    displayName: row.display_name,
+    inviteToken: row.invite_token,
+  };
 }
 
 export async function createPreapprovedMember({

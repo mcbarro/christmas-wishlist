@@ -3,6 +3,7 @@ import {
   Bell,
   Check,
   Inbox,
+  Link2,
   Loader2,
   Trash2,
   UserMinus,
@@ -31,6 +32,7 @@ export default function InboxModal({
   onMarkRead,
   onCreateInvite,
   onRemoveMember,
+  onReissueInvite,
 }) {
   const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState('notifications');
@@ -43,6 +45,10 @@ export default function InboxModal({
   const [removeConfirmId, setRemoveConfirmId] = useState('');
   const [removeBusyId, setRemoveBusyId] = useState('');
   const [removeError, setRemoveError] = useState('');
+  const [reissueConfirmId, setReissueConfirmId] = useState('');
+  const [reissueBusyId, setReissueBusyId] = useState('');
+  const [reissueError, setReissueError] = useState('');
+  const [reissueResult, setReissueResult] = useState(null);
   const markedRef = useRef(false);
   const wasOpenRef = useRef(false);
 
@@ -70,6 +76,10 @@ export default function InboxModal({
     setRemoveConfirmId('');
     setRemoveBusyId('');
     setRemoveError('');
+    setReissueConfirmId('');
+    setReissueBusyId('');
+    setReissueError('');
+    setReissueResult(null);
     markedRef.current = false;
   }, [open, isAdmin, pendingMembers.length]);
 
@@ -139,6 +149,22 @@ export default function InboxModal({
       setRemoveError(error.code || 'UNKNOWN');
     } finally {
       setRemoveBusyId('');
+    }
+  };
+
+  const handleReissueInvite = async (member) => {
+    if (!onReissueInvite || reissueBusyId) return;
+    setReissueBusyId(member.id);
+    setReissueError('');
+
+    try {
+      const result = await onReissueInvite(member);
+      setReissueResult(result);
+      setReissueConfirmId('');
+    } catch (error) {
+      setReissueError(error.code || 'UNKNOWN');
+    } finally {
+      setReissueBusyId('');
     }
   };
 
@@ -365,7 +391,7 @@ export default function InboxModal({
               })
             )}
 
-            {onRemoveMember && members.length > 0 ? (
+            {(onRemoveMember || onReissueInvite) && members.length > 0 ? (
               <div className="rounded-2xl border border-line bg-surface p-4">
                 <h3 className="text-sm font-semibold text-ink">
                   {t('members.manageTitle')}
@@ -374,12 +400,44 @@ export default function InboxModal({
                   {t('members.manageDescription')}
                 </p>
 
+                {reissueResult ? (
+                  <div className="mt-3 rounded-xl border border-success/20 bg-success/10 p-3">
+                    <p className="text-sm font-semibold text-success">
+                      {t('members.reissueLinkTitle', {
+                        name: reissueResult.name,
+                      })}
+                    </p>
+                    <p className="mt-1 break-all text-xs leading-relaxed text-muted">
+                      {reissueResult.link}
+                    </p>
+                    <CopyLinkButton
+                      text={reissueResult.link}
+                      label={t('members.inviteCopy')}
+                      className="mt-2 w-full"
+                    />
+                    <p className="mt-1.5 text-xs leading-relaxed text-subtle">
+                      {t('members.reissueLinkHint')}
+                    </p>
+                  </div>
+                ) : null}
+
+                {reissueError ? (
+                  <p
+                    className="mt-3 rounded-xl border border-danger/20 bg-danger/10 px-3 py-2 text-xs text-danger"
+                    role="alert"
+                  >
+                    {t(`group.errors.${reissueError}`)}
+                  </p>
+                ) : null}
+
                 <div className="mt-3 space-y-1.5">
                   {members.map((member) => {
                     const color = getMemberColor(member.id);
                     const isCurrent = member.id === currentMemberId;
-                    const confirming = removeConfirmId === member.id;
-                    const isBusy = removeBusyId === member.id;
+                    const confirmingRemove = removeConfirmId === member.id;
+                    const confirmingReissue = reissueConfirmId === member.id;
+                    const isRemoving = removeBusyId === member.id;
+                    const isReissuing = reissueBusyId === member.id;
 
                     return (
                       <div
@@ -406,7 +464,7 @@ export default function InboxModal({
                           </span>
                         ) : null}
 
-                        {confirming ? (
+                        {confirmingRemove ? (
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span className="text-[11px] font-semibold text-danger">
                               {t('members.removeConfirmShort')}
@@ -414,10 +472,10 @@ export default function InboxModal({
                             <button
                               type="button"
                               onClick={() => handleRemoveMember(member)}
-                              disabled={isBusy}
+                              disabled={isRemoving}
                               className="inline-flex h-7 items-center gap-1 rounded-lg border border-danger/20 bg-danger/10 px-2 text-[11px] font-semibold text-danger transition hover:bg-danger/20 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                              {isBusy ? (
+                              {isRemoving ? (
                                 <Loader2
                                   className="h-3.5 w-3.5 animate-spin"
                                   aria-hidden="true"
@@ -433,7 +491,41 @@ export default function InboxModal({
                             <button
                               type="button"
                               onClick={() => setRemoveConfirmId('')}
-                              disabled={isBusy}
+                              disabled={isRemoving}
+                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-line bg-surface px-2 text-[11px] font-semibold text-muted transition hover:bg-surface-strong hover:text-ink disabled:opacity-60"
+                            >
+                              <X className="h-3.5 w-3.5" aria-hidden="true" />
+                              {t('members.removeCancel')}
+                            </button>
+                          </div>
+                        ) : confirmingReissue ? (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="text-[11px] font-semibold text-accent">
+                              {t('members.reissueConfirmShort')}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleReissueInvite(member)}
+                              disabled={isReissuing}
+                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-accent/20 bg-accent/10 px-2 text-[11px] font-semibold text-accent transition hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              {isReissuing ? (
+                                <Loader2
+                                  className="h-3.5 w-3.5 animate-spin"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <Link2
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              {t('members.reissue')}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setReissueConfirmId('')}
+                              disabled={isReissuing}
                               className="inline-flex h-7 items-center gap-1 rounded-lg border border-line bg-surface px-2 text-[11px] font-semibold text-muted transition hover:bg-surface-strong hover:text-ink disabled:opacity-60"
                             >
                               <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -441,23 +533,48 @@ export default function InboxModal({
                             </button>
                           </div>
                         ) : isCurrent ? null : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setRemoveConfirmId(member.id);
-                              setRemoveError('');
-                            }}
-                            className="inline-flex h-7 items-center gap-1 rounded-lg border border-danger/20 bg-danger/10 px-2 text-[11px] font-semibold text-danger transition hover:bg-danger/20"
-                            aria-label={t('members.removeAria', {
-                              name: member.displayName,
-                            })}
-                          >
-                            <UserMinus
-                              className="h-3.5 w-3.5"
-                              aria-hidden="true"
-                            />
-                            {t('members.remove')}
-                          </button>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {onReissueInvite ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReissueConfirmId(member.id);
+                                  setRemoveConfirmId('');
+                                  setReissueError('');
+                                }}
+                                className="inline-flex h-7 items-center gap-1 rounded-lg border border-accent/20 bg-accent/10 px-2 text-[11px] font-semibold text-accent transition hover:bg-accent/20"
+                                aria-label={t('members.reissueAria', {
+                                  name: member.displayName,
+                                })}
+                              >
+                                <Link2
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                                {t('members.reissue')}
+                              </button>
+                            ) : null}
+                            {onRemoveMember ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setRemoveConfirmId(member.id);
+                                  setReissueConfirmId('');
+                                  setRemoveError('');
+                                }}
+                                className="inline-flex h-7 items-center gap-1 rounded-lg border border-danger/20 bg-danger/10 px-2 text-[11px] font-semibold text-danger transition hover:bg-danger/20"
+                                aria-label={t('members.removeAria', {
+                                  name: member.displayName,
+                                })}
+                              >
+                                <UserMinus
+                                  className="h-3.5 w-3.5"
+                                  aria-hidden="true"
+                                />
+                                {t('members.remove')}
+                              </button>
+                            ) : null}
+                          </div>
                         )}
                       </div>
                     );
@@ -467,6 +584,11 @@ export default function InboxModal({
                 <p className="mt-2 text-[11px] leading-relaxed text-subtle">
                   {t('members.removeHint')}
                 </p>
+                {onReissueInvite ? (
+                  <p className="mt-1 text-[11px] leading-relaxed text-subtle">
+                    {t('members.reissueHint')}
+                  </p>
+                ) : null}
 
                 {removeError ? (
                   <p

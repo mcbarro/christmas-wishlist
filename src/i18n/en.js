@@ -190,6 +190,8 @@ const en = {
   "group.errors.NOT_ADMIN": "Only a group admin can do this.",
   "group.errors.CANNOT_REMOVE_SELF":
     "You can't remove yourself. Use Leave this group instead.",
+  "group.errors.CANNOT_REINVITE_SELF":
+    "You can't regenerate your own link here. Copy your personal link from the profile instead.",
   "group.errors.ITEM_NOT_FOUND": "This wish no longer exists.",
   "group.errors.OWN_ITEM": "You cannot reserve your own wish.",
   "group.errors.ALREADY_RESERVED":
@@ -241,6 +243,14 @@ const en = {
     "The member loses access immediately. Their wishes and gift ideas stay in the group.",
   "members.removed": "{name} was removed from the group.",
   "members.adminBadge": "Admin",
+  "members.reissue": "New link",
+  "members.reissueAria": "Generate a new link for {name}",
+  "members.reissueConfirmShort": "New link?",
+  "members.reissueHint":
+    "Generating a new link signs the member out and invalidates any previous link.",
+  "members.reissueLinkTitle": "New one-time link for {name}",
+  "members.reissueLinkHint":
+    "Send it privately. The previous link and active sessions no longer work.",
 
   "session.open": "Open session",
   "session.title": "Your session",

@@ -10,6 +10,8 @@ Responsive card grid, closed family groups and native mobile sharing.
   stops working after the first use.
 - Admins can remove a member, revoking access immediately while keeping the
   wishes and gift ideas already shared with the group.
+- Admins can reissue a one-time link for a member who lost their link, without
+  losing that member's wishes or suggestions.
 - Join multiple family groups and switch between them from the header.
 - Add wishes manually, share a product link from a phone, import a public
   Amazon wishlist, or save the current page with a desktop bookmarklet.
@@ -93,6 +95,7 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261110070000_fix_invite_token.sql`
 - `supabase/migrations/20261110080000_item_ratings.sql`
 - `supabase/migrations/20261110090000_member_removal.sql`
+- `supabase/migrations/20261110100000_reissue_invites.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -137,7 +140,8 @@ through SECURITY DEFINER functions that validate the group and member secrets:
 - `get_group_items`, `add_item`, `add_items`, `update_item`
 - `reserve_item`, `release_item`, `get_safe_reservations`
 - `get_pending_members`, `approve_member`, `get_group_members`,
-  `create_preapproved_member`, `get_invite`, `claim_invite`, `remove_member`
+  `create_preapproved_member`, `get_invite`, `claim_invite`, `remove_member`,
+  `reissue_invite`
 - `delete_item`, `get_notifications`, `mark_notifications_read`
 - `hide_item`, `unhide_item`, `set_item_rating`
 - `get_app_capabilities`
@@ -236,6 +240,22 @@ invite token is cleared, so access is revoked immediately. Their reservations,
 hidden items and notifications are deleted. Their wishes and gift ideas stay in
 the group, so the family does not lose the ideas they contributed. Admins cannot
 remove themselves; use **Leave this group** from the profile dialog instead.
+
+### Reissuing a lost link
+
+If a member loses their secret link, the admin can generate a new one from the
+**Members** section:
+
+1. Open the inbox bell, then the **Requests** tab.
+2. Next to the member, click **New link** and confirm.
+3. Copy the new one-time link and send it privately.
+
+The member keeps the same row and member id, so their wishes, suggestions and
+reservations stay attached to them. Reissuing replaces the session secret and
+clears any previous invite token: the old link and any active sessions stop
+working immediately. The new link goes through the usual confirmation screen and
+becomes invalid after the first claim. Admins cannot reissue their own link;
+they can copy their personal link from the profile dialog instead.
 
 ### Privacy of reservations
 
@@ -567,7 +587,8 @@ dialogs, forms and status messages.
 │       ├── 20261110060000_one_time_invites.sql
 │       ├── 20261110070000_fix_invite_token.sql
 │       ├── 20261110080000_item_ratings.sql
-│       └── 20261110090000_member_removal.sql
+│       ├── 20261110090000_member_removal.sql
+│       └── 20261110100000_reissue_invites.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json
