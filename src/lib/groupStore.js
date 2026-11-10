@@ -121,7 +121,7 @@ export class GroupError extends Error {
 }
 
 const DEMO_CAPABILITIES = {
-  schema_version: 2,
+  schema_version: 5,
   features: [
     'suggestions',
     'delete_notifications',
@@ -133,6 +133,7 @@ const DEMO_CAPABILITIES = {
     'multi_group',
     'bookmarklet',
     'preapproved_members',
+    'one_time_invites',
   ],
 };
 
@@ -185,15 +186,23 @@ export function parseSessionParams(search) {
   return {
     groupSecret: (params.get('group') || '').trim(),
     userSecret: (params.get('user') || '').trim(),
+    inviteToken: (params.get('invite') || '').trim(),
   };
 }
 
-export function buildSessionLink({ href, groupSecret, userSecret }) {
+export function buildSessionLink({
+  href,
+  groupSecret,
+  userSecret,
+  inviteToken,
+}) {
   const url = new URL(href);
   url.searchParams.delete('group');
   url.searchParams.delete('user');
+  url.searchParams.delete('invite');
   if (groupSecret) url.searchParams.set('group', groupSecret);
   if (userSecret) url.searchParams.set('user', userSecret);
+  if (inviteToken) url.searchParams.set('invite', inviteToken);
   return url.toString();
 }
 
@@ -542,6 +551,7 @@ function mapSupabaseError(error) {
     'MEMBER_NOT_PENDING',
     'MEMBER_NOT_FOUND',
     'NOT_ALLOWED',
+    'INVITE_NOT_FOUND',
     'INVALID_IMPORT',
     'IMPORT_LIMIT',
     'TITLE_REQUIRED',
@@ -592,7 +602,9 @@ function demoSession({ groupSecret, userSecret }) {
       candidate.group_id === group.id &&
       candidate.user_secret === userSecret
   );
-  if (!member) return null;
+  if (!member || !['pending', 'approved'].includes(member.status)) {
+    return null;
+  }
   return { group: mapDemoGroup(group), member: mapDemoMember(member) };
 }
 
@@ -1518,8 +1530,6 @@ export async function createPreapprovedMember({
   const cleanName = trim(displayName);
   if (!cleanName) throw new GroupError('INVALID_NAME');
 
-  const userSecret = generateSecret();
-
   if (isDemo()) {
     const state = readDemoState();
     const admin = state.members.find(
@@ -1531,13 +1541,17 @@ export async function createPreapprovedMember({
     );
     if (!admin) throw new GroupError('NOT_ADMIN');
 
+    const inviteToken = generateSecret();
     const member = {
       id: createId(),
       group_id: group.id,
-      user_secret: userSecret,
+      user_secret: generateSecret(),
       display_name: cleanName,
       is_admin: false,
-      status: 'approved',
+      status: 'invited',
+      invite_token: inviteToken,
+      invite_created_at: new Date().toISOString(),
+      invite_used_at: null,
       created_at: new Date().toISOString(),
     };
     state.members.push(member);
@@ -1546,7 +1560,7 @@ export async function createPreapprovedMember({
     return {
       memberId: member.id,
       displayName: cleanName,
-      userSecret,
+      inviteToken,
     };
   }
 
@@ -1554,7 +1568,6 @@ export async function createPreapprovedMember({
     p_group_secret: group.groupSecret,
     p_admin_user_secret: session.userSecret,
     p_display_name: cleanName,
-    p_user_secret: userSecret,
   });
   const row = firstRow(data);
   if (!row) throw new GroupError('UNKNOWN');
@@ -1562,6 +1575,101 @@ export async function createPreapprovedMember({
   return {
     memberId: row.member_id,
     displayName: row.display_name,
-    userSecret,
+    inviteToken: row.invite_token,
   };
+}
+
+export async function getInviteInfo({ groupSecret, inviteToken }) {
+  if (!groupSecret || !inviteToken) return null;
+
+  if (isDemo()) {
+    const state = readDemoState();
+    const group = state.groups.find(
+      (candidate) => candidate.group_secret === groupSecret
+    );
+    if (!group) return null;
+
+    const member = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.invite_token === inviteToken &&
+        candidate.status === 'invited'
+    );
+    if (!member) return null;
+
+    return {
+      group: mapDemoGroup(group),
+      member: {
+        id: member.id,
+        displayName: member.display_name,
+      },
+      inviteToken,
+    };
+  }
+
+  const data = await rpc('get_invite', {
+    p_group_secret: groupSecret,
+    p_invite_token: inviteToken,
+  });
+  const row = firstRow(data);
+  if (!row) return null;
+
+  return {
+    group: {
+      id: row.group_id,
+      name: row.group_name,
+      groupSecret,
+    },
+    member: {
+      id: row.member_id,
+      displayName: row.display_name,
+    },
+    inviteToken,
+  };
+}
+
+export async function claimInvite({
+  groupSecret,
+  inviteToken,
+  userSecret,
+}) {
+  if (!groupSecret || !inviteToken || !userSecret) {
+    throw new GroupError('INVITE_NOT_FOUND');
+  }
+
+  if (isDemo()) {
+    const state = readDemoState();
+    const group = state.groups.find(
+      (candidate) => candidate.group_secret === groupSecret
+    );
+    if (!group) throw new GroupError('INVITE_NOT_FOUND');
+
+    const member = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.invite_token === inviteToken &&
+        candidate.status === 'invited'
+    );
+    if (!member) throw new GroupError('INVITE_NOT_FOUND');
+
+    member.user_secret = userSecret;
+    member.status = 'approved';
+    member.invite_token = null;
+    member.invite_used_at = new Date().toISOString();
+    writeDemoState(state);
+
+    return {
+      group: mapDemoGroup(group),
+      member: mapDemoMember(member),
+    };
+  }
+
+  const data = await rpc('claim_invite', {
+    p_group_secret: groupSecret,
+    p_invite_token: inviteToken,
+    p_user_secret: userSecret,
+  });
+  const row = firstRow(data);
+  if (!row) throw new GroupError('INVITE_NOT_FOUND');
+  return mapGroupRow(row, groupSecret);
 }

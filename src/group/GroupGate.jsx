@@ -294,6 +294,95 @@ function JoinGroupForm() {
   );
 }
 
+function InviteGate() {
+  const { t } = useI18n();
+  const {
+    inviteInfo,
+    claimInvite,
+    startAddGroup,
+    sessions,
+    resumeCurrentGroup,
+  } = useGroup();
+  const [submitting, setSubmitting] = useState(false);
+  const [localError, setLocalError] = useState('');
+
+  const handleClaim = async () => {
+    if (submitting) return;
+    setLocalError('');
+    setSubmitting(true);
+
+    try {
+      await claimInvite();
+    } catch (error) {
+      setLocalError(error.code || 'UNKNOWN');
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <FormCard
+      icon={Gift}
+      title={t('group.inviteTitle')}
+      description={t('group.inviteDescription', {
+        group: inviteInfo?.group?.name || '',
+      })}
+    >
+      <div className="rounded-2xl border border-line bg-surface-strong px-4 py-3 text-left text-sm">
+        <p className="text-muted">
+          <span className="font-semibold text-ink">{t('group.pendingGroup')}:</span>{' '}
+          {inviteInfo?.group?.name}
+        </p>
+        <p className="mt-1 text-muted">
+          <span className="font-semibold text-ink">{t('group.pendingMember')}:</span>{' '}
+          {inviteInfo?.member?.displayName}
+        </p>
+      </div>
+
+      <p className="mt-4 text-xs leading-relaxed text-subtle">
+        {t('group.inviteSingleUseHint')}
+      </p>
+
+      <div className="mt-4">
+        <ErrorMessage code={localError} />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleClaim}
+        disabled={submitting}
+        className={`${PRIMARY_BUTTON} mt-4 w-full`}
+      >
+        {submitting ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <UserPlus className="h-4 w-4" aria-hidden="true" />
+        )}
+        {submitting ? t('group.inviteJoining') : t('group.inviteJoin')}
+      </button>
+
+      <button
+        type="button"
+        onClick={startAddGroup}
+        className={`${SECONDARY_BUTTON} mt-2 w-full`}
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        {t('group.startNewGroup')}
+      </button>
+
+      {sessions.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => void resumeCurrentGroup()}
+          className={`${SECONDARY_BUTTON} mt-2 w-full`}
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {t('group.backToGroup')}
+        </button>
+      ) : null}
+    </FormCard>
+  );
+}
+
 function PendingApproval() {
   const { t } = useI18n();
   const {
@@ -451,6 +540,7 @@ export default function GroupGate() {
   const {
     status,
     inviteGroup,
+    inviteInfo,
     errorCode,
     fallbackReason,
   } = useGroup();
@@ -461,6 +551,9 @@ export default function GroupGate() {
   else if (status === 'no-group') content = <CreateGroupForm />;
   else if (status === 'join') {
     content = inviteGroup ? <JoinGroupForm /> : <GateLoading />;
+  }
+  else if (status === 'invite') {
+    content = inviteInfo ? <InviteGate /> : <GateLoading />;
   }
   else if (status === 'pending') content = <PendingApproval />;
   else if (status === 'invalid') content = <InvalidGroup errorCode={errorCode} />;

@@ -151,6 +151,13 @@ const en = {
     "The group admin will need to approve your request before you can see the wishes.",
   "group.sessionRevoked":
     "Your previous session is no longer valid. Request access again to rejoin the group.",
+  "group.inviteTitle": "You're invited",
+  "group.inviteDescription":
+    "You've been invited to join “{group}”. Confirm below to enter.",
+  "group.inviteJoin": "Join the group",
+  "group.inviteJoining": "Joining...",
+  "group.inviteSingleUseHint":
+    "This link works only once. After you join it can no longer be used, and this browser keeps your access.",
   "group.startNewGroup": "Start a new group",
   "group.pendingTitle": "Waiting for approval",
   "group.pendingDescription":
@@ -185,6 +192,8 @@ const en = {
   "group.errors.TITLE_REQUIRED": "Enter a name for the gift.",
   "group.errors.SESSION_REVOKED":
     "Your previous session is no longer valid. Request access again.",
+  "group.errors.INVITE_NOT_FOUND":
+    "This invite link has already been used or is no longer valid. Ask the admin for a new one.",
   "group.errors.STORAGE_FAILED":
     "This browser could not save the group data.",
   "group.errors.NETWORK":
@@ -202,18 +211,18 @@ const en = {
   "members.reject": "Reject",
   "members.approved": "Member approved.",
   "members.rejected": "Member request rejected.",
-  "members.preapprovedTitle": "Pre-create a member",
-  "members.preapprovedDescription":
-    "Enter their name and generate a link. They can join immediately, without waiting for approval.",
-  "members.preapprovedNameLabel": "Member name",
-  "members.preapprovedNamePlaceholder": "e.g. Sofia",
-  "members.preapprovedCreate": "Generate link",
-  "members.preapprovedCreating": "Generating...",
-  "members.preapprovedLinkTitle": "Pre-approved link for {name}",
-  "members.preapprovedLinkHint":
-    "Share this link privately. Anyone with it can join as this member.",
-  "members.preapprovedCreated": "Pre-approved member {name} created.",
-  "members.preapprovedCopy": "Copy link",
+  "members.inviteTitle": "Invite a member",
+  "members.inviteDescription":
+    "Enter their name and generate a one-time link. They join immediately the first time they open it, without waiting for approval.",
+  "members.inviteNameLabel": "Member name",
+  "members.inviteNamePlaceholder": "e.g. Sofia",
+  "members.inviteCreate": "Generate link",
+  "members.inviteCreating": "Generating...",
+  "members.inviteLinkTitle": "One-time invite link for {name}",
+  "members.inviteLinkHint":
+    "Send this link privately. It works once: after they join, it can no longer be used.",
+  "members.inviteCreated": "One-time invite for {name} created.",
+  "members.inviteCopy": "Copy link",
 
   "session.open": "Open session",
   "session.title": "Your session",

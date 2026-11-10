@@ -11,6 +11,15 @@ describe('parseSessionParams', () => {
     expect(parseSessionParams('?group=family&user=marco&lang=it')).toEqual({
       groupSecret: 'family',
       userSecret: 'marco',
+      inviteToken: '',
+    });
+  });
+
+  it('reads a one-time invite token from the query string', () => {
+    expect(parseSessionParams('?group=family&invite=token-1')).toEqual({
+      groupSecret: 'family',
+      userSecret: '',
+      inviteToken: 'token-1',
     });
   });
 
@@ -18,6 +27,7 @@ describe('parseSessionParams', () => {
     expect(parseSessionParams('?foo=bar')).toEqual({
       groupSecret: '',
       userSecret: '',
+      inviteToken: '',
     });
   });
 });
@@ -46,6 +56,19 @@ describe('buildSessionLink', () => {
     expect(url.searchParams.get('group')).toBe('group-2');
     expect(url.searchParams.get('user')).toBeNull();
     expect(url.searchParams.get('lang')).toBe('it');
+  });
+
+  it('builds a one-time invite link without a user secret', () => {
+    const link = buildSessionLink({
+      href: 'https://example.com/christmas-wishlist/?group=old&user=old&invite=old',
+      groupSecret: 'group-3',
+      inviteToken: 'invite-3',
+    });
+
+    const url = new URL(link);
+    expect(url.searchParams.get('group')).toBe('group-3');
+    expect(url.searchParams.get('invite')).toBe('invite-3');
+    expect(url.searchParams.get('user')).toBeNull();
   });
 });
 

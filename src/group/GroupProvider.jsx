@@ -8,6 +8,7 @@ import {
 } from 'react';
 import {
   buildSessionLink,
+  claimInvite as claimInviteInStore,
   clearSchemaProbeCache,
   clearStoredSession,
   clearStoredSessions,
@@ -16,6 +17,7 @@ import {
   generateSecret,
   getCapabilities,
   getGroupBySecret,
+  getInviteInfo,
   getSession,
   GroupError,
   joinGroup as joinGroupInStore,
@@ -38,6 +40,7 @@ function writeSessionToUrl({ groupSecret, userSecret }) {
   else url.searchParams.delete('group');
   if (userSecret) url.searchParams.set('user', userSecret);
   else url.searchParams.delete('user');
+  url.searchParams.delete('invite');
   window.history.replaceState(null, '', url);
 }
 
@@ -46,6 +49,7 @@ function clearSessionFromUrl() {
   const url = new URL(window.location.href);
   url.searchParams.delete('group');
   url.searchParams.delete('user');
+  url.searchParams.delete('invite');
   window.history.replaceState(null, '', url);
 }
 
@@ -77,6 +81,7 @@ export function GroupProvider({ children }) {
   const [session, setSession] = useState(null);
   const [sessions, setSessions] = useState(() => readStoredSessions());
   const [inviteGroup, setInviteGroup] = useState(null);
+  const [inviteInfo, setInviteInfo] = useState(null);
   const [errorCode, setErrorCode] = useState('');
   const [checking, setChecking] = useState(false);
   const [reloadToken, setReloadToken] = useState(0);
@@ -94,6 +99,7 @@ export function GroupProvider({ children }) {
     setMember(null);
     setSession(null);
     setInviteGroup(null);
+    setInviteInfo(null);
     setErrorCode('');
     setStatus(nextStatus);
   }, []);
@@ -110,6 +116,7 @@ export function GroupProvider({ children }) {
       setMember(result.member);
       setSession(nextSession);
       setInviteGroup(null);
+      setInviteInfo(null);
       setStatus(result.member.status === 'approved' ? 'approved' : 'pending');
       setErrorCode('');
 
@@ -203,6 +210,37 @@ export function GroupProvider({ children }) {
       const urlSession = parseSessionParams(window.location.search);
       const storedSessions = readStoredSessions();
       setSessions(storedSessions);
+
+      // A one-time invite always wins, even over saved sessions: the token has
+      // to be resolved explicitly and confirmed before it can be claimed.
+      if (urlSession.groupSecret && urlSession.inviteToken) {
+        try {
+          const info = await getInviteInfo({
+            groupSecret: urlSession.groupSecret,
+            inviteToken: urlSession.inviteToken,
+          });
+          if (cancelled) return;
+
+          if (info) {
+            setInviteInfo(info);
+            setInviteGroup(info.group);
+            setStatus('invite');
+            setErrorCode('');
+            return;
+          }
+
+          setInviteInfo(null);
+          setInviteGroup(null);
+          setStatus('invalid');
+          setErrorCode('INVITE_NOT_FOUND');
+          return;
+        } catch (error) {
+          if (cancelled) return;
+          setStatus('error');
+          setErrorCode(error.code || 'UNKNOWN');
+          return;
+        }
+      }
 
       // A complete personal link always wins and is resolved explicitly.
       if (urlSession.groupSecret && urlSession.userSecret) {
@@ -349,6 +387,20 @@ export function GroupProvider({ children }) {
     [applyResolved, inviteGroup]
   );
 
+  const claimInvite = useCallback(async () => {
+    if (!inviteInfo) throw new GroupError('INVITE_NOT_FOUND');
+
+    const groupSecret = inviteInfo.group.groupSecret;
+    const userSecret = generateSecret();
+    const result = await claimInviteInStore({
+      groupSecret,
+      inviteToken: inviteInfo.inviteToken,
+      userSecret,
+    });
+    applyResolved(result, { groupSecret, userSecret });
+    return result;
+  }, [applyResolved, inviteInfo]);
+
   const refreshSession = useCallback(
     async ({ silent = false } = {}) => {
       if (!session) return null;
@@ -492,6 +544,7 @@ export function GroupProvider({ children }) {
       session,
       sessions,
       inviteGroup,
+      inviteInfo,
       errorCode,
       checking,
       dataMode,
@@ -502,6 +555,7 @@ export function GroupProvider({ children }) {
       groupInviteLink,
       createGroup,
       joinGroup,
+      claimInvite,
       refreshSession,
       switchGroup,
       startAddGroup,
@@ -518,6 +572,7 @@ export function GroupProvider({ children }) {
       session,
       sessions,
       inviteGroup,
+      inviteInfo,
       errorCode,
       checking,
       dataMode,
@@ -528,6 +583,7 @@ export function GroupProvider({ children }) {
       groupInviteLink,
       createGroup,
       joinGroup,
+      claimInvite,
       refreshSession,
       switchGroup,
       startAddGroup,

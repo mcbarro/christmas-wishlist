@@ -153,6 +153,13 @@ const it = {
     "L'amministratore del gruppo dovrà approvare la tua richiesta prima che tu possa vedere i desideri.",
   "group.sessionRevoked":
     "La tua sessione precedente non è più valida. Richiedi di nuovo l'accesso per rientrare nel gruppo.",
+  "group.inviteTitle": "Sei invitato",
+  "group.inviteDescription":
+    "Sei stato invitato a entrare in “{group}”. Conferma qui sotto per accedere.",
+  "group.inviteJoin": "Entra nel gruppo",
+  "group.inviteJoining": "Accesso in corso...",
+  "group.inviteSingleUseHint":
+    "Questo link funziona una sola volta. Dopo l'accesso non può più essere usato e questo browser conserva il tuo accesso.",
   "group.startNewGroup": "Crea un nuovo gruppo",
   "group.pendingTitle": "In attesa di approvazione",
   "group.pendingDescription":
@@ -187,6 +194,8 @@ const it = {
   "group.errors.TITLE_REQUIRED": "Inserisci un nome per il regalo.",
   "group.errors.SESSION_REVOKED":
     "La tua sessione precedente non è più valida. Richiedi di nuovo l'accesso.",
+  "group.errors.INVITE_NOT_FOUND":
+    "Questo link d'invito è già stato usato o non è più valido. Chiedi all'amministratore un nuovo link.",
   "group.errors.STORAGE_FAILED":
     "Questo browser non è riuscito a salvare i dati del gruppo.",
   "group.errors.NETWORK":
@@ -204,18 +213,18 @@ const it = {
   "members.reject": "Rifiuta",
   "members.approved": "Membro approvato.",
   "members.rejected": "Richiesta di accesso rifiutata.",
-  "members.preapprovedTitle": "Pre-crea un membro",
-  "members.preapprovedDescription":
-    "Inserisci il nome e genera un link. Potrà entrare subito, senza attendere l'approvazione.",
-  "members.preapprovedNameLabel": "Nome del membro",
-  "members.preapprovedNamePlaceholder": "es. Sofia",
-  "members.preapprovedCreate": "Genera link",
-  "members.preapprovedCreating": "Generazione...",
-  "members.preapprovedLinkTitle": "Link preapprovato per {name}",
-  "members.preapprovedLinkHint":
-    "Condividi questo link in privato. Chi lo possiede può entrare come questo membro.",
-  "members.preapprovedCreated": "Membro preapprovato {name} creato.",
-  "members.preapprovedCopy": "Copia link",
+  "members.inviteTitle": "Invita un membro",
+  "members.inviteDescription":
+    "Inserisci il nome e genera un link monouso. Entrerà subito la prima volta che lo apre, senza attendere l'approvazione.",
+  "members.inviteNameLabel": "Nome del membro",
+  "members.inviteNamePlaceholder": "es. Sofia",
+  "members.inviteCreate": "Genera link",
+  "members.inviteCreating": "Generazione...",
+  "members.inviteLinkTitle": "Link d'invito monouso per {name}",
+  "members.inviteLinkHint":
+    "Invia il link in privato. Funziona una sola volta: dopo l'accesso non può più essere usato.",
+  "members.inviteCreated": "Invito monouso per {name} creato.",
+  "members.inviteCopy": "Copia link",
 
   "session.open": "Apri sessione",
   "session.title": "La tua sessione",

@@ -369,17 +369,17 @@ export default function WishlistApp() {
     [rejectMember, showToast, t]
   );
 
-  const handleCreatePreapprovedMember = useCallback(
+  const handleCreateInvite = useCallback(
     async (displayName) => {
       const result = await createPreapprovedMember(displayName);
       const link = buildSessionLink({
         href: baseHref,
         groupSecret: group?.groupSecret || '',
-        userSecret: result.userSecret,
+        inviteToken: result.inviteToken,
       });
 
       showToast(
-        t('members.preapprovedCreated', { name: result.displayName }),
+        t('members.inviteCreated', { name: result.displayName }),
         'success'
       );
       return { name: result.displayName, link };
@@ -537,9 +537,9 @@ export default function WishlistApp() {
         onApprove={handleApprove}
         onReject={handleReject}
         onMarkRead={handleMarkNotificationsRead}
-        onCreatePreapproved={
-          hasFeature('preapproved_members')
-            ? handleCreatePreapprovedMember
+        onCreateInvite={
+          hasFeature('one_time_invites')
+            ? handleCreateInvite
             : undefined
         }
       />

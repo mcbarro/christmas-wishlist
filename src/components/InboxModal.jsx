@@ -25,7 +25,7 @@ export default function InboxModal({
   onApprove,
   onReject,
   onMarkRead,
-  onCreatePreapproved,
+  onCreateInvite,
 }) {
   const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState('notifications');
@@ -94,7 +94,7 @@ export default function InboxModal({
 
   const handleCreateInvite = async (event) => {
     event.preventDefault();
-    if (!onCreatePreapproved || inviteBusy) return;
+    if (!onCreateInvite || inviteBusy) return;
 
     const name = inviteName.trim();
     if (!name) {
@@ -106,7 +106,7 @@ export default function InboxModal({
     setInviteError('');
 
     try {
-      const result = await onCreatePreapproved(name);
+      const result = await onCreateInvite(name);
       setInviteResult(result);
       setInviteName('');
     } catch (error) {
@@ -194,13 +194,13 @@ export default function InboxModal({
             aria-labelledby="inbox-requests-tab"
             className="space-y-3"
           >
-            {onCreatePreapproved ? (
+            {onCreateInvite ? (
               <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4">
                 <h3 className="text-sm font-semibold text-ink">
-                  {t('members.preapprovedTitle')}
+                  {t('members.inviteTitle')}
                 </h3>
                 <p className="mt-1 text-xs leading-relaxed text-muted">
-                  {t('members.preapprovedDescription')}
+                  {t('members.inviteDescription')}
                 </p>
 
                 <form
@@ -214,8 +214,8 @@ export default function InboxModal({
                       setInviteName(event.target.value);
                       setInviteError('');
                     }}
-                    placeholder={t('members.preapprovedNamePlaceholder')}
-                    aria-label={t('members.preapprovedNameLabel')}
+                    placeholder={t('members.inviteNamePlaceholder')}
+                    aria-label={t('members.inviteNameLabel')}
                     className={INPUT_CLASS}
                     disabled={inviteBusy}
                   />
@@ -233,8 +233,8 @@ export default function InboxModal({
                       <UserPlus className="h-4 w-4" aria-hidden="true" />
                     )}
                     {inviteBusy
-                      ? t('members.preapprovedCreating')
-                      : t('members.preapprovedCreate')}
+                      ? t('members.inviteCreating')
+                      : t('members.inviteCreate')}
                   </button>
                 </form>
 
@@ -250,7 +250,7 @@ export default function InboxModal({
                 {inviteResult ? (
                   <div className="mt-3 rounded-xl border border-success/20 bg-success/10 p-3">
                     <p className="text-sm font-semibold text-success">
-                      {t('members.preapprovedLinkTitle', {
+                      {t('members.inviteLinkTitle', {
                         name: inviteResult.name,
                       })}
                     </p>
@@ -259,11 +259,11 @@ export default function InboxModal({
                     </p>
                     <CopyLinkButton
                       text={inviteResult.link}
-                      label={t('members.preapprovedCopy')}
+                      label={t('members.inviteCopy')}
                       className="mt-2 w-full"
                     />
                     <p className="mt-1.5 text-xs leading-relaxed text-subtle">
-                      {t('members.preapprovedLinkHint')}
+                      {t('members.inviteLinkHint')}
                     </p>
                   </div>
                 ) : null}
