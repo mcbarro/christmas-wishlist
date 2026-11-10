@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
+import { getMemberColor } from '../lib/memberColor';
 
 export default function WishCard({
   item,
@@ -40,6 +41,9 @@ export default function WishCard({
   const reservation = item.reservation;
   const reserved = Boolean(reservation?.reserved_by_name);
   const reservedByMe = Boolean(reservation?.is_mine);
+  const ownerColor = item.owner_member_id
+    ? getMemberColor(item.owner_member_id)
+    : null;
 
   const addedByLabel = isSuggestion
     ? isOwnSuggestion
@@ -61,8 +65,11 @@ export default function WishCard({
   return (
     <article
       aria-labelledby={titleId}
-      className="group relative overflow-hidden rounded-3xl border border-line bg-surface shadow-xl shadow-black/5 transition duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-strong animate-fade-up"
-      style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
+      className="group relative overflow-hidden rounded-3xl border-2 border-line bg-surface shadow-xl shadow-black/5 transition duration-300 hover:-translate-y-0.5 hover:bg-surface-strong animate-fade-up"
+      style={{
+        animationDelay: `${Math.min(index, 8) * 45}ms`,
+        borderColor: ownerColor?.background,
+      }}
     >
       <div className="relative overflow-hidden bg-surface-strong">
         {hasImage ? (
@@ -165,20 +172,7 @@ export default function WishCard({
           </p>
         ) : null}
 
-        {isOwnItem ? (
-          <div className="flex items-start gap-2 rounded-xl border border-accent/20 bg-accent/10 px-3 py-2 text-xs leading-relaxed text-muted">
-            <EyeOff
-              className="mt-0.5 h-4 w-4 shrink-0 text-accent"
-              aria-hidden="true"
-            />
-            <span>
-              <span className="font-semibold text-accent">
-                {t('card.yourWish')}
-              </span>{' '}
-              — {t('card.privacyHint')}
-            </span>
-          </div>
-        ) : reserved ? (
+        {isOwnItem ? null : reserved ? (
           <div className="flex items-center justify-between gap-3 rounded-xl border border-success/20 bg-success/10 px-3 py-2">
             <div className="flex min-w-0 items-center gap-2 text-sm text-success">
               <Check className="h-4 w-4 shrink-0" aria-hidden="true" />

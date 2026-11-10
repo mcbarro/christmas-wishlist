@@ -76,8 +76,6 @@ const en = {
   "card.openAria": "View product — {title}",
   "card.imageAlt": "{title} product image",
   "card.yourWishBadge": "Your wish",
-  "card.yourWish": "Your wish",
-  "card.privacyHint": "Reservations are hidden here to keep the surprise.",
 
   "add.title": "Add a wish",
   "add.description": "Paste a product link or fill in the details yourself.",

@@ -77,9 +77,6 @@ const it = {
   "card.openAria": "Vedi prodotto — {title}",
   "card.imageAlt": "Immagine del prodotto {title}",
   "card.yourWishBadge": "Il tuo desiderio",
-  "card.yourWish": "Il tuo desiderio",
-  "card.privacyHint":
-    "Le prenotazioni qui sono nascoste per mantenere la sorpresa.",
 
   "add.title": "Aggiungi un desiderio",
   "add.description":
