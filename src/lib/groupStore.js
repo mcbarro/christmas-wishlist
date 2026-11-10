@@ -132,6 +132,7 @@ const DEMO_CAPABILITIES = {
     'hide_items',
     'multi_group',
     'bookmarklet',
+    'preapproved_members',
   ],
 };
 
@@ -1507,4 +1508,60 @@ export async function approveMember({
   });
   if (data === false) throw new GroupError('MEMBER_NOT_PENDING');
   return true;
+}
+
+export async function createPreapprovedMember({
+  group,
+  session,
+  displayName,
+}) {
+  const cleanName = trim(displayName);
+  if (!cleanName) throw new GroupError('INVALID_NAME');
+
+  const userSecret = generateSecret();
+
+  if (isDemo()) {
+    const state = readDemoState();
+    const admin = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved' &&
+        candidate.is_admin
+    );
+    if (!admin) throw new GroupError('NOT_ADMIN');
+
+    const member = {
+      id: createId(),
+      group_id: group.id,
+      user_secret: userSecret,
+      display_name: cleanName,
+      is_admin: false,
+      status: 'approved',
+      created_at: new Date().toISOString(),
+    };
+    state.members.push(member);
+    writeDemoState(state);
+
+    return {
+      memberId: member.id,
+      displayName: cleanName,
+      userSecret,
+    };
+  }
+
+  const data = await rpc('create_preapproved_member', {
+    p_group_secret: group.groupSecret,
+    p_admin_user_secret: session.userSecret,
+    p_display_name: cleanName,
+    p_user_secret: userSecret,
+  });
+  const row = firstRow(data);
+  if (!row) throw new GroupError('UNKNOWN');
+
+  return {
+    memberId: row.member_id,
+    displayName: row.display_name,
+    userSecret,
+  };
 }

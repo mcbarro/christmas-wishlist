@@ -204,6 +204,18 @@ const it = {
   "members.reject": "Rifiuta",
   "members.approved": "Membro approvato.",
   "members.rejected": "Richiesta di accesso rifiutata.",
+  "members.preapprovedTitle": "Pre-crea un membro",
+  "members.preapprovedDescription":
+    "Inserisci il nome e genera un link. Potrà entrare subito, senza attendere l'approvazione.",
+  "members.preapprovedNameLabel": "Nome del membro",
+  "members.preapprovedNamePlaceholder": "es. Sofia",
+  "members.preapprovedCreate": "Genera link",
+  "members.preapprovedCreating": "Generazione...",
+  "members.preapprovedLinkTitle": "Link preapprovato per {name}",
+  "members.preapprovedLinkHint":
+    "Condividi questo link in privato. Chi lo possiede può entrare come questo membro.",
+  "members.preapprovedCreated": "Membro preapprovato {name} creato.",
+  "members.preapprovedCopy": "Copia link",
 
   "session.open": "Apri sessione",
   "session.title": "La tua sessione",

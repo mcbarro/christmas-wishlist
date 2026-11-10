@@ -202,6 +202,18 @@ const en = {
   "members.reject": "Reject",
   "members.approved": "Member approved.",
   "members.rejected": "Member request rejected.",
+  "members.preapprovedTitle": "Pre-create a member",
+  "members.preapprovedDescription":
+    "Enter their name and generate a link. They can join immediately, without waiting for approval.",
+  "members.preapprovedNameLabel": "Member name",
+  "members.preapprovedNamePlaceholder": "e.g. Sofia",
+  "members.preapprovedCreate": "Generate link",
+  "members.preapprovedCreating": "Generating...",
+  "members.preapprovedLinkTitle": "Pre-approved link for {name}",
+  "members.preapprovedLinkHint":
+    "Share this link privately. Anyone with it can join as this member.",
+  "members.preapprovedCreated": "Pre-approved member {name} created.",
+  "members.preapprovedCopy": "Copy link",
 
   "session.open": "Open session",
   "session.title": "Your session",

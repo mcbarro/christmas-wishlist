@@ -8,9 +8,13 @@ import {
   UserPlus,
   X,
 } from 'lucide-react';
+import CopyLinkButton from './CopyLinkButton';
 import Modal from './Modal';
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
+
+const INPUT_CLASS =
+  'w-full min-w-0 rounded-xl border border-line bg-field px-3.5 py-2.5 text-sm text-ink placeholder:text-subtle outline-none transition focus:border-accent/60 focus:bg-panel focus:ring-2 focus:ring-accent/20';
 
 export default function InboxModal({
   open,
@@ -21,11 +25,16 @@ export default function InboxModal({
   onApprove,
   onReject,
   onMarkRead,
+  onCreatePreapproved,
 }) {
   const { t, locale } = useI18n();
   const [activeTab, setActiveTab] = useState('notifications');
   const [busyId, setBusyId] = useState('');
   const [errorCode, setErrorCode] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteBusy, setInviteBusy] = useState(false);
+  const [inviteError, setInviteError] = useState('');
+  const [inviteResult, setInviteResult] = useState(null);
   const markedRef = useRef(false);
   const wasOpenRef = useRef(false);
 
@@ -46,6 +55,10 @@ export default function InboxModal({
     );
     setBusyId('');
     setErrorCode('');
+    setInviteName('');
+    setInviteBusy(false);
+    setInviteError('');
+    setInviteResult(null);
     markedRef.current = false;
   }, [open, isAdmin, pendingMembers.length]);
 
@@ -76,6 +89,30 @@ export default function InboxModal({
       setErrorCode(error.code || 'UNKNOWN');
     } finally {
       setBusyId('');
+    }
+  };
+
+  const handleCreateInvite = async (event) => {
+    event.preventDefault();
+    if (!onCreatePreapproved || inviteBusy) return;
+
+    const name = inviteName.trim();
+    if (!name) {
+      setInviteError('INVALID_NAME');
+      return;
+    }
+
+    setInviteBusy(true);
+    setInviteError('');
+
+    try {
+      const result = await onCreatePreapproved(name);
+      setInviteResult(result);
+      setInviteName('');
+    } catch (error) {
+      setInviteError(error.code || 'UNKNOWN');
+    } finally {
+      setInviteBusy(false);
     }
   };
 
@@ -157,6 +194,82 @@ export default function InboxModal({
             aria-labelledby="inbox-requests-tab"
             className="space-y-3"
           >
+            {onCreatePreapproved ? (
+              <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4">
+                <h3 className="text-sm font-semibold text-ink">
+                  {t('members.preapprovedTitle')}
+                </h3>
+                <p className="mt-1 text-xs leading-relaxed text-muted">
+                  {t('members.preapprovedDescription')}
+                </p>
+
+                <form
+                  onSubmit={handleCreateInvite}
+                  className="mt-3 flex flex-col gap-2 sm:flex-row"
+                >
+                  <input
+                    type="text"
+                    value={inviteName}
+                    onChange={(event) => {
+                      setInviteName(event.target.value);
+                      setInviteError('');
+                    }}
+                    placeholder={t('members.preapprovedNamePlaceholder')}
+                    aria-label={t('members.preapprovedNameLabel')}
+                    className={INPUT_CLASS}
+                    disabled={inviteBusy}
+                  />
+                  <button
+                    type="submit"
+                    disabled={inviteBusy || !inviteName.trim()}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-accent/20 bg-accent/10 px-3.5 py-2.5 text-sm font-semibold text-accent transition hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {inviteBusy ? (
+                      <Loader2
+                        className="h-4 w-4 animate-spin"
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <UserPlus className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    {inviteBusy
+                      ? t('members.preapprovedCreating')
+                      : t('members.preapprovedCreate')}
+                  </button>
+                </form>
+
+                {inviteError ? (
+                  <p
+                    className="mt-2 rounded-xl border border-danger/20 bg-danger/10 px-3 py-2 text-xs text-danger"
+                    role="alert"
+                  >
+                    {t(`group.errors.${inviteError}`)}
+                  </p>
+                ) : null}
+
+                {inviteResult ? (
+                  <div className="mt-3 rounded-xl border border-success/20 bg-success/10 p-3">
+                    <p className="text-sm font-semibold text-success">
+                      {t('members.preapprovedLinkTitle', {
+                        name: inviteResult.name,
+                      })}
+                    </p>
+                    <p className="mt-1 break-all text-xs leading-relaxed text-muted">
+                      {inviteResult.link}
+                    </p>
+                    <CopyLinkButton
+                      text={inviteResult.link}
+                      label={t('members.preapprovedCopy')}
+                      className="mt-2 w-full"
+                    />
+                    <p className="mt-1.5 text-xs leading-relaxed text-subtle">
+                      {t('members.preapprovedLinkHint')}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             {pendingMembers.length === 0 ? (
               <div className="flex flex-col items-center rounded-2xl border border-dashed border-line bg-surface px-5 py-10 text-center">
                 <UserPlus className="h-8 w-8 text-subtle" aria-hidden="true" />

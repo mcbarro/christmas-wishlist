@@ -5,6 +5,8 @@ Pinterest-style masonry layout, closed family groups and native mobile sharing.
 
 - No sign-up, no email and no password.
 - Closed family groups with invite links and admin approval of new members.
+- Admins can pre-create a member and share a pre-approved join link, so the
+  invited person can enter immediately without waiting for approval.
 - Join multiple family groups and switch between them from the header.
 - Add wishes manually, share a product link from a phone, import a public
   Amazon wishlist, or save the current page with a desktop bookmarklet.
@@ -77,6 +79,7 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261110020000_delete_and_notifications.sql`
 - `supabase/migrations/20261110030000_bulk_import_and_capabilities.sql`
 - `supabase/migrations/20261110040000_edit_and_hidden_items.sql`
+- `supabase/migrations/20261110050000_preapproved_members.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -120,7 +123,8 @@ through SECURITY DEFINER functions that validate the group and member secrets:
 - `create_group`, `join_group`, `get_session`, `get_group_by_secret`
 - `get_group_items`, `add_item`, `add_items`, `update_item`
 - `reserve_item`, `release_item`, `get_safe_reservations`
-- `get_pending_members`, `approve_member`, `get_group_members`
+- `get_pending_members`, `approve_member`, `get_group_members`,
+  `create_preapproved_member`
 - `delete_item`, `get_notifications`, `mark_notifications_read`
 - `hide_item`, `unhide_item`
 - `get_app_capabilities`
@@ -184,6 +188,23 @@ backwards compatibility.
    tab and chooses **Approve** or **Reject**.
 5. The pending screen checks again automatically every few seconds, or
    immediately with **Check again**.
+
+### Pre-approved member links
+
+An admin can create a member before they join:
+
+1. Open the inbox bell, then the **Requests** tab.
+2. Enter the member name under **Pre-create a member**.
+3. Generate the link and send it privately.
+
+The member row is created already approved, and the generated link is a
+personal link for that member. Opening it logs the invited person in
+immediately, with no pending screen and no approval step.
+
+> [!WARNING]
+> The pre-approved link is a credential: anyone with it can act as that member.
+> Share it only with the intended person. There is currently no member-removal
+> control; if a link leaks, create a new member and stop sharing the old link.
 
 ### Privacy of reservations
 
@@ -489,7 +510,8 @@ consistent across cards, dialogs, forms and status messages.
 │       ├── 20261110010000_suggestions_and_members.sql
 │       ├── 20261110020000_delete_and_notifications.sql
 │       ├── 20261110030000_bulk_import_and_capabilities.sql
-│       └── 20261110040000_edit_and_hidden_items.sql
+│       ├── 20261110040000_edit_and_hidden_items.sql
+│       └── 20261110050000_preapproved_members.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json

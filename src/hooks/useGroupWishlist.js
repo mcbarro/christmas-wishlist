@@ -4,6 +4,7 @@ import {
   addItem as addItemInStore,
   addItems as addItemsInStore,
   approveMember as approveMemberInStore,
+  createPreapprovedMember as createPreapprovedMemberInStore,
   deleteItem as deleteItemInStore,
   DEMO_GROUP_EVENT,
   DEMO_GROUPS_KEY,
@@ -237,6 +238,19 @@ export function useGroupWishlist() {
     [group, session, load]
   );
 
+  const createPreapprovedMember = useCallback(
+    async (displayName) => {
+      const result = await createPreapprovedMemberInStore({
+        group,
+        session,
+        displayName,
+      });
+      await load({ quiet: true });
+      return result;
+    },
+    [group, session, load]
+  );
+
   const reload = useCallback(() => load(), [load]);
 
   return {
@@ -259,5 +273,6 @@ export function useGroupWishlist() {
     releaseItem,
     approveMember,
     rejectMember,
+    createPreapprovedMember,
   };
 }

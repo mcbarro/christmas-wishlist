@@ -20,7 +20,10 @@ import { useGroupWishlist } from './hooks/useGroupWishlist';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { useI18n } from './i18n/I18nProvider';
 import { filterWishes, getPriceBounds } from './lib/filters';
-import { addItem as addItemInStore } from './lib/groupStore';
+import {
+  addItem as addItemInStore,
+  buildSessionLink,
+} from './lib/groupStore';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -63,6 +66,7 @@ export default function WishlistApp() {
     releaseItem,
     approveMember,
     rejectMember,
+    createPreapprovedMember,
   } = useGroupWishlist();
   const { canInstall, install } = useInstallPrompt();
 
@@ -365,6 +369,24 @@ export default function WishlistApp() {
     [rejectMember, showToast, t]
   );
 
+  const handleCreatePreapprovedMember = useCallback(
+    async (displayName) => {
+      const result = await createPreapprovedMember(displayName);
+      const link = buildSessionLink({
+        href: baseHref,
+        groupSecret: group?.groupSecret || '',
+        userSecret: result.userSecret,
+      });
+
+      showToast(
+        t('members.preapprovedCreated', { name: result.displayName }),
+        'success'
+      );
+      return { name: result.displayName, link };
+    },
+    [createPreapprovedMember, baseHref, group, showToast, t]
+  );
+
   const handleLeaveDevice = useCallback(() => {
     setSessionOpen(false);
     leaveDevice();
@@ -515,6 +537,11 @@ export default function WishlistApp() {
         onApprove={handleApprove}
         onReject={handleReject}
         onMarkRead={handleMarkNotificationsRead}
+        onCreatePreapproved={
+          hasFeature('preapproved_members')
+            ? handleCreatePreapprovedMember
+            : undefined
+        }
       />
 
       <DeleteWishModal
