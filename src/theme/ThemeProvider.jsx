@@ -18,7 +18,7 @@ function isTheme(value) {
 }
 
 function getInitialTheme() {
-  if (typeof window === 'undefined') return 'light';
+  if (typeof window === 'undefined') return 'christmas';
 
   try {
     const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
@@ -27,7 +27,7 @@ function getInitialTheme() {
     // Theme persistence is best-effort.
   }
 
-  return 'light';
+  return 'christmas';
 }
 
 function applyTheme(theme) {

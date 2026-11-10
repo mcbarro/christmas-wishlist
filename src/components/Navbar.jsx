@@ -1,6 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Bell,
+  ChevronDown,
   Download,
   Eye,
   EyeOff,
@@ -15,7 +17,6 @@ import {
 import { useI18n } from '../i18n/I18nProvider';
 import BudgetFilter from './BudgetFilter';
 import GroupSwitcher from './GroupSwitcher';
-import LanguageSwitcher from './LanguageSwitcher';
 import MemberFilter from './MemberFilter';
 import ThemeToggle from './ThemeToggle';
 
@@ -57,7 +58,15 @@ export default function Navbar({
   onRefresh,
 }) {
   const { t } = useI18n();
+  const [searchOpen, setSearchOpen] = useState(Boolean(search));
+  const searchRef = useRef(null);
   const inboxCount = (pendingCount || 0) + (unreadCount || 0);
+  const showSearch = searchOpen || Boolean(search);
+
+  useEffect(() => {
+    if (!searchOpen) return;
+    searchRef.current?.focus();
+  }, [searchOpen]);
 
   const groupSwitcher = (
     <GroupSwitcher
@@ -201,9 +210,7 @@ export default function Navbar({
               <UserRound className="h-4 w-4" aria-hidden="true" />
             </button>
 
-            <LanguageSwitcher />
             <ThemeToggle />
-
             <button
               type="button"
               onClick={onAdd}
@@ -218,67 +225,75 @@ export default function Navbar({
 
         <div className="lg:hidden">{groupSwitcher}</div>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <div className="relative min-w-0 flex-1 sm:max-w-md">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder={t('nav.searchPlaceholder')}
-              aria-label={t('nav.searchLabel')}
-              autoComplete="off"
-              enterKeyHint="search"
-              className="w-full rounded-xl border border-line bg-field py-2.5 pl-9 pr-9 text-sm text-ink placeholder:text-subtle outline-none transition focus:border-accent/60 focus:bg-panel focus:ring-2 focus:ring-accent/20"
-            />
-            {search ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {showSearch ? (
+            <div className="relative min-w-[13rem] flex-1 sm:max-w-md">
+              <Search
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
+                aria-hidden="true"
+              />
+              <input
+                ref={searchRef}
+                type="search"
+                value={search}
+                onChange={(event) => onSearchChange(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Escape') {
+                    onSearchChange('');
+                    setSearchOpen(false);
+                  }
+                }}
+                onBlur={(event) => {
+                  if (!event.currentTarget.value) setSearchOpen(false);
+                }}
+                placeholder={t('nav.searchPlaceholder')}
+                aria-label={t('nav.searchLabel')}
+                autoComplete="off"
+                enterKeyHint="search"
+                className="w-full rounded-xl border border-line bg-field py-2 pl-9 pr-9 text-sm text-ink placeholder:text-subtle outline-none transition focus:border-accent/60 focus:bg-panel focus:ring-2 focus:ring-accent/20"
+              />
               <button
                 type="button"
-                onClick={() => onSearchChange('')}
+                onClick={() => {
+                  onSearchChange('');
+                  setSearchOpen(false);
+                }}
                 className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-subtle transition hover:bg-surface-strong hover:text-ink"
                 aria-label={t('nav.clearSearch')}
               >
                 <X className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
-            ) : null}
-          </div>
-
-          <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-0.5">
-            <div
-              className="flex items-center gap-1.5"
-              role="group"
-              aria-label={t('nav.filterLabel')}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+              aria-label={t('nav.searchLabel')}
+              title={t('nav.searchLabel')}
             >
-              {filters.map((entry) => {
-                const selected = filter === entry.id;
-                return (
-                  <button
-                    key={entry.id}
-                    type="button"
-                    onClick={() => onFilterChange(entry.id)}
-                    aria-pressed={selected}
-                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
-                      selected
-                        ? 'border-line-strong bg-ink text-page'
-                        : 'border-line bg-surface text-muted hover:bg-surface-strong hover:text-ink'
-                    }`}
-                  >
-                    {entry.label}
-                    <span
-                      className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                        selected
-                          ? 'bg-page/15 text-page'
-                          : 'bg-surface-strong text-subtle'
-                      }`}
-                    >
-                      {entry.count}
-                    </span>
-                  </button>
-                );
-              })}
+              <Search className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+
+          <div className="no-scrollbar flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto pb-0.5 sm:flex-none">
+            <div className="relative shrink-0">
+              <select
+                value={filter}
+                onChange={(event) => onFilterChange(event.target.value)}
+                aria-label={t('nav.filterLabel')}
+                className="appearance-none rounded-full border border-line bg-surface py-1.5 pl-3 pr-8 text-xs font-semibold text-ink outline-none transition hover:bg-surface-strong focus:border-accent/60 focus:ring-2 focus:ring-accent/20"
+              >
+                {filters.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.label} ({entry.count})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle"
+                aria-hidden="true"
+              />
             </div>
 
             <BudgetFilter
@@ -352,14 +367,12 @@ export default function Navbar({
         </div>
 
         {members?.length > 1 ? (
-          <div className="border-t border-line/60 pt-2">
-            <MemberFilter
-              members={members}
-              selectedId={memberFilter}
-              currentMemberId={currentMemberId}
-              onSelect={onMemberFilterChange}
-            />
-          </div>
+          <MemberFilter
+            members={members}
+            selectedId={memberFilter}
+            currentMemberId={currentMemberId}
+            onSelect={onMemberFilterChange}
+          />
         ) : null}
       </div>
     </header>

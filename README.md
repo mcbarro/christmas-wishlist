@@ -21,12 +21,14 @@ Responsive card grid, closed family groups and native mobile sharing.
   the wish details on the right.
 - Rate your own wishes from 1 to 5 in 0.5 steps; wishlists are sorted by
   rating, with gift ideas for other members first.
-- Filter by member and by budget range; both filters combine with the search
-  and availability filters.
+- Filter by member and by budget range; the header keeps compact dropdowns for
+  availability and members, and the search field expands from its icon.
 - Hide wishes for your own view and reveal them again with a dedicated toggle.
 - Family sync across devices through Supabase.
-- English and Italian UI, detected from the browser language.
-- Three themes: light, dark and Christmas, with a saved preference.
+- English and Italian UI, detected from the browser language and switchable
+  from the profile dialog.
+- Three themes: light, dark and Christmas. New users start in the Christmas
+  theme, and the choice is saved from then on.
 - Deployable to GitHub Pages with a single push to `main`.
 
 ## Tech stack
@@ -258,9 +260,12 @@ for them.
 
 ### Member filter and budget
 
-- The approved members appear in a dedicated header row with a stable color
+- The approved members appear in a compact header row with a stable color
   derived from the member UUID and an initial.
-- Selecting a member filters by recipient; **Everyone** clears the member filter.
+- **Everyone** clears the member filter; the dropdown next to it lists the
+  approved members with their color and initial.
+- The availability filter is a dropdown with the same all/available/reserved
+  counts.
 - The budget button opens a min/max slider. You can include wishes without a
   parsable price with the dedicated checkbox.
 - Member, budget, availability and text search all combine with AND.
@@ -424,7 +429,8 @@ custom domains.
 The UI is fully translated into English and Italian.
 
 - The initial language is chosen from `navigator.languages`.
-- The language can be switched with the `EN` / `IT` control in the header.
+- The language can be switched with the `EN` / `IT` control in the profile
+  dialog (the session panel).
 - The choice is stored in `localStorage`.
 - `?lang=it` or `?lang=en` can be used to force a language for testing or for a
   specific shared link.
@@ -435,14 +441,15 @@ in `src/i18n/I18nProvider.jsx`.
 
 ## Theme
 
-The app starts in **light mode**. The theme button cycles through **light →
-dark → Christmas → light**, and the choice is saved in `localStorage` under
-`christmas-wishlist:theme`. The Christmas theme uses the same semantic CSS
-variables with an evergreen/red/gold palette, falling snow that accumulates at
-the bottom of the viewport, strings of lights on the header, cards and dialogs,
-and a subtle semi-transparent Christmas tree in the background. The snow
-animation is disabled for `prefers-reduced-motion`. All three themes stay
-consistent across cards, dialogs, forms and status messages.
+The app starts in the **Christmas** theme when no preference has been saved
+yet. The theme button cycles through **light → dark → Christmas → light**, and
+the choice is saved in `localStorage` under `christmas-wishlist:theme`. The
+Christmas theme uses the same semantic CSS variables with an
+evergreen/red/gold palette, dense falling snow that accumulates at the bottom of
+the viewport, strings of lights on the header, cards and dialogs, and a subtle
+semi-transparent illustrated Christmas tree. The snow animation is disabled for
+`prefers-reduced-motion`. All three themes stay consistent across cards,
+dialogs, forms and status messages.
 
 ## Scripts
 

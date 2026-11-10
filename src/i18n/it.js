@@ -297,6 +297,8 @@ const it = {
   "members.filterLabel": "Filtra per membro",
   "members.filterAll": "Tutti",
   "members.filterBy": "Filtra per {name}",
+  "members.filterChoose": "Scegli membro",
+  "members.filterMenu": "Filtra per membro",
   "members.you": "tu",
 
   "card.ideaFor": "Idea regalo per {name}",

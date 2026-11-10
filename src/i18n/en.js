@@ -294,6 +294,8 @@ const en = {
   "members.filterLabel": "Filter by member",
   "members.filterAll": "Everyone",
   "members.filterBy": "Filter by {name}",
+  "members.filterChoose": "Choose member",
+  "members.filterMenu": "Filter by member",
   "members.you": "you",
 
   "card.ideaFor": "Gift idea for {name}",

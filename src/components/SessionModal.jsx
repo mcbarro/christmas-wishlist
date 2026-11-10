@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { Download, LogOut, Shield, UserRound } from 'lucide-react';
+import { Download, Languages, LogOut, Shield, UserRound } from 'lucide-react';
 import Modal from './Modal';
 import CopyLinkButton from './CopyLinkButton';
+import LanguageSwitcher from './LanguageSwitcher';
 import { useI18n } from '../i18n/I18nProvider';
 
 export default function SessionModal({
@@ -70,6 +71,14 @@ export default function SessionModal({
           {member?.isAdmin
             ? t('session.roleAdmin')
             : t('session.roleMember')}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-surface px-3.5 py-2.5">
+          <span className="inline-flex items-center gap-2 text-xs font-semibold text-muted">
+            <Languages className="h-4 w-4 shrink-0 text-accent" aria-hidden="true" />
+            {t('language.label')}
+          </span>
+          <LanguageSwitcher />
         </div>
 
         <section>
