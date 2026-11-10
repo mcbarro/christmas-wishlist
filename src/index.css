@@ -171,12 +171,14 @@ html[data-theme="christmas"] body {
 }
 
 .christmas-tree {
-  position: absolute;
+  position: fixed;
   right: 2.5vw;
   bottom: -0.5rem;
+  z-index: 20;
   width: min(20rem, 30vw);
-  opacity: 0.13;
-  filter: saturate(0.6) brightness(1.05);
+  opacity: 0.08;
+  pointer-events: none;
+  filter: saturate(0.5) brightness(1.05);
 }
 
 .christmas-tree svg {
@@ -259,7 +261,7 @@ html[data-theme="christmas"] article::after {
   .christmas-tree {
     right: -1.5rem;
     width: 10rem;
-    opacity: 0.1;
+    opacity: 0.06;
   }
 }
 

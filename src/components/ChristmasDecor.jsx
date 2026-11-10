@@ -169,9 +169,11 @@ export default function ChristmasDecor() {
   if (theme !== 'christmas') return null;
 
   return (
-    <div className="christmas-decor" aria-hidden="true">
-      <canvas ref={canvasRef} className="christmas-snow" />
+    <>
+      <div className="christmas-decor" aria-hidden="true">
+        <canvas ref={canvasRef} className="christmas-snow" />
+      </div>
       <ChristmasTree />
-    </div>
+    </>
   );
 }
