@@ -256,7 +256,8 @@ for them.
   boxes in the Christmas theme.
 - The header toggle switches between the card grid and a compact list with a
   preview on the left and details on the right. The grid fills left to right and
-  then moves to the next row. The choice is saved in the browser.
+  then moves to the next row. The choice is saved in the browser; on mobile the
+  initial default is the list view.
 
 ### Member filter and budget
 

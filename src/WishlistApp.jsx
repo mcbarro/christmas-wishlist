@@ -28,17 +28,27 @@ import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const VIEW_STORAGE_KEY = 'christmas-wishlist:view:v1';
+const MOBILE_VIEW_QUERY = '(max-width: 639px)';
+
+function isMobileViewport() {
+  if (typeof window === 'undefined') return false;
+  if (typeof window.matchMedia === 'function') {
+    return window.matchMedia(MOBILE_VIEW_QUERY).matches;
+  }
+  return window.innerWidth < 640;
+}
 
 function readInitialViewMode() {
   if (typeof window === 'undefined') return 'grid';
 
   try {
-    return window.localStorage.getItem(VIEW_STORAGE_KEY) === 'list'
-      ? 'list'
-      : 'grid';
+    const stored = window.localStorage.getItem(VIEW_STORAGE_KEY);
+    if (stored === 'list' || stored === 'grid') return stored;
   } catch {
-    return 'grid';
+    // Fall back to the viewport default when storage is unavailable.
   }
+
+  return isMobileViewport() ? 'list' : 'grid';
 }
 
 export default function WishlistApp() {
