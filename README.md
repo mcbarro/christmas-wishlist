@@ -82,6 +82,7 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261110040000_edit_and_hidden_items.sql`
 - `supabase/migrations/20261110050000_preapproved_members.sql`
 - `supabase/migrations/20261110060000_one_time_invites.sql`
+- `supabase/migrations/20261110070000_fix_invite_token.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -517,7 +518,8 @@ consistent across cards, dialogs, forms and status messages.
 │       ├── 20261110030000_bulk_import_and_capabilities.sql
 │       ├── 20261110040000_edit_and_hidden_items.sql
 │       ├── 20261110050000_preapproved_members.sql
-│       └── 20261110060000_one_time_invites.sql
+│       ├── 20261110060000_one_time_invites.sql
+│       └── 20261110070000_fix_invite_token.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json
