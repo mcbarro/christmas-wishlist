@@ -31,7 +31,7 @@ function GateShell({ children }) {
   const { t } = useI18n();
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="relative z-10 flex min-h-dvh flex-col">
       <header className="safe-top mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-red-700 shadow-lg shadow-rose-950/40">

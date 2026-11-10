@@ -132,14 +132,14 @@ export default function Navbar({
             </span>
           </Link>
 
-          <div className="hidden min-w-0 sm:block">{groupSwitcher}</div>
+          <div className="hidden min-w-0 lg:block">{groupSwitcher}</div>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={onRefresh}
-              className={`hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition hover:brightness-110 md:inline-flex ${status.className}`}
+              className={`hidden items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide transition hover:brightness-110 xl:inline-flex ${status.className}`}
               title={status.title}
               aria-label={`${status.label}: ${t('nav.refresh')}`}
             >
@@ -154,7 +154,7 @@ export default function Navbar({
               <button
                 type="button"
                 onClick={onInstall}
-                className="hidden h-9 w-9 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink sm:grid"
+                className="hidden h-9 w-9 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink lg:grid"
                 aria-label={t('nav.install')}
                 title={t('nav.install')}
               >
@@ -207,12 +207,12 @@ export default function Navbar({
               aria-label={t('nav.add')}
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">{t('nav.add')}</span>
+              <span className="hidden lg:inline">{t('nav.add')}</span>
             </button>
           </div>
         </div>
 
-        <div className="sm:hidden">{groupSwitcher}</div>
+        <div className="lg:hidden">{groupSwitcher}</div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative min-w-0 flex-1 sm:max-w-md">

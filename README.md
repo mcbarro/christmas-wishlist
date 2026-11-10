@@ -391,9 +391,11 @@ in `src/i18n/I18nProvider.jsx`.
 The app starts in **light mode**. The theme button cycles through **light →
 dark → Christmas → light**, and the choice is saved in `localStorage` under
 `christmas-wishlist:theme`. The Christmas theme uses the same semantic CSS
-variables with an evergreen/red/gold palette and a subtle festive background.
-All three themes stay consistent across cards, dialogs, forms and status
-messages.
+variables with an evergreen/red/gold palette, falling snow that accumulates at
+the bottom of the viewport, strings of lights on the header, cards and dialogs,
+and a subtle semi-transparent Christmas tree in the background. The snow
+animation is disabled for `prefers-reduced-motion`. All three themes stay
+consistent across cards, dialogs, forms and status messages.
 
 ## Scripts
 

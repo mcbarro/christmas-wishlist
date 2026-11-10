@@ -61,7 +61,7 @@ export default function WishCard({
   return (
     <article
       aria-labelledby={titleId}
-      className="group overflow-hidden rounded-3xl border border-line bg-surface shadow-xl shadow-black/5 transition duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-strong animate-fade-up"
+      className="group relative overflow-hidden rounded-3xl border border-line bg-surface shadow-xl shadow-black/5 transition duration-300 hover:-translate-y-0.5 hover:border-line-strong hover:bg-surface-strong animate-fade-up"
       style={{ animationDelay: `${Math.min(index, 8) * 45}ms` }}
     >
       <div className="relative overflow-hidden bg-surface-strong">

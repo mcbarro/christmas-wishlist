@@ -371,7 +371,7 @@ export default function WishlistApp() {
   }, [leaveDevice]);
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="relative z-10 flex min-h-dvh flex-col">
       <Navbar
         search={search}
         onSearchChange={setSearch}
