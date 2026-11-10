@@ -17,6 +17,10 @@ Pinterest-style masonry layout, closed family groups and native mobile sharing.
 - Reserve gifts as your approved member identity so nobody buys the same present twice.
 - Reservations on your own wishes are hidden to preserve the surprise.
 - Suggest gift ideas for another member without revealing them to that member.
+- Switch between grid and list view; the list shows a preview on the left and
+  the wish details on the right.
+- Rate your own wishes from 1 to 5 in 0.5 steps; wishlists are sorted by
+  rating, with gift ideas for other members first.
 - Filter by member and by budget range; both filters combine with the search
   and availability filters.
 - Hide wishes for your own view and reveal them again with a dedicated toggle.
@@ -83,6 +87,7 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261110050000_preapproved_members.sql`
 - `supabase/migrations/20261110060000_one_time_invites.sql`
 - `supabase/migrations/20261110070000_fix_invite_token.sql`
+- `supabase/migrations/20261110080000_item_ratings.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -129,7 +134,7 @@ through SECURITY DEFINER functions that validate the group and member secrets:
 - `get_pending_members`, `approve_member`, `get_group_members`,
   `create_preapproved_member`, `get_invite`, `claim_invite`
 - `delete_item`, `get_notifications`, `mark_notifications_read`
-- `hide_item`, `unhide_item`
+- `hide_item`, `unhide_item`, `set_item_rating`
 - `get_app_capabilities`
 
 Two privacy rules are enforced in the database:
@@ -235,6 +240,21 @@ for them.
 - Only the creator can delete the suggestion; the owner and other members
   cannot.
 - The creator can reserve their own suggestion if they want to buy it.
+
+### Wish ratings and list view
+
+- Each wish created for yourself starts with a rating of **2.5** and can be set
+  from **1 to 5** in **0.5** steps.
+- Only the member who created the wish can change its rating; other members see
+  it read-only.
+- Gift ideas created for someone else have no rating. They are always listed
+  before rated wishes; the remaining wishes are sorted from the highest rating
+  to the lowest.
+- The five rating icons are stars in the light and dark themes and small gift
+  boxes in the Christmas theme.
+- The header toggle switches between the masonry grid and a compact list with a
+  preview on the left and details on the right. The choice is saved in the
+  browser.
 
 ### Member filter and budget
 
@@ -519,7 +539,8 @@ consistent across cards, dialogs, forms and status messages.
 │       ├── 20261110040000_edit_and_hidden_items.sql
 │       ├── 20261110050000_preapproved_members.sql
 │       ├── 20261110060000_one_time_invites.sql
-│       └── 20261110070000_fix_invite_token.sql
+│       ├── 20261110070000_fix_invite_token.sql
+│       └── 20261110080000_item_ratings.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json

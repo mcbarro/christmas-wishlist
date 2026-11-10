@@ -121,7 +121,7 @@ export class GroupError extends Error {
 }
 
 const DEMO_CAPABILITIES = {
-  schema_version: 5,
+  schema_version: 6,
   features: [
     'suggestions',
     'delete_notifications',
@@ -134,6 +134,7 @@ const DEMO_CAPABILITIES = {
     'bookmarklet',
     'preapproved_members',
     'one_time_invites',
+    'item_ratings',
   ],
 };
 
@@ -483,6 +484,12 @@ function mapDemoMember(member) {
   };
 }
 
+function normalizeRating(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 2.5;
+  return Math.min(5, Math.max(1, Math.round(numeric * 2) / 2));
+}
+
 function mapItem(row) {
   return {
     id: row.id,
@@ -499,6 +506,7 @@ function mapItem(row) {
     image_url: row.image_url || '',
     notes: row.notes || '',
     price: row.price || '',
+    rating: normalizeRating(row.rating),
     hidden_by_me: Boolean(row.hidden_by_me),
   };
 }
@@ -529,6 +537,8 @@ function mergeItems(items, reservations, memberId) {
       is_own_suggestion: createdById === memberId,
       can_delete: createdById === memberId,
       can_edit: createdById === memberId,
+      can_rate: !isSuggestion && createdById === memberId,
+      rating: isSuggestion ? null : normalizeRating(item.rating),
       hidden_by_me: Boolean(item.hidden_by_me),
       reservation: isOwnItem ? null : reservationsByItem.get(item.id) || null,
     };
@@ -552,6 +562,7 @@ function mapSupabaseError(error) {
     'MEMBER_NOT_FOUND',
     'NOT_ALLOWED',
     'INVITE_NOT_FOUND',
+    'INVALID_RATING',
     'INVALID_IMPORT',
     'IMPORT_LIMIT',
     'TITLE_REQUIRED',
@@ -998,6 +1009,7 @@ export async function addItem({
       image_url: trim(image_url),
       notes: trim(notes),
       price: trim(price),
+      rating: 2.5,
       created_at: new Date().toISOString(),
     };
     state.items.push(item);
@@ -1070,6 +1082,7 @@ export async function addItems({ group, session, items }) {
         image_url: item.image_url,
         notes: item.notes,
         price: item.price,
+        rating: 2.5,
         created_at: new Date().toISOString(),
       });
     }
@@ -1178,6 +1191,49 @@ export async function updateItem({
   const row = firstRow(data);
   if (!row) throw new GroupError('UNKNOWN');
   return mapItem(row);
+}
+
+export async function setItemRating({ group, session, itemId, rating }) {
+  const value = Number(rating);
+
+  if (!Number.isFinite(value) || value < 1 || value > 5 || !Number.isInteger(value * 2)) {
+    throw new GroupError('INVALID_RATING');
+  }
+
+  if (isDemo()) {
+    const state = readDemoState();
+    const currentMember = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!currentMember) throw new GroupError('NOT_APPROVED');
+
+    const item = state.items.find(
+      (candidate) =>
+        candidate.id === itemId && candidate.group_id === group.id
+    );
+    if (!item) throw new GroupError('ITEM_NOT_FOUND');
+
+    const creatorId = item.created_by_member_id || item.owner_member_id;
+    if (creatorId !== currentMember.id || item.owner_member_id !== creatorId) {
+      throw new GroupError('NOT_ALLOWED');
+    }
+
+    item.rating = value;
+    writeDemoState(state);
+    return value;
+  }
+
+  const data = await rpc('set_item_rating', {
+    p_group_secret: group.groupSecret,
+    p_user_secret: session.userSecret,
+    p_item_id: itemId,
+    p_rating: value,
+  });
+  if (data === false) throw new GroupError('NOT_ALLOWED');
+  return value;
 }
 
 export async function hideItem({ group, session, itemId }) {

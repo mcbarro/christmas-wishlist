@@ -77,6 +77,10 @@ const it = {
   "card.openAria": "Vedi prodotto — {title}",
   "card.imageAlt": "Immagine del prodotto {title}",
   "card.yourWishBadge": "Il tuo desiderio",
+  "rating.label": "Voto del desiderio",
+  "rating.value": "{value} su 5",
+  "rating.hint": "Clicca o usa le frecce. Ogni passo vale 0,5.",
+  "rating.error": "Non siamo riusciti a salvare il voto. Riprova.",
 
   "add.title": "Aggiungi un desiderio",
   "add.description":
@@ -181,6 +185,8 @@ const it = {
   "group.errors.INVALID_SECRET":
     "Il link del gruppo o del membro non è valido.",
   "group.errors.INVALID_NAME": "Completa i campi nome richiesti.",
+  "group.errors.INVALID_RATING":
+    "Scegli un voto tra 1 e 5 con passi da 0,5.",
   "group.errors.NOT_APPROVED":
     "La tua iscrizione è ancora in attesa di approvazione.",
   "group.errors.NOT_ADMIN": "Solo un amministratore del gruppo può farlo.",
@@ -430,6 +436,10 @@ const it = {
     "Mostra o nascondi i desideri che hai nascosto per te.",
   "hide.success": "Desiderio nascosto.",
   "unhide.success": "Desiderio di nuovo visibile.",
+
+  "view.label": "Disposizione dei desideri",
+  "view.grid": "Vista a griglia",
+  "view.list": "Vista a lista",
 
   "bookmarklet.title": "Salva questa pagina",
   "bookmarklet.description":

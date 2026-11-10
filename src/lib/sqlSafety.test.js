@@ -18,6 +18,7 @@ const SQL_FILES = [
   'supabase/migrations/20261110050000_preapproved_members.sql',
   'supabase/migrations/20261110060000_one_time_invites.sql',
   'supabase/migrations/20261110070000_fix_invite_token.sql',
+  'supabase/migrations/20261110080000_item_ratings.sql',
   'supabase_schema.sql',
 ];
 

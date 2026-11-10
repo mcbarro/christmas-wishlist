@@ -76,6 +76,10 @@ const en = {
   "card.openAria": "View product — {title}",
   "card.imageAlt": "{title} product image",
   "card.yourWishBadge": "Your wish",
+  "rating.label": "Wish rating",
+  "rating.value": "{value} out of 5",
+  "rating.hint": "Click or use the arrow keys. Each step is 0.5.",
+  "rating.error": "We couldn't save your rating. Please try again.",
 
   "add.title": "Add a wish",
   "add.description": "Paste a product link or fill in the details yourself.",
@@ -179,6 +183,8 @@ const en = {
   "group.errors.INVALID_SECRET":
     "The group or member link is invalid.",
   "group.errors.INVALID_NAME": "Please complete the required name fields.",
+  "group.errors.INVALID_RATING":
+    "Choose a rating between 1 and 5 in steps of 0.5.",
   "group.errors.NOT_APPROVED":
     "Your membership is still pending approval.",
   "group.errors.NOT_ADMIN": "Only a group admin can do this.",
@@ -424,6 +430,10 @@ const en = {
     "Show or hide the wishes you have hidden for yourself.",
   "hide.success": "Wish hidden.",
   "unhide.success": "Wish visible again.",
+
+  "view.label": "Wish layout",
+  "view.grid": "Grid view",
+  "view.list": "List view",
 
   "bookmarklet.title": "Save this page",
   "bookmarklet.description":

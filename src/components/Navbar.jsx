@@ -5,6 +5,8 @@ import {
   Eye,
   EyeOff,
   Gift,
+  LayoutGrid,
+  List,
   Plus,
   Search,
   UserRound,
@@ -48,6 +50,8 @@ export default function Navbar({
   hiddenCount,
   hideFeature,
   onToggleHidden,
+  viewMode,
+  onViewModeChange,
   onInbox,
   onSession,
   onRefresh,
@@ -309,6 +313,41 @@ export default function Navbar({
                 ) : null}
               </button>
             ) : null}
+
+            <div
+              className="flex shrink-0 items-center gap-0.5 rounded-full border border-line bg-surface p-0.5"
+              role="group"
+              aria-label={t('view.label')}
+            >
+              <button
+                type="button"
+                onClick={() => onViewModeChange('grid')}
+                aria-pressed={viewMode !== 'list'}
+                className={`grid h-7 w-7 place-items-center rounded-full transition ${
+                  viewMode !== 'list'
+                    ? 'bg-ink text-page'
+                    : 'text-muted hover:bg-surface-strong hover:text-ink'
+                }`}
+                aria-label={t('view.grid')}
+                title={t('view.grid')}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => onViewModeChange('list')}
+                aria-pressed={viewMode === 'list'}
+                className={`grid h-7 w-7 place-items-center rounded-full transition ${
+                  viewMode === 'list'
+                    ? 'bg-ink text-page'
+                    : 'text-muted hover:bg-surface-strong hover:text-ink'
+                }`}
+                aria-label={t('view.list')}
+                title={t('view.list')}
+              >
+                <List className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </div>
 

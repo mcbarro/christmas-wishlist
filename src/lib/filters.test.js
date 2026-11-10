@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterWishes, getPriceBounds } from './filters';
+import { filterWishes, getPriceBounds, sortWishes } from './filters';
 
 const items = [
   {
@@ -120,6 +120,63 @@ describe('filterWishes', () => {
         showHidden: true,
       }).map((item) => item.id)
     ).toEqual(['a', 'b', 'c', 'hidden']);
+  });
+});
+
+describe('sortWishes', () => {
+  it('puts suggestions first and then sorts by rating descending', () => {
+    const sorted = sortWishes([
+      {
+        id: 'low',
+        rating: 2.5,
+        is_suggestion: false,
+        created_at: '2026-11-10T10:00:00.000Z',
+      },
+      {
+        id: 'suggestion',
+        rating: null,
+        is_suggestion: true,
+        created_at: '2026-11-10T09:00:00.000Z',
+      },
+      {
+        id: 'high',
+        rating: 5,
+        is_suggestion: false,
+        created_at: '2026-11-10T08:00:00.000Z',
+      },
+      {
+        id: 'half',
+        rating: 4.5,
+        is_suggestion: false,
+        created_at: '2026-11-10T11:00:00.000Z',
+      },
+    ]);
+
+    expect(sorted.map((item) => item.id)).toEqual([
+      'suggestion',
+      'high',
+      'half',
+      'low',
+    ]);
+  });
+
+  it('keeps the newest first when ratings are equal', () => {
+    const sorted = sortWishes([
+      {
+        id: 'older',
+        rating: 3,
+        is_suggestion: false,
+        created_at: '2026-11-10T08:00:00.000Z',
+      },
+      {
+        id: 'newer',
+        rating: 3,
+        is_suggestion: false,
+        created_at: '2026-11-10T09:00:00.000Z',
+      },
+    ]);
+
+    expect(sorted.map((item) => item.id)).toEqual(['newer', 'older']);
   });
 });
 

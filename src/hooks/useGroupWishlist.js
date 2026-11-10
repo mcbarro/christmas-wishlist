@@ -13,6 +13,7 @@ import {
   markNotificationsRead as markNotificationsReadInStore,
   releaseItem as releaseItemInStore,
   reserveItem as reserveItemInStore,
+  setItemRating as setItemRatingInStore,
   unhideItem as unhideItemInStore,
   updateItem as updateItemInStore,
 } from '../lib/groupStore';
@@ -144,6 +145,31 @@ export function useGroupWishlist() {
     [group, session, load]
   );
 
+  const setItemRating = useCallback(
+    async (itemId, rating) => {
+      setItems((current) =>
+        current.map((item) =>
+          item.id === itemId ? { ...item, rating } : item
+        )
+      );
+
+      try {
+        const saved = await setItemRatingInStore({
+          group,
+          session,
+          itemId,
+          rating,
+        });
+        await load({ quiet: true });
+        return saved;
+      } catch (error) {
+        await load({ quiet: true });
+        throw error;
+      }
+    },
+    [group, session, load]
+  );
+
   const deleteItem = useCallback(
     async (itemId) => {
       await deleteItemInStore({ group, session, itemId });
@@ -265,6 +291,7 @@ export function useGroupWishlist() {
     addItem,
     addItems,
     updateItem,
+    setItemRating,
     deleteItem,
     hideItem,
     unhideItem,

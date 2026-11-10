@@ -51,6 +51,7 @@ export default function HomePage({
   loading,
   error,
   hasFilters,
+  viewMode,
   onRetry,
   onAdd,
   onClearFilters,
@@ -60,6 +61,8 @@ export default function HomePage({
   onEdit,
   onHide,
   onUnhide,
+  onRate,
+  showRating,
   canHide,
 }) {
   const { t, tn } = useI18n();
@@ -138,12 +141,15 @@ export default function HomePage({
       <h2 className="sr-only">{t('home.wishesTitle')}</h2>
       <WishGrid
         items={items}
+        viewMode={viewMode}
         onReserve={onReserve}
         onRelease={onRelease}
         onDelete={onDelete}
         onEdit={onEdit}
         onHide={onHide}
         onUnhide={onUnhide}
+        onRate={onRate}
+        showRating={showRating}
         canHide={canHide}
       />
     </div>

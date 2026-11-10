@@ -19,13 +19,27 @@ import { useGroup } from './group/GroupProvider';
 import { useGroupWishlist } from './hooks/useGroupWishlist';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { useI18n } from './i18n/I18nProvider';
-import { filterWishes, getPriceBounds } from './lib/filters';
+import { filterWishes, getPriceBounds, sortWishes } from './lib/filters';
 import {
   addItem as addItemInStore,
   buildSessionLink,
 } from './lib/groupStore';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
+
+const VIEW_STORAGE_KEY = 'christmas-wishlist:view:v1';
+
+function readInitialViewMode() {
+  if (typeof window === 'undefined') return 'grid';
+
+  try {
+    return window.localStorage.getItem(VIEW_STORAGE_KEY) === 'list'
+      ? 'list'
+      : 'grid';
+  } catch {
+    return 'grid';
+  }
+}
 
 export default function WishlistApp() {
   const { t } = useI18n();
@@ -58,6 +72,7 @@ export default function WishlistApp() {
     addItem,
     addItems,
     updateItem,
+    setItemRating,
     deleteItem,
     hideItem,
     unhideItem,
@@ -83,6 +98,7 @@ export default function WishlistApp() {
   const [addInitial, setAddInitial] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [showHidden, setShowHidden] = useState(false);
+  const [viewMode, setViewMode] = useState(readInitialViewMode);
   const [amazonOpen, setAmazonOpen] = useState(false);
   const [bookmarkletData, setBookmarkletData] = useState(null);
   const [reservation, setReservation] = useState(null);
@@ -163,15 +179,28 @@ export default function WishlistApp() {
 
   const filteredItems = useMemo(
     () =>
-      filterWishes(items, {
-        memberId: memberFilter,
-        budget,
-        status: filter,
-        query: search,
-        showHidden,
-      }),
+      sortWishes(
+        filterWishes(items, {
+          memberId: memberFilter,
+          budget,
+          status: filter,
+          query: search,
+          showHidden,
+        })
+      ),
     [items, memberFilter, budget, filter, search, showHidden]
   );
+
+  const handleViewModeChange = useCallback((mode) => {
+    const next = mode === 'list' ? 'list' : 'grid';
+    setViewMode(next);
+
+    try {
+      window.localStorage.setItem(VIEW_STORAGE_KEY, next);
+    } catch {
+      // Keep the in-memory preference when storage is unavailable.
+    }
+  }, []);
 
   const hasFilters =
     filter !== 'all' ||
@@ -267,6 +296,18 @@ export default function WishlistApp() {
   const handleRelease = useCallback((item) => {
     setReservation({ item, mode: 'release' });
   }, []);
+
+  const handleRate = useCallback(
+    async (item, rating) => {
+      try {
+        await setItemRating(item.id, rating);
+      } catch (error) {
+        console.error('Could not save the wish rating:', error);
+        showToast(t('rating.error'), 'error');
+      }
+    },
+    [setItemRating, showToast, t]
+  );
 
   const closeReservation = useCallback(() => setReservation(null), []);
   const clearFilters = useCallback(() => {
@@ -425,6 +466,8 @@ export default function WishlistApp() {
         hiddenCount={hiddenCount}
         hideFeature={hasFeature('hide_items')}
         onToggleHidden={() => setShowHidden((current) => !current)}
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
         onInbox={() => setInboxOpen(true)}
         onSession={() => setSessionOpen(true)}
         onRefresh={handleRetry}
@@ -449,11 +492,14 @@ export default function WishlistApp() {
                 loading={loading}
                 error={error}
                 hasFilters={hasFilters}
+                viewMode={viewMode}
                 onRetry={handleRetry}
                 onAdd={openAdd}
                 onClearFilters={clearFilters}
                 onReserve={handleReserve}
                 onRelease={handleRelease}
+                onRate={handleRate}
+                showRating={hasFeature('item_ratings')}
                 onDelete={
                   hasFeature('delete_notifications')
                     ? handleDeleteRequest

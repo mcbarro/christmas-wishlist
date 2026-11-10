@@ -42,6 +42,28 @@ export function filterWishes(
   });
 }
 
+export function sortWishes(items) {
+  return [...(items || [])].sort((first, second) => {
+    const firstSuggestion = Boolean(first.is_suggestion);
+    const secondSuggestion = Boolean(second.is_suggestion);
+
+    if (firstSuggestion !== secondSuggestion) {
+      return firstSuggestion ? -1 : 1;
+    }
+
+    if (!firstSuggestion) {
+      const ratingDifference =
+        (Number(second.rating) || 0) - (Number(first.rating) || 0);
+      if (ratingDifference !== 0) return ratingDifference;
+    }
+
+    return (
+      new Date(second.created_at).getTime() -
+      new Date(first.created_at).getTime()
+    );
+  });
+}
+
 export function getPriceBounds(items) {
   const prices = (items || [])
     .map((item) => parsePriceAmount(item.price))

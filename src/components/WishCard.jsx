@@ -12,6 +12,7 @@ import {
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
 import { getMemberColor } from '../lib/memberColor';
+import RatingControl from './RatingControl';
 import shushIcon from '../assets/shush.svg';
 
 export default function WishCard({
@@ -24,6 +25,9 @@ export default function WishCard({
   onHide,
   onUnhide,
   canHide = false,
+  variant = 'grid',
+  onRate,
+  showRating = false,
 }) {
   const { t, locale } = useI18n();
   const [imageFailed, setImageFailed] = useState(false);
@@ -45,6 +49,10 @@ export default function WishCard({
   const ownerColor = item.owner_member_id
     ? getMemberColor(item.owner_member_id)
     : null;
+  const canRate =
+    showRating && Boolean(item.can_rate) && typeof onRate === 'function';
+  const showItemRating =
+    showRating && !isSuggestion && item.rating != null;
 
   const addedByLabel = isSuggestion
     ? isOwnSuggestion
@@ -63,10 +71,236 @@ export default function WishCard({
     ? t('card.addedOn', { date: relativeDate })
     : '';
 
+  const ratingNode = showItemRating ? (
+    <RatingControl
+      value={item.rating}
+      readOnly={!canRate}
+      compact={variant === 'list'}
+      onChange={canRate ? (value) => onRate(item, value) : undefined}
+    />
+  ) : null;
+
+  const actionButtons = (
+    <>
+      {canUnhide ? (
+        <button
+          type="button"
+          onClick={() => onUnhide(item)}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+          aria-label={t('card.unhideAria', { title: item.title })}
+          title={t('card.unhide')}
+        >
+          <Eye className="h-4 w-4" aria-hidden="true" />
+        </button>
+      ) : null}
+
+      {canHideItem ? (
+        <button
+          type="button"
+          onClick={() => onHide(item)}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+          aria-label={t('card.hideAria', { title: item.title })}
+          title={t('card.hide')}
+        >
+          <EyeOff className="h-4 w-4" aria-hidden="true" />
+        </button>
+      ) : null}
+
+      {canEdit ? (
+        <button
+          type="button"
+          onClick={() => onEdit(item)}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+          aria-label={t('card.editAria', { title: item.title })}
+          title={t('card.edit')}
+        >
+          <Pencil className="h-4 w-4" aria-hidden="true" />
+        </button>
+      ) : null}
+
+      {canDelete ? (
+        <button
+          type="button"
+          onClick={() => onDelete(item)}
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-danger/20 bg-danger/10 text-danger transition hover:bg-danger/20"
+          aria-label={t('card.deleteAria', { title: item.title })}
+          title={t('card.delete')}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+        </button>
+      ) : null}
+    </>
+  );
+
+  if (variant === 'list') {
+    return (
+      <article
+        aria-labelledby={titleId}
+        className="group relative overflow-hidden rounded-2xl border-4 border-line bg-surface shadow-lg shadow-black/5 transition hover:bg-surface-strong animate-fade-up"
+        style={{
+          animationDelay: `${Math.min(index, 8) * 35}ms`,
+          borderColor: ownerColor?.background,
+        }}
+      >
+        <div className="flex gap-3 p-3 sm:gap-4 sm:p-4">
+          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-strong sm:h-28 sm:w-28">
+            {hasImage ? (
+              <img
+                src={item.image_url}
+                alt={t('card.imageAlt', { title: item.title })}
+                loading="lazy"
+                decoding="async"
+                onError={() => setImageFailed(true)}
+                className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(225,29,72,0.24),transparent_60%),radial-gradient(circle_at_70%_80%,rgba(16,185,129,0.16),transparent_60%)]">
+                <Gift className="h-7 w-7 text-subtle" aria-hidden="true" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <h3
+                id={titleId}
+                className="line-clamp-2 font-display text-base font-semibold leading-snug text-ink sm:text-lg"
+              >
+                {item.url ? (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="transition hover:text-accent"
+                  >
+                    {item.title}
+                  </a>
+                ) : (
+                  item.title
+                )}
+              </h3>
+
+              {item.price ? (
+                <span className="mt-0.5 shrink-0 rounded-full border border-price/25 bg-price-bg px-2 py-0.5 text-[11px] font-bold text-price">
+                  {item.price}
+                </span>
+              ) : null}
+            </div>
+
+            {item.notes ? (
+              <p className="line-clamp-2 text-xs leading-relaxed text-muted">
+                {item.notes}
+              </p>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-subtle">
+              {isSuggestion ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-accent">
+                  <Gift className="h-3 w-3" aria-hidden="true" />
+                  {t('card.ideaFor', { name: item.owner_name })}
+                </span>
+              ) : isOwnItem ? (
+                <span className="font-semibold text-accent">
+                  {t('card.yourWishBadge')}
+                </span>
+              ) : reserved ? (
+                <span className="inline-flex items-center gap-1 font-semibold text-success">
+                  <Check className="h-3 w-3" aria-hidden="true" />
+                  {reservedByMe
+                    ? t('card.reservedByYou')
+                    : t('card.reservedBy', {
+                        name: reservation.reserved_by_name,
+                      })}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1">
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-success"
+                    aria-hidden="true"
+                  />
+                  {t('card.available')}
+                </span>
+              )}
+              <span>{addedByLabel}</span>
+              {dateLabel ? (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{dateLabel}</span>
+                </>
+              ) : null}
+              {isHidden ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-warning/20 bg-warning/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-warning">
+                  <EyeOff className="h-2.5 w-2.5" aria-hidden="true" />
+                  {t('card.hiddenBadge')}
+                </span>
+              ) : null}
+            </div>
+
+            {ratingNode ? <div>{ratingNode}</div> : null}
+
+            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+              {!isOwnItem ? (
+                reserved ? (
+                  reservedByMe ? (
+                    <button
+                      type="button"
+                      onClick={() => onRelease(item)}
+                      className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-success/20 bg-success/10 px-2.5 text-xs font-semibold text-success transition hover:bg-success/20"
+                    >
+                      <Undo2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t('card.release')}
+                    </button>
+                  ) : null
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onReserve(item)}
+                    className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-red-500 px-2.5 text-xs font-semibold text-white shadow-md shadow-rose-950/20 transition hover:from-rose-500 hover:to-red-400 active:scale-[0.99]"
+                    aria-label={t('card.reserveAria', { title: item.title })}
+                  >
+                    <Gift className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t('card.reserve')}
+                  </button>
+                )
+              ) : null}
+
+              {item.url ? (
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-8 items-center gap-1 text-xs font-medium text-subtle transition hover:text-accent"
+                  aria-label={t('card.openAria', { title: item.title })}
+                >
+                  <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">{t('card.viewProduct')}</span>
+                </a>
+              ) : null}
+
+              <div className="ml-auto flex items-center gap-1">
+                {actionButtons}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {isSuggestion ? (
+          <img
+            src={shushIcon}
+            alt=""
+            aria-hidden="true"
+            draggable="false"
+            className="pointer-events-none absolute -bottom-6 -right-6 h-24 w-24 select-none opacity-[0.05]"
+          />
+        ) : null}
+      </article>
+    );
+  }
+
   return (
     <article
       aria-labelledby={titleId}
-      className="group relative overflow-hidden rounded-3xl border-2 border-line bg-surface shadow-xl shadow-black/5 transition duration-300 hover:-translate-y-0.5 hover:bg-surface-strong animate-fade-up"
+      className="group relative overflow-hidden rounded-3xl border-4 border-line bg-surface shadow-xl shadow-black/5 transition duration-300 hover:-translate-y-0.5 hover:bg-surface-strong animate-fade-up"
       style={{
         animationDelay: `${Math.min(index, 8) * 45}ms`,
         borderColor: ownerColor?.background,
@@ -167,6 +401,8 @@ export default function WishCard({
           ) : null}
         </div>
 
+        {ratingNode ? <div>{ratingNode}</div> : null}
+
         {isSuggestion && isOwnSuggestion ? (
           <p className="text-xs leading-relaxed text-subtle">
             {t('card.suggestionPrivate', { name: item.owner_name })}
@@ -225,55 +461,7 @@ export default function WishCard({
             <span />
           )}
 
-          <div className="flex items-center gap-1.5">
-            {canUnhide ? (
-              <button
-                type="button"
-                onClick={() => onUnhide(item)}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
-                aria-label={t('card.unhideAria', { title: item.title })}
-                title={t('card.unhide')}
-              >
-                <Eye className="h-4 w-4" aria-hidden="true" />
-              </button>
-            ) : null}
-
-            {canHideItem ? (
-              <button
-                type="button"
-                onClick={() => onHide(item)}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
-                aria-label={t('card.hideAria', { title: item.title })}
-                title={t('card.hide')}
-              >
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-              </button>
-            ) : null}
-
-            {canEdit ? (
-              <button
-                type="button"
-                onClick={() => onEdit(item)}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
-                aria-label={t('card.editAria', { title: item.title })}
-                title={t('card.edit')}
-              >
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-              </button>
-            ) : null}
-
-            {canDelete ? (
-              <button
-                type="button"
-                onClick={() => onDelete(item)}
-                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-danger/20 bg-danger/10 text-danger transition hover:bg-danger/20"
-                aria-label={t('card.deleteAria', { title: item.title })}
-                title={t('card.delete')}
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </button>
-            ) : null}
-          </div>
+          <div className="flex items-center gap-1.5">{actionButtons}</div>
         </div>
       </div>
 
