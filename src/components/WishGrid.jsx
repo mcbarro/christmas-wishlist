@@ -1,6 +1,15 @@
 import WishCard from './WishCard';
 
-export default function WishGrid({ items, onReserve, onRelease, onDelete }) {
+export default function WishGrid({
+  items,
+  onReserve,
+  onRelease,
+  onDelete,
+  onEdit,
+  onHide,
+  onUnhide,
+  canHide,
+}) {
   return (
     <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 2xl:columns-4">
       {items.map((item, index) => (
@@ -11,6 +20,10 @@ export default function WishGrid({ items, onReserve, onRelease, onDelete }) {
             onReserve={onReserve}
             onRelease={onRelease}
             onDelete={onDelete}
+            onEdit={onEdit}
+            onHide={onHide}
+            onUnhide={onUnhide}
+            canHide={canHide}
           />
         </div>
       ))}

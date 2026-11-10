@@ -165,7 +165,7 @@ const it = {
   "group.copyPersonalLink": "Copia link personale",
   "group.checkAgain": "Controlla di nuovo",
   "group.checking": "Controllo...",
-  "group.leaveDevice": "Esci da questo dispositivo",
+  "group.leaveDevice": "Esci da questo gruppo",
   "group.invalidTitle": "Gruppo non trovato",
   "group.errorTitle": "Non siamo riusciti ad aprire il gruppo",
   "group.backToStart": "Torna all'inizio",
@@ -226,8 +226,8 @@ const it = {
     "Condividi questo link con un parente. Entrerà come membro in attesa finché non lo approvi.",
   "session.copyGroupInvite": "Copia link invito",
   "session.leaveHint":
-    "Uscendo rimuovi la sessione da questo browser. Puoi riaprirla con il tuo link personale.",
-  "session.leaveDevice": "Esci da questo dispositivo",
+    "Uscendo rimuovi questa sessione gruppo dal browser. Gli altri gruppi salvati restano disponibili.",
+  "session.leaveDevice": "Esci da questo gruppo",
 
   "share.loadingTitle": "Lettura del link condiviso...",
   "share.loadingDescription":
@@ -371,6 +371,86 @@ const it = {
     "Puoi importare al massimo 100 desideri alla volta.",
   "group.errors.RPC_MISSING":
     "Questa funzione non è ancora disponibile. Riprova dopo l'aggiornamento del database.",
+
+  "groups.switchAria": "Cambia gruppo: {group}",
+  "groups.fallback": "Gruppo",
+  "groups.menuLabel": "Menu gruppi",
+  "groups.yourGroups": "I tuoi gruppi",
+  "groups.addGroup": "Aggiungi un gruppo",
+  "groups.leaveGroup": "Esci da questo gruppo",
+  "groups.leaveAll": "Esci da tutti i gruppi",
+  "group.backToGroup": "Torna al mio gruppo",
+
+  "theme.switchToChristmas": "Passa al tema natalizio",
+
+  "add.editTitle": "Modifica questo desiderio",
+  "add.editDescription":
+    "Aggiorna i dettagli. La modifica è subito visibile al gruppo.",
+  "add.save": "Salva modifiche",
+  "add.saving": "Salvataggio...",
+  "add.updateSuccess": "Desiderio aggiornato.",
+  "add.searchImage": "Cerca immagine",
+  "add.searchImageTitle": "Cerca un'immagine",
+  "add.searchImageHint": "Cerca su Wikimedia Commons per questo regalo.",
+  "add.searchImagePlaceholder": "Cerca immagine",
+  "add.searchingImage": "Ricerca...",
+  "add.imageSearchEmpty": "Nessuna immagine trovata. Prova altre parole.",
+  "add.imageSearchError":
+    "Ricerca immagini non riuscita. Riprova o incolla un URL immagine.",
+  "add.useImage": "Usa immagine: {title}",
+
+  "card.hiddenBadge": "Nascosto",
+  "card.hide": "Nascondi",
+  "card.hideAria": "Nascondi — {title}",
+  "card.unhide": "Mostra di nuovo",
+  "card.unhideAria": "Mostra di nuovo — {title}",
+  "card.edit": "Modifica",
+  "card.editAria": "Modifica — {title}",
+
+  "hidden.toggle": "Nascosti",
+  "hidden.toggleHint":
+    "Mostra o nascondi i desideri che hai nascosto per te.",
+  "hide.success": "Desiderio nascosto.",
+  "unhide.success": "Desiderio di nuovo visibile.",
+
+  "bookmarklet.title": "Salva questa pagina",
+  "bookmarklet.description":
+    "Salva la pagina corrente del browser come desiderio in uno dei tuoi gruppi.",
+  "bookmarklet.loading": "Preparazione della pagina...",
+  "bookmarklet.loadingDescription":
+    "Lettura dei dettagli e caricamento dei gruppi.",
+  "bookmarklet.page": "Pagina",
+  "bookmarklet.group": "Gruppo",
+  "bookmarklet.forWhom": "Per chi è?",
+  "bookmarklet.titleLabel": "Nome del regalo",
+  "bookmarklet.save": "Aggiungi desiderio",
+  "bookmarklet.saving": "Aggiunta...",
+  "bookmarklet.cancel": "Annulla",
+  "bookmarklet.installTitle": "Bookmarklet per desktop",
+  "bookmarklet.installHint":
+    "Trascina questo pulsante nella barra dei preferiti, oppure copia il codice e crea un preferito manualmente.",
+  "bookmarklet.installNote":
+    "Apri il preferito su una pagina prodotto per aggiungerla a un gruppo e scegliere il destinatario.",
+  "bookmarklet.drag": "Aggiungi alla wishlist",
+  "bookmarklet.copy": "Copia bookmarklet",
+  "bookmarklet.saved": "Desiderio aggiunto a {group}.",
+  "bookmarklet.errors.NO_GROUP":
+    "Nessun gruppo salvato disponibile. Unisciti prima a un gruppo.",
+  "bookmarklet.errors.SESSION_REVOKED":
+    "La sessione per questo gruppo non è più valida.",
+  "bookmarklet.errors.NETWORK":
+    "Non siamo riusciti a raggiungere il servizio di sincronizzazione. Controlla la connessione.",
+  "bookmarklet.errors.TITLE_REQUIRED": "Inserisci un nome per il regalo.",
+  "bookmarklet.errors.MEMBER_NOT_FOUND":
+    "Il membro selezionato non è più disponibile.",
+  "bookmarklet.errors.NOT_APPROVED":
+    "La tua iscrizione non è più approvata.",
+  "bookmarklet.errors.NOT_ALLOWED":
+    "Non puoi aggiungere un desiderio a questo gruppo con l'account selezionato.",
+  "bookmarklet.errors.RPC_MISSING":
+    "Questa funzione non è ancora disponibile. Riprova dopo l'aggiornamento del database.",
+  "bookmarklet.errors.UNKNOWN":
+    "Non siamo riusciti a salvare questa pagina. Riprova.",
 
   "common.close": "Chiudi",
   "common.someone": "qualcuno",

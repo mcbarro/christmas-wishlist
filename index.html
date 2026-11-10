@@ -25,8 +25,12 @@
       (function () {
         var theme = 'light';
         try {
-          if (window.localStorage.getItem('christmas-wishlist:theme') === 'dark') {
-            theme = 'dark';
+          var storedTheme = window.localStorage.getItem('christmas-wishlist:theme');
+          if (
+            storedTheme === 'dark' ||
+            storedTheme === 'christmas'
+          ) {
+            theme = storedTheme;
           }
         } catch (error) {
           // localStorage can be unavailable in private browsing modes.
@@ -37,7 +41,11 @@
         if (themeColor) {
           themeColor.setAttribute(
             'content',
-            theme === 'dark' ? '#070b14' : '#f7f3ec'
+            theme === 'dark'
+              ? '#070b14'
+              : theme === 'christmas'
+                ? '#0b3d2e'
+                : '#f7f3ec'
           );
         }
         var statusBar = document.querySelector(

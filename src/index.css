@@ -108,6 +108,52 @@ html[data-theme="dark"] {
   --theme-focus: rgba(251, 113, 133, 0.9);
 }
 
+html[data-theme="christmas"] {
+  color-scheme: light;
+
+  --theme-page: #f7efe0;
+  --theme-header: rgba(247, 239, 224, 0.92);
+  --theme-panel: #fffaf0;
+  --theme-panel-glass: rgba(255, 250, 240, 0.92);
+  --theme-surface: #fffdf7;
+  --theme-surface-strong: #f0e2c8;
+  --theme-field: #fffdf7;
+  --theme-line: #dcc8a4;
+  --theme-line-strong: #c6ab7d;
+  --theme-ink: #1d2a22;
+  --theme-muted: #4f5d51;
+  --theme-subtle: #6b796d;
+  --theme-accent: #0f6b3f;
+  --theme-success: #0f6b3f;
+  --theme-warning: #9a5b08;
+  --theme-danger: #b91c1c;
+  --theme-info: #0f766e;
+  --theme-overlay: rgba(20, 35, 25, 0.46);
+  --theme-price: #8a4b0f;
+  --theme-price-bg: rgba(255, 248, 220, 0.94);
+  --theme-image-shade: rgba(0, 0, 0, 0.25);
+
+  --theme-glow-accent: rgba(15, 107, 63, 0.12);
+  --theme-glow-success: rgba(185, 28, 28, 0.08);
+  --theme-glow-warm: rgba(234, 179, 8, 0.18);
+  --theme-dot: rgba(29, 42, 34, 0.07);
+  --theme-selection: rgba(185, 28, 28, 0.18);
+  --theme-selection-text: #1d2a22;
+  --theme-scroll-track: #efe3cf;
+  --theme-scroll-thumb: rgba(29, 42, 34, 0.24);
+  --theme-scroll-thumb-hover: rgba(29, 42, 34, 0.38);
+  --theme-autofill-bg: #fffdf7;
+  --theme-autofill-text: #1d2a22;
+  --theme-focus: rgba(15, 107, 63, 0.85);
+}
+
+html[data-theme="christmas"] body {
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(185, 28, 28, 0.07), transparent 34%),
+    radial-gradient(circle at 88% 2%, rgba(15, 107, 63, 0.09), transparent 36%),
+    radial-gradient(circle at 50% 100%, rgba(234, 179, 8, 0.08), transparent 42%);
+}
+
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;

@@ -7,10 +7,13 @@ import {
   deleteItem as deleteItemInStore,
   DEMO_GROUP_EVENT,
   DEMO_GROUPS_KEY,
+  hideItem as hideItemInStore,
   loadGroupData,
   markNotificationsRead as markNotificationsReadInStore,
   releaseItem as releaseItemInStore,
   reserveItem as reserveItemInStore,
+  unhideItem as unhideItemInStore,
+  updateItem as updateItemInStore,
 } from '../lib/groupStore';
 
 export function useGroupWishlist() {
@@ -126,9 +129,41 @@ export function useGroupWishlist() {
     [group, session, load]
   );
 
+  const updateItem = useCallback(
+    async (itemId, payload) => {
+      const item = await updateItemInStore({
+        group,
+        session,
+        itemId,
+        ...payload,
+      });
+      await load({ quiet: true });
+      return item;
+    },
+    [group, session, load]
+  );
+
   const deleteItem = useCallback(
     async (itemId) => {
       await deleteItemInStore({ group, session, itemId });
+      await load({ quiet: true });
+      return true;
+    },
+    [group, session, load]
+  );
+
+  const hideItem = useCallback(
+    async (itemId) => {
+      await hideItemInStore({ group, session, itemId });
+      await load({ quiet: true });
+      return true;
+    },
+    [group, session, load]
+  );
+
+  const unhideItem = useCallback(
+    async (itemId) => {
+      await unhideItemInStore({ group, session, itemId });
       await load({ quiet: true });
       return true;
     },
@@ -215,7 +250,10 @@ export function useGroupWishlist() {
     reload,
     addItem,
     addItems,
+    updateItem,
     deleteItem,
+    hideItem,
+    unhideItem,
     markNotificationsRead,
     reserveItem,
     releaseItem,

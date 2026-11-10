@@ -14,6 +14,7 @@ const SQL_FILES = [
   'supabase/migrations/20261110010000_suggestions_and_members.sql',
   'supabase/migrations/20261110020000_delete_and_notifications.sql',
   'supabase/migrations/20261110030000_bulk_import_and_capabilities.sql',
+  'supabase/migrations/20261110040000_edit_and_hidden_items.sql',
   'supabase_schema.sql',
 ];
 

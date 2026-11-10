@@ -7,6 +7,7 @@ import {
   ErrorBanner,
   SyncFallbackBanner,
 } from './components/Banners';
+import BookmarkletModal from './components/BookmarkletModal';
 import DeleteWishModal from './components/DeleteWishModal';
 import InboxModal from './components/InboxModal';
 import Navbar from './components/Navbar';
@@ -19,6 +20,7 @@ import { useGroupWishlist } from './hooks/useGroupWishlist';
 import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { useI18n } from './i18n/I18nProvider';
 import { filterWishes, getPriceBounds } from './lib/filters';
+import { addItem as addItemInStore } from './lib/groupStore';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -33,6 +35,13 @@ export default function WishlistApp() {
     dataMode,
     fallbackReason,
     capabilities,
+    baseHref,
+    session,
+    sessions,
+    switchGroup,
+    startAddGroup,
+    leaveGroup,
+    leaveAllGroups,
   } = useGroup();
   const {
     items,
@@ -45,7 +54,10 @@ export default function WishlistApp() {
     reload,
     addItem,
     addItems,
+    updateItem,
     deleteItem,
+    hideItem,
+    unhideItem,
     markNotificationsRead,
     reserveItem,
     releaseItem,
@@ -65,7 +77,10 @@ export default function WishlistApp() {
   });
   const [addOpen, setAddOpen] = useState(false);
   const [addInitial, setAddInitial] = useState(null);
+  const [editTarget, setEditTarget] = useState(null);
+  const [showHidden, setShowHidden] = useState(false);
   const [amazonOpen, setAmazonOpen] = useState(false);
+  const [bookmarkletData, setBookmarkletData] = useState(null);
   const [reservation, setReservation] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [inboxOpen, setInboxOpen] = useState(false);
@@ -84,6 +99,21 @@ export default function WishlistApp() {
   const unreadCount = notifications.filter(
     (notification) => !notification.isRead
   ).length;
+  const hiddenCount = items.filter((item) => item.hidden_by_me).length;
+  const canHide =
+    memberFilter !== 'all' && memberFilter !== member?.id;
+
+  const addModalInitial = useMemo(() => {
+    if (!editTarget) return addInitial;
+    return {
+      title: editTarget.title || '',
+      url: editTarget.url || '',
+      image_url: editTarget.image_url || '',
+      notes: editTarget.notes || '',
+      price: editTarget.price || '',
+      owner_member_id: editTarget.owner_member_id || '',
+    };
+  }, [editTarget, addInitial]);
 
   useEffect(() => {
     if (
@@ -93,6 +123,24 @@ export default function WishlistApp() {
       setMemberFilter('all');
     }
   }, [members, memberFilter]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('bookmarklet') !== '1') return;
+
+    setBookmarkletData({
+      url: params.get('url') || '',
+      title: params.get('title') || '',
+    });
+
+    params.delete('bookmarklet');
+    params.delete('url');
+    params.delete('title');
+    const nextUrl = new URL(window.location.href);
+    nextUrl.search = params.toString();
+    window.history.replaceState(null, '', nextUrl);
+  }, []);
 
   const showToast = useCallback((message, type = 'success') => {
     setToast({ id: `${Date.now()}-${Math.random()}`, message, type });
@@ -116,8 +164,9 @@ export default function WishlistApp() {
         budget,
         status: filter,
         query: search,
+        showHidden,
       }),
-    [items, memberFilter, budget, filter, search]
+    [items, memberFilter, budget, filter, search, showHidden]
   );
 
   const hasFilters =
@@ -128,26 +177,40 @@ export default function WishlistApp() {
 
   const openAdd = useCallback(() => {
     setAddInitial(null);
+    setEditTarget(null);
     setAddOpen(true);
   }, []);
 
   const closeAdd = useCallback(() => {
     setAddOpen(false);
     setAddInitial(null);
+    setEditTarget(null);
+  }, []);
+
+  const openEdit = useCallback((item) => {
+    setAddInitial(null);
+    setEditTarget(item);
+    setAddOpen(true);
   }, []);
 
   const openAmazonImport = useCallback(() => {
     setAddOpen(false);
     setAddInitial(null);
+    setEditTarget(null);
     setAmazonOpen(true);
   }, []);
 
   const handleAdd = useCallback(
     async (payload) => {
-      await addItem(payload);
-      showToast(t('add.success'), 'success');
+      if (editTarget) {
+        await updateItem(editTarget.id, payload);
+        showToast(t('add.updateSuccess'), 'success');
+      } else {
+        await addItem(payload);
+        showToast(t('add.success'), 'success');
+      }
     },
-    [addItem, showToast, t]
+    [addItem, updateItem, editTarget, showToast, t]
   );
 
   const handleReservation = useCallback(
@@ -169,6 +232,7 @@ export default function WishlistApp() {
   const handleShared = useCallback(
     (payload, info) => {
       setAddInitial(payload);
+      setEditTarget(null);
       setAddOpen(true);
 
       if (!info.hadUrl) {
@@ -205,6 +269,7 @@ export default function WishlistApp() {
     setSearch('');
     setFilter('all');
     setMemberFilter('all');
+    setShowHidden(false);
     setBudget({
       active: false,
       min: budgetBounds.min,
@@ -230,6 +295,27 @@ export default function WishlistApp() {
     [addItems, showToast, t]
   );
 
+  const handleBookmarkletSave = useCallback(
+    async ({ group, session: targetSession, item }) => {
+      await addItemInStore({
+        group,
+        session: targetSession,
+        ...item,
+      });
+
+      const isCurrent =
+        targetSession.groupSecret === session?.groupSecret &&
+        targetSession.userSecret === session?.userSecret;
+      if (isCurrent) await reload();
+
+      showToast(
+        t('bookmarklet.saved', { group: group.name }),
+        'success'
+      );
+    },
+    [session, reload, showToast, t]
+  );
+
   const handleDeleteRequest = useCallback((item) => {
     setDeleteTarget(item);
   }, []);
@@ -241,6 +327,22 @@ export default function WishlistApp() {
       showToast(t('delete.success'), 'success');
     },
     [deleteItem, showToast, t]
+  );
+
+  const handleHide = useCallback(
+    async (item) => {
+      await hideItem(item.id);
+      showToast(t('hide.success'), 'success');
+    },
+    [hideItem, showToast, t]
+  );
+
+  const handleUnhide = useCallback(
+    async (item) => {
+      await unhideItem(item.id);
+      showToast(t('unhide.success'), 'success');
+    },
+    [unhideItem, showToast, t]
   );
 
   const handleMarkNotificationsRead = useCallback(async () => {
@@ -280,7 +382,13 @@ export default function WishlistApp() {
         onInstall={handleInstall}
         canInstall={canInstall}
         connection={connection}
-        groupName={group?.name}
+        group={group}
+        sessions={sessions}
+        session={session}
+        onSwitchGroup={switchGroup}
+        onAddGroup={startAddGroup}
+        onLeaveGroup={leaveGroup}
+        onLeaveAll={leaveAllGroups}
         pendingCount={pendingMembers.length}
         unreadCount={unreadCount}
         members={hasFeature('suggestions') ? members : []}
@@ -291,6 +399,10 @@ export default function WishlistApp() {
         budget={budget}
         onBudgetChange={setBudget}
         onBudgetReset={resetBudget}
+        showHidden={showHidden}
+        hiddenCount={hiddenCount}
+        hideFeature={hasFeature('hide_items')}
+        onToggleHidden={() => setShowHidden((current) => !current)}
         onInbox={() => setInboxOpen(true)}
         onSession={() => setSessionOpen(true)}
         onRefresh={handleRetry}
@@ -325,6 +437,16 @@ export default function WishlistApp() {
                     ? handleDeleteRequest
                     : undefined
                 }
+                onEdit={
+                  hasFeature('edit_items') ? openEdit : undefined
+                }
+                onHide={
+                  hasFeature('hide_items') ? handleHide : undefined
+                }
+                onUnhide={
+                  hasFeature('hide_items') ? handleUnhide : undefined
+                }
+                canHide={canHide}
               />
             }
           />
@@ -349,9 +471,10 @@ export default function WishlistApp() {
 
       <AddWishModal
         open={addOpen}
-        initial={addInitial}
+        initial={addModalInitial}
         members={hasFeature('suggestions') ? members : []}
         currentMemberId={member?.id}
+        editing={Boolean(editTarget)}
         onAmazonImport={openAmazonImport}
         onClose={closeAdd}
         onSubmit={handleAdd}
@@ -362,6 +485,16 @@ export default function WishlistApp() {
         onClose={() => setAmazonOpen(false)}
         existingItems={items}
         onImport={handleAmazonImport}
+      />
+
+      <BookmarkletModal
+        open={Boolean(bookmarkletData)}
+        pageUrl={bookmarkletData?.url || ''}
+        pageTitle={bookmarkletData?.title || ''}
+        sessions={sessions}
+        currentSession={session}
+        onClose={() => setBookmarkletData(null)}
+        onSave={handleBookmarkletSave}
       />
 
       <ReserveModal
@@ -398,6 +531,7 @@ export default function WishlistApp() {
         member={member}
         personalLink={personalLink}
         groupInviteLink={groupInviteLink}
+        baseHref={baseHref}
         onLeaveDevice={handleLeaveDevice}
         canInstall={canInstall}
         onInstall={handleInstall}

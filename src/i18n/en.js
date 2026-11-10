@@ -162,7 +162,7 @@ const en = {
   "group.copyPersonalLink": "Copy personal link",
   "group.checkAgain": "Check again",
   "group.checking": "Checking...",
-  "group.leaveDevice": "Leave this device",
+  "group.leaveDevice": "Leave this group",
   "group.invalidTitle": "Group not found",
   "group.errorTitle": "We couldn't open the group",
   "group.backToStart": "Back to start",
@@ -223,8 +223,8 @@ const en = {
     "Share this link with a relative. They will join as a pending member until you approve them.",
   "session.copyGroupInvite": "Copy invite link",
   "session.leaveHint":
-    "Leaving removes your session from this browser. You can reopen it with your personal link.",
-  "session.leaveDevice": "Leave this device",
+    "Leaving removes this group session from this browser. Other saved groups stay available.",
+  "session.leaveDevice": "Leave this group",
 
   "share.loadingTitle": "Reading the shared link...",
   "share.loadingDescription":
@@ -364,6 +364,86 @@ const en = {
   "group.errors.IMPORT_LIMIT": "You can import at most 100 wishes at a time.",
   "group.errors.RPC_MISSING":
     "This feature is not available yet. Try again after the database update.",
+
+  "groups.switchAria": "Switch group: {group}",
+  "groups.fallback": "Group",
+  "groups.menuLabel": "Group menu",
+  "groups.yourGroups": "Your groups",
+  "groups.addGroup": "Add a group",
+  "groups.leaveGroup": "Leave this group",
+  "groups.leaveAll": "Leave all groups",
+  "group.backToGroup": "Back to my group",
+
+  "theme.switchToChristmas": "Switch to Christmas theme",
+
+  "add.editTitle": "Edit this wish",
+  "add.editDescription":
+    "Update the details. The change is visible to the group immediately.",
+  "add.save": "Save changes",
+  "add.saving": "Saving...",
+  "add.updateSuccess": "Wish updated.",
+  "add.searchImage": "Search image",
+  "add.searchImageTitle": "Search an image",
+  "add.searchImageHint": "Search Wikimedia Commons for this gift.",
+  "add.searchImagePlaceholder": "Image search",
+  "add.searchingImage": "Searching...",
+  "add.imageSearchEmpty": "No images found. Try different words.",
+  "add.imageSearchError":
+    "Image search failed. Try again or paste an image URL.",
+  "add.useImage": "Use image: {title}",
+
+  "card.hiddenBadge": "Hidden",
+  "card.hide": "Hide",
+  "card.hideAria": "Hide — {title}",
+  "card.unhide": "Show again",
+  "card.unhideAria": "Show again — {title}",
+  "card.edit": "Edit",
+  "card.editAria": "Edit — {title}",
+
+  "hidden.toggle": "Hidden",
+  "hidden.toggleHint":
+    "Show or hide the wishes you have hidden for yourself.",
+  "hide.success": "Wish hidden.",
+  "unhide.success": "Wish visible again.",
+
+  "bookmarklet.title": "Save this page",
+  "bookmarklet.description":
+    "Save the current browser page as a wish in one of your groups.",
+  "bookmarklet.loading": "Preparing the page...",
+  "bookmarklet.loadingDescription":
+    "Reading the page details and loading your groups.",
+  "bookmarklet.page": "Page",
+  "bookmarklet.group": "Group",
+  "bookmarklet.forWhom": "Who is it for?",
+  "bookmarklet.titleLabel": "Gift name",
+  "bookmarklet.save": "Add wish",
+  "bookmarklet.saving": "Adding...",
+  "bookmarklet.cancel": "Cancel",
+  "bookmarklet.installTitle": "Desktop bookmarklet",
+  "bookmarklet.installHint":
+    "Drag this button to your bookmarks bar, or copy the code and create a bookmark manually.",
+  "bookmarklet.installNote":
+    "Open the bookmark on any product page to add it to a group and choose the recipient.",
+  "bookmarklet.drag": "Add to wishlist",
+  "bookmarklet.copy": "Copy bookmarklet",
+  "bookmarklet.saved": "Wish added to {group}.",
+  "bookmarklet.errors.NO_GROUP":
+    "No saved group is available. Join a group first.",
+  "bookmarklet.errors.SESSION_REVOKED":
+    "Your session for this group is no longer valid.",
+  "bookmarklet.errors.NETWORK":
+    "We couldn't reach the family sync service. Check your connection.",
+  "bookmarklet.errors.TITLE_REQUIRED": "Enter a name for the gift.",
+  "bookmarklet.errors.MEMBER_NOT_FOUND":
+    "The selected member is no longer available.",
+  "bookmarklet.errors.NOT_APPROVED":
+    "Your membership is no longer approved.",
+  "bookmarklet.errors.NOT_ALLOWED":
+    "You cannot add a wish to this group with the selected account.",
+  "bookmarklet.errors.RPC_MISSING":
+    "This feature is not available yet. Try again after the database update.",
+  "bookmarklet.errors.UNKNOWN":
+    "We couldn't save this page. Please try again.",
 
   "common.close": "Close",
   "common.someone": "someone",

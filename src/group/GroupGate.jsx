@@ -96,7 +96,7 @@ function FormCard({ icon: Icon, title, description, children }) {
 
 function CreateGroupForm() {
   const { t } = useI18n();
-  const { createGroup } = useGroup();
+  const { createGroup, sessions, resumeCurrentGroup } = useGroup();
   const [groupName, setGroupName] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -174,13 +174,31 @@ function CreateGroupForm() {
       <p className="mt-4 text-xs leading-relaxed text-subtle">
         {t('group.inviteHint')}
       </p>
+
+      {sessions.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => void resumeCurrentGroup()}
+          className={`${SECONDARY_BUTTON} mt-3 w-full`}
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {t('group.backToGroup')}
+        </button>
+      ) : null}
     </FormCard>
   );
 }
 
 function JoinGroupForm() {
   const { t } = useI18n();
-  const { inviteGroup, joinGroup, leaveDevice, errorCode } = useGroup();
+  const {
+    inviteGroup,
+    joinGroup,
+    startAddGroup,
+    sessions,
+    resumeCurrentGroup,
+    errorCode,
+  } = useGroup();
   const [displayName, setDisplayName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState('');
@@ -255,12 +273,23 @@ function JoinGroupForm() {
 
       <button
         type="button"
-        onClick={leaveDevice}
+        onClick={startAddGroup}
         className={`${SECONDARY_BUTTON} mt-3 w-full`}
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         {t('group.startNewGroup')}
       </button>
+
+      {sessions.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => void resumeCurrentGroup()}
+          className={`${SECONDARY_BUTTON} mt-2 w-full`}
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          {t('group.backToGroup')}
+        </button>
+      ) : null}
     </FormCard>
   );
 }

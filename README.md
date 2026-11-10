@@ -5,18 +5,21 @@ Pinterest-style masonry layout, closed family groups and native mobile sharing.
 
 - No sign-up, no email and no password.
 - Closed family groups with invite links and admin approval of new members.
-- Add wishes manually, share a product link from a phone, or import a public
-  Amazon wishlist.
+- Join multiple family groups and switch between them from the header.
+- Add wishes manually, share a product link from a phone, import a public
+  Amazon wishlist, or save the current page with a desktop bookmarklet.
+- Search an image for a gift when there is no product URL.
+- Edit and delete the wishes you created; members who had reserved them receive
+  an in-app notification.
 - Reserve gifts as your approved member identity so nobody buys the same present twice.
 - Reservations on your own wishes are hidden to preserve the surprise.
 - Suggest gift ideas for another member without revealing them to that member.
 - Filter by member and by budget range; both filters combine with the search
   and availability filters.
-- Delete your own wishes; members who had reserved them receive an in-app
-  notification.
+- Hide wishes for your own view and reveal them again with a dedicated toggle.
 - Family sync across devices through Supabase.
 - English and Italian UI, detected from the browser language.
-- Light theme by default, with a dark-mode toggle and a saved preference.
+- Three themes: light, dark and Christmas, with a saved preference.
 - Deployable to GitHub Pages with a single push to `main`.
 
 ## Tech stack
@@ -27,6 +30,7 @@ Pinterest-style masonry layout, closed family groups and native mobile sharing.
 - `vite-plugin-pwa` + Workbox
 - Microlink API for OpenGraph metadata
 - Jina Reader for public Amazon wishlist imports
+- Wikimedia Commons API for gift image search
 - GitHub Actions + GitHub Pages
 
 ## Quick start
@@ -72,6 +76,7 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261110010000_suggestions_and_members.sql`
 - `supabase/migrations/20261110020000_delete_and_notifications.sql`
 - `supabase/migrations/20261110030000_bulk_import_and_capabilities.sql`
+- `supabase/migrations/20261110040000_edit_and_hidden_items.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -107,15 +112,17 @@ The group migration creates or extends these tables:
 | `wishlist_items` | Group id, owner member id, creator member id, title, URL, image, notes, price and creation date |
 | `item_reservations` | One reservation per item, with the reserving member id |
 | `notifications` | Private per-member notifications, with a JSON payload and a read timestamp |
+| `hidden_items` | Per-member hidden wishes; invisible to everyone else |
 
 Direct table access is denied to `anon` and `authenticated`. All operations go
 through SECURITY DEFINER functions that validate the group and member secrets:
 
 - `create_group`, `join_group`, `get_session`, `get_group_by_secret`
-- `get_group_items`, `add_item`, `add_items`
+- `get_group_items`, `add_item`, `add_items`, `update_item`
 - `reserve_item`, `release_item`, `get_safe_reservations`
 - `get_pending_members`, `approve_member`, `get_group_members`
 - `delete_item`, `get_notifications`, `mark_notifications_read`
+- `hide_item`, `unhide_item`
 - `get_app_capabilities`
 
 Two privacy rules are enforced in the database:
@@ -150,6 +157,22 @@ from the **session** button in the header.
 
 The session is stored in `localStorage` and mirrored in the URL so it can be
 copied to another device.
+
+### Multiple groups
+
+The app stores a list of group sessions in `localStorage`
+(`christmas-wishlist:sessions:v1`) and keeps the legacy single-session key for
+backwards compatibility.
+
+- The header pill next to the app title shows the current group.
+- Open it to switch to another saved group, add a group, leave the current
+  group, or leave all groups.
+- Adding a group keeps the existing sessions; the create/join screen offers
+  **Back to my group**.
+- Leaving the current group switches to the most recent remaining group, or
+  shows the create/join screen when none are left.
+- The personal link remains the portable way to reopen a group on another
+  device.
 
 ### Join and approval
 
@@ -205,6 +228,42 @@ for them.
 - If someone had reserved the wish, they receive an in-app notification in the
   bell/inbox. The notification is created in the same database transaction as
   the deletion.
+
+### Edit a wish
+
+The creator of a wish sees a pencil button on the card. The same add dialog
+opens in edit mode and updates the title, URL, image, notes, price and
+recipient through the `update_item` RPC. Only the creator can edit, matching
+the delete rule.
+
+### Hidden wishes
+
+- While filtering by another member, each wish has a **Hide** button.
+- Hidden wishes are private to the member who hid them; nobody else is told.
+- The **Hidden** toggle next to the budget filter controls whether the current
+  member sees their hidden wishes.
+- When hidden wishes are visible, they carry a **Hidden** badge and a
+  **Show again** button.
+- The hidden state is stored in `hidden_items` and survives reloads and
+  devices linked to the same personal session.
+
+### Image search
+
+If no product URL is present, the add/edit dialog offers **Search image**. The
+query is based on the gift name and results come from the Wikimedia Commons
+API. Selecting a result fills the image URL and shows a preview.
+
+### Desktop bookmarklet
+
+The session dialog includes a desktop-only bookmarklet section. Drag the
+button to the bookmarks bar, or copy the bookmarklet code. Opening the bookmark
+on any page opens the app on a dedicated save screen where you choose:
+
+- one of your saved groups;
+- the recipient of the wish;
+- the gift name, price, image and notes.
+
+The page URL and title are prefilled, and metadata is fetched when possible.
 
 ### Import an Amazon wishlist
 
@@ -329,11 +388,12 @@ in `src/i18n/I18nProvider.jsx`.
 
 ## Theme
 
-The app starts in **light mode**. The sun/moon button in the header switches to
-dark mode, and the choice is saved in `localStorage` under
-`christmas-wishlist:theme`. The palette is implemented with semantic CSS
-variables, so both themes stay consistent across cards, dialogs, forms and
-status messages.
+The app starts in **light mode**. The theme button cycles through **light →
+dark → Christmas → light**, and the choice is saved in `localStorage` under
+`christmas-wishlist:theme`. The Christmas theme uses the same semantic CSS
+variables with an evergreen/red/gold palette and a subtle festive background.
+All three themes stay consistent across cards, dialogs, forms and status
+messages.
 
 ## Scripts
 
@@ -365,11 +425,13 @@ status messages.
 │   │   ├── AddWishModal.jsx
 │   │   ├── AmazonImportModal.jsx
 │   │   ├── Banners.jsx
+│   │   ├── BookmarkletModal.jsx
 │   │   ├── BudgetFilter.jsx
 │   │   ├── CopyLinkButton.jsx
 │   │   ├── DeleteWishModal.jsx
 │   │   ├── EmptyState.jsx
 │   │   ├── ErrorBoundary.jsx
+│   │   ├── GroupSwitcher.jsx
 │   │   ├── InboxModal.jsx
 │   │   ├── LanguageSwitcher.jsx
 │   │   ├── MemberFilter.jsx
@@ -398,6 +460,7 @@ status messages.
 │   │   ├── date.js
 │   │   ├── filters.js
 │   │   ├── groupStore.js
+│   │   ├── imageSearch.js
 │   │   ├── memberColor.js
 │   │   ├── ogScraper.js
 │   │   ├── price.js
@@ -423,7 +486,8 @@ status messages.
 │       ├── 20261109030000_fix_join_group_ambiguity.sql
 │       ├── 20261110010000_suggestions_and_members.sql
 │       ├── 20261110020000_delete_and_notifications.sql
-│       └── 20261110030000_bulk_import_and_capabilities.sql
+│       ├── 20261110030000_bulk_import_and_capabilities.sql
+│       └── 20261110040000_edit_and_hidden_items.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json
@@ -507,6 +571,12 @@ both project sites and custom domains.
 | A reservation notification does not appear immediately | Notifications refresh with the 15-second polling, on tab focus or with the status refresh button. |
 | The budget filter hides a wish with no price | Enable **Include wishes without a price** in the budget dialog. |
 | Member chips or the inbox are missing | Apply the latest migrations and redeploy. The capability probe disables features that the database does not expose yet. |
+| The group switcher does not list a group | Open the group with its personal link once; the session is added to `christmas-wishlist:sessions:v1`. |
+| The edit button is missing | Only the creator of a wish can edit it, and the `edit_items` capability must be present. |
+| The hidden toggle is missing | Apply `20261110040000_edit_and_hidden_items.sql`; the `hide_items` capability gates the toggle. |
+| Image search returns nothing | Try a simpler query in Italian or English. Wikimedia Commons may not have a matching photo. |
+| The bookmarklet link cannot be dragged | Use **Copy bookmarklet** and create a bookmark manually, pasting the code as the URL. |
+| The Christmas theme looks wrong after an update | Reload once to refresh the cached CSS and service worker. |
 | The Amazon import says the list is private | Make the Amazon wishlist public; the reader service cannot access lists that require a login. |
 | The Amazon import fails or times out | Jina Reader may be rate-limited or temporarily unavailable. Wait a moment and try again; the rest of the app is unaffected. |
 | Amazon items have no price or image | Amazon does not always expose them in the public page. The item is still imported and can be edited manually. |

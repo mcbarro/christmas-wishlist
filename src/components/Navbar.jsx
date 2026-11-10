@@ -1,7 +1,18 @@
 import { Link } from 'react-router-dom';
-import { Bell, Download, Gift, Plus, Search, UserRound, X } from 'lucide-react';
+import {
+  Bell,
+  Download,
+  Eye,
+  EyeOff,
+  Gift,
+  Plus,
+  Search,
+  UserRound,
+  X,
+} from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
 import BudgetFilter from './BudgetFilter';
+import GroupSwitcher from './GroupSwitcher';
 import LanguageSwitcher from './LanguageSwitcher';
 import MemberFilter from './MemberFilter';
 import ThemeToggle from './ThemeToggle';
@@ -16,7 +27,13 @@ export default function Navbar({
   onInstall,
   canInstall,
   connection,
-  groupName,
+  group,
+  sessions,
+  session,
+  onSwitchGroup,
+  onAddGroup,
+  onLeaveGroup,
+  onLeaveAll,
   pendingCount,
   unreadCount,
   members,
@@ -27,12 +44,28 @@ export default function Navbar({
   budget,
   onBudgetChange,
   onBudgetReset,
+  showHidden,
+  hiddenCount,
+  hideFeature,
+  onToggleHidden,
   onInbox,
   onSession,
   onRefresh,
 }) {
   const { t } = useI18n();
   const inboxCount = (pendingCount || 0) + (unreadCount || 0);
+
+  const groupSwitcher = (
+    <GroupSwitcher
+      group={group}
+      sessions={sessions}
+      currentSession={session}
+      onSwitch={onSwitchGroup}
+      onAddGroup={onAddGroup}
+      onLeaveGroup={onLeaveGroup}
+      onLeaveAll={onLeaveAll}
+    />
+  );
 
   const status =
     connection === 'demo'
@@ -76,8 +109,12 @@ export default function Navbar({
   return (
     <header className="safe-top sticky top-0 z-30 border-b border-line bg-header backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 pb-3 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <Link to="/" className="flex min-w-0 items-center gap-3 rounded-xl">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <Link
+              to="/"
+              className="flex min-w-0 shrink items-center gap-3 rounded-xl"
+            >
             <span className="relative grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-rose-500 to-red-700 shadow-lg shadow-rose-950/40">
               <Gift className="h-5 w-5 text-white" aria-hidden="true" />
               <span
@@ -90,12 +127,15 @@ export default function Navbar({
                 {t('app.title')}
               </span>
               <span className="hidden truncate text-xs text-muted sm:block">
-                {groupName || t('app.subtitle')}
+                {t('app.subtitle')}
               </span>
             </span>
           </Link>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="hidden min-w-0 sm:block">{groupSwitcher}</div>
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
             <button
               type="button"
               onClick={onRefresh}
@@ -172,6 +212,8 @@ export default function Navbar({
           </div>
         </div>
 
+        <div className="sm:hidden">{groupSwitcher}</div>
+
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <div className="relative min-w-0 flex-1 sm:max-w-md">
             <Search
@@ -241,6 +283,32 @@ export default function Navbar({
               onChange={onBudgetChange}
               onReset={onBudgetReset}
             />
+
+            {hideFeature ? (
+              <button
+                type="button"
+                onClick={onToggleHidden}
+                aria-pressed={showHidden}
+                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                  showHidden
+                    ? 'border-warning/30 bg-warning/10 text-warning'
+                    : 'border-line bg-surface text-muted hover:bg-surface-strong hover:text-ink'
+                }`}
+                title={t('hidden.toggleHint')}
+              >
+                {showHidden ? (
+                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                ) : (
+                  <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                {t('hidden.toggle')}
+                {hiddenCount > 0 ? (
+                  <span className="rounded-full bg-warning/20 px-1.5 py-0.5 text-[10px] font-bold text-warning">
+                    {hiddenCount}
+                  </span>
+                ) : null}
+              </button>
+            ) : null}
           </div>
         </div>
 

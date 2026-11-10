@@ -2,8 +2,10 @@ import { useId, useState } from 'react';
 import {
   Check,
   ExternalLink,
+  Eye,
   EyeOff,
   Gift,
+  Pencil,
   Trash2,
   Undo2,
 } from 'lucide-react';
@@ -16,6 +18,10 @@ export default function WishCard({
   onReserve,
   onRelease,
   onDelete,
+  onEdit,
+  onHide,
+  onUnhide,
+  canHide = false,
 }) {
   const { t, locale } = useI18n();
   const [imageFailed, setImageFailed] = useState(false);
@@ -26,6 +32,11 @@ export default function WishCard({
   const isSuggestion = Boolean(item.is_suggestion);
   const isOwnSuggestion = Boolean(item.is_own_suggestion);
   const canDelete = Boolean(item.can_delete) && typeof onDelete === 'function';
+  const canEdit = Boolean(item.can_edit) && typeof onEdit === 'function';
+  const isHidden = Boolean(item.hidden_by_me);
+  const canHideItem =
+    Boolean(canHide) && typeof onHide === 'function' && !isHidden;
+  const canUnhide = isHidden && typeof onUnhide === 'function';
   const reservation = item.reservation;
   const reserved = Boolean(reservation?.reserved_by_name);
   const reservedByMe = Boolean(reservation?.is_mine);
@@ -140,6 +151,12 @@ export default function WishCard({
               <span>{dateLabel}</span>
             </>
           ) : null}
+          {isHidden ? (
+            <span className="inline-flex items-center gap-1 rounded-full border border-warning/20 bg-warning/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning">
+              <EyeOff className="h-3 w-3" aria-hidden="true" />
+              {t('card.hiddenBadge')}
+            </span>
+          ) : null}
         </div>
 
         {isSuggestion && isOwnSuggestion ? (
@@ -213,17 +230,55 @@ export default function WishCard({
             <span />
           )}
 
-          {canDelete ? (
-            <button
-              type="button"
-              onClick={() => onDelete(item)}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-danger/20 bg-danger/10 text-danger transition hover:bg-danger/20"
-              aria-label={t('card.deleteAria', { title: item.title })}
-              title={t('card.delete')}
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </button>
-          ) : null}
+          <div className="flex items-center gap-1.5">
+            {canUnhide ? (
+              <button
+                type="button"
+                onClick={() => onUnhide(item)}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+                aria-label={t('card.unhideAria', { title: item.title })}
+                title={t('card.unhide')}
+              >
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              </button>
+            ) : null}
+
+            {canHideItem ? (
+              <button
+                type="button"
+                onClick={() => onHide(item)}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+                aria-label={t('card.hideAria', { title: item.title })}
+                title={t('card.hide')}
+              >
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              </button>
+            ) : null}
+
+            {canEdit ? (
+              <button
+                type="button"
+                onClick={() => onEdit(item)}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink"
+                aria-label={t('card.editAria', { title: item.title })}
+                title={t('card.edit')}
+              >
+                <Pencil className="h-4 w-4" aria-hidden="true" />
+              </button>
+            ) : null}
+
+            {canDelete ? (
+              <button
+                type="button"
+                onClick={() => onDelete(item)}
+                className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-danger/20 bg-danger/10 text-danger transition hover:bg-danger/20"
+                aria-label={t('card.deleteAria', { title: item.title })}
+                title={t('card.delete')}
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
         </div>
       </div>
     </article>

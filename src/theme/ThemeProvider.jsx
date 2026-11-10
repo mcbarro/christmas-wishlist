@@ -9,7 +9,7 @@ import {
 
 // Keep the storage key in sync with the inline theme script in index.html.
 export const THEME_STORAGE_KEY = 'christmas-wishlist:theme';
-export const THEMES = ['light', 'dark'];
+export const THEMES = ['light', 'dark', 'christmas'];
 
 const ThemeContext = createContext(null);
 
@@ -39,7 +39,11 @@ function applyTheme(theme) {
   if (themeColor) {
     themeColor.setAttribute(
       'content',
-      theme === 'dark' ? '#070b14' : '#f7f3ec'
+      theme === 'dark'
+        ? '#070b14'
+        : theme === 'christmas'
+          ? '#0b3d2e'
+          : '#f7f3ec'
     );
   }
 
@@ -47,7 +51,10 @@ function applyTheme(theme) {
     'meta[name="apple-mobile-web-app-status-bar-style"]'
   );
   if (statusBar) {
-    statusBar.setAttribute('content', theme === 'dark' ? 'black-translucent' : 'default');
+    statusBar.setAttribute(
+      'content',
+      theme === 'dark' ? 'black-translucent' : 'default'
+    );
   }
 }
 
@@ -66,7 +73,12 @@ export function ThemeProvider({ children }) {
 
   const toggleTheme = useCallback(() => {
     setThemeState((current) => {
-      const nextTheme = current === 'dark' ? 'light' : 'dark';
+      const nextTheme =
+        current === 'light'
+          ? 'dark'
+          : current === 'dark'
+            ? 'christmas'
+            : 'light';
       try {
         window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
       } catch {
@@ -97,6 +109,7 @@ export function ThemeProvider({ children }) {
     () => ({
       theme,
       isDark: theme === 'dark',
+      isChristmas: theme === 'christmas',
       setTheme,
       toggleTheme,
     }),

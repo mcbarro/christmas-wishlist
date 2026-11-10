@@ -4,12 +4,15 @@ import {
   Link2,
   Loader2,
   Plus,
+  Search,
   ShoppingBasket,
   Sparkles,
   Trash2,
+  X,
 } from 'lucide-react';
 import Modal from './Modal';
 import { useI18n } from '../i18n/I18nProvider';
+import { searchGiftImages } from '../lib/imageSearch';
 import { fetchUrlMetadata } from '../lib/ogScraper';
 import { isValidHttpUrl, normalizeUrl } from '../lib/url';
 
@@ -48,6 +51,7 @@ export default function AddWishModal({
   initial,
   members = [],
   currentMemberId = '',
+  editing = false,
   onAmazonImport,
   onClose,
   onSubmit,
@@ -62,6 +66,12 @@ export default function AddWishModal({
   const scrapeAbortRef = useRef(null);
   const scrapingRef = useRef(false);
   const lastScrapedRef = useRef('');
+  const [imageSearchOpen, setImageSearchOpen] = useState(false);
+  const [imageQuery, setImageQuery] = useState('');
+  const [imageResults, setImageResults] = useState([]);
+  const [imageSearching, setImageSearching] = useState(false);
+  const [imageSearchError, setImageSearchError] = useState('');
+  const imageAbortRef = useRef(null);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -72,6 +82,11 @@ export default function AddWishModal({
     setScraping(false);
     setScrapeStatus(null);
     setImageFailed(false);
+    setImageSearchOpen(false);
+    setImageQuery('');
+    setImageResults([]);
+    setImageSearching(false);
+    setImageSearchError('');
     scrapingRef.current = false;
     lastScrapedRef.current =
       initial?.title || initial?.image_url
@@ -81,6 +96,8 @@ export default function AddWishModal({
     return () => {
       scrapeAbortRef.current?.abort();
       scrapeAbortRef.current = null;
+      imageAbortRef.current?.abort();
+      imageAbortRef.current = null;
       scrapingRef.current = false;
     };
   }, [open, initial]);
@@ -210,6 +227,44 @@ export default function AddWishModal({
     void scrapeUrl(form.url);
   };
 
+  const runImageSearch = async (rawQuery) => {
+    const query = String(rawQuery || '').trim();
+    if (!query) return;
+
+    imageAbortRef.current?.abort();
+    const controller = new AbortController();
+    imageAbortRef.current = controller;
+
+    setImageSearching(true);
+    setImageSearchError('');
+    setImageResults([]);
+
+    try {
+      const results = await searchGiftImages(query, {
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted) return;
+      setImageResults(results);
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      setImageSearchError(error.code || 'UNKNOWN');
+    } finally {
+      if (!controller.signal.aborted) setImageSearching(false);
+    }
+  };
+
+  const openImageSearch = () => {
+    setImageSearchOpen(true);
+    setImageQuery(form.title.trim());
+    void runImageSearch(form.title);
+  };
+
+  const chooseImage = (imageUrl) => {
+    setForm((current) => ({ ...current, image_url: imageUrl }));
+    setImageFailed(false);
+    setImageSearchOpen(false);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (submitting || !validate()) return;
@@ -252,8 +307,10 @@ export default function AddWishModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={t('add.title')}
-      description={t('add.description')}
+      title={editing ? t('add.editTitle') : t('add.title')}
+      description={
+        editing ? t('add.editDescription') : t('add.description')
+      }
       size="lg"
       closeDisabled={submitting}
       footer={
@@ -275,12 +332,12 @@ export default function AddWishModal({
             {submitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                {t('add.submitting')}
+                {editing ? t('add.saving') : t('add.submitting')}
               </>
             ) : (
               <>
                 <Plus className="h-4 w-4" aria-hidden="true" />
-                {t('add.submit')}
+                {editing ? t('add.save') : t('add.submit')}
               </>
             )}
           </button>
@@ -297,7 +354,7 @@ export default function AddWishModal({
           </div>
         ) : null}
 
-        {onAmazonImport ? (
+        {onAmazonImport && !editing ? (
           <button
             type="button"
             onClick={onAmazonImport}
@@ -457,10 +514,23 @@ export default function AddWishModal({
         </div>
 
         <div>
-          <label htmlFor="add-image" className={LABEL_CLASS}>
-            {t('add.imageLabel')}
-          </label>
-          <div className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor="add-image" className={LABEL_CLASS}>
+              {t('add.imageLabel')}
+            </label>
+            {!form.url.trim() ? (
+              <button
+                type="button"
+                onClick={openImageSearch}
+                disabled={!form.title.trim() || imageSearching}
+                className="inline-flex items-center gap-1 rounded-lg border border-accent/20 bg-accent/10 px-2.5 py-1.5 text-[11px] font-semibold text-accent transition hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Search className="h-3 w-3" aria-hidden="true" />
+                {t('add.searchImage')}
+              </button>
+            ) : null}
+          </div>
+          <div className="relative mt-1.5">
             <ImagePlus
               className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-subtle"
               aria-hidden="true"
@@ -487,6 +557,106 @@ export default function AddWishModal({
             >
               {errors.image_url}
             </p>
+          ) : null}
+
+          {imageSearchOpen ? (
+            <div className="mt-3 rounded-xl border border-line bg-surface p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold text-ink">
+                    {t('add.searchImageTitle')}
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-subtle">
+                    {t('add.searchImageHint')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setImageSearchOpen(false)}
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-subtle transition hover:bg-surface-strong hover:text-ink"
+                  aria-label={t('common.close')}
+                >
+                  <X className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </div>
+
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="text"
+                  value={imageQuery}
+                  onChange={(event) => setImageQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') {
+                      event.preventDefault();
+                      void runImageSearch(imageQuery);
+                    }
+                  }}
+                  placeholder={t('add.searchImagePlaceholder')}
+                  className={INPUT_CLASS}
+                  aria-label={t('add.searchImagePlaceholder')}
+                />
+                <button
+                  type="button"
+                  onClick={() => void runImageSearch(imageQuery)}
+                  disabled={imageSearching || !imageQuery.trim()}
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-line bg-surface px-3 py-2.5 text-sm font-semibold text-ink transition hover:bg-surface-strong disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {imageSearching ? (
+                    <Loader2
+                      className="h-4 w-4 animate-spin"
+                      aria-hidden="true"
+                    />
+                  ) : (
+                    <Search className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+
+              {imageSearchError ? (
+                <p
+                  className="mt-2 text-xs font-medium text-danger"
+                  role="alert"
+                >
+                  {t('add.imageSearchError')}
+                </p>
+              ) : null}
+
+              {imageSearching ? (
+                <p className="mt-2 text-xs text-muted" role="status">
+                  {t('add.searchingImage')}
+                </p>
+              ) : null}
+
+              {!imageSearching &&
+              !imageSearchError &&
+              imageResults.length === 0 ? (
+                <p className="mt-2 text-xs text-muted" role="status">
+                  {t('add.imageSearchEmpty')}
+                </p>
+              ) : null}
+
+              {imageResults.length ? (
+                <div className="mt-2 grid max-h-56 grid-cols-3 gap-2 overflow-y-auto pr-1">
+                  {imageResults.map((image) => (
+                    <button
+                      key={image.id}
+                      type="button"
+                      onClick={() => chooseImage(image.url)}
+                      className="overflow-hidden rounded-lg border border-line bg-surface-strong transition hover:border-accent/50 hover:ring-2 hover:ring-accent/20"
+                      aria-label={t('add.useImage', { title: image.title })}
+                      title={image.title}
+                    >
+                      <img
+                        src={image.thumbnail}
+                        alt=""
+                        loading="lazy"
+                        className="h-20 w-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           ) : null}
 
           {form.image_url.trim() ? (

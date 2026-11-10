@@ -128,6 +128,10 @@ const DEMO_CAPABILITIES = {
     'member_filter',
     'budget_filter',
     'amazon_import',
+    'edit_items',
+    'hide_items',
+    'multi_group',
+    'bookmarklet',
   ],
 };
 
@@ -239,6 +243,113 @@ export function clearStoredSession() {
   }
 }
 
+export const SESSIONS_STORAGE_KEY = 'christmas-wishlist:sessions:v1';
+
+function normalizeStoredSession(session) {
+  if (
+    typeof session?.groupSecret !== 'string' ||
+    !session.groupSecret.trim() ||
+    typeof session?.userSecret !== 'string' ||
+    !session.userSecret.trim()
+  ) {
+    return null;
+  }
+
+  return {
+    groupSecret: session.groupSecret.trim(),
+    userSecret: session.userSecret.trim(),
+    groupId: typeof session.groupId === 'string' ? session.groupId : '',
+    groupName: typeof session.groupName === 'string' ? session.groupName : '',
+    memberId: typeof session.memberId === 'string' ? session.memberId : '',
+    displayName:
+      typeof session.displayName === 'string' ? session.displayName : '',
+    isAdmin: Boolean(session.isAdmin),
+    lastUsedAt: Number(session.lastUsedAt) || 0,
+  };
+}
+
+export function readStoredSessions() {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const raw = window.localStorage.getItem(SESSIONS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map(normalizeStoredSession)
+          .filter(Boolean)
+          .map((session, index) => ({
+            ...session,
+            lastUsedAt: session.lastUsedAt || index,
+          }));
+      }
+    }
+  } catch {
+    // Ignore invalid storage.
+  }
+
+  const legacy = readStoredSession();
+  return legacy ? [{ ...legacy, lastUsedAt: 0 }] : [];
+}
+
+export function writeStoredSessions(sessions) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      SESSIONS_STORAGE_KEY,
+      JSON.stringify((sessions || []).map(normalizeStoredSession).filter(Boolean))
+    );
+  } catch {
+    // Persisting sessions is best-effort.
+  }
+}
+
+export function upsertStoredSession(sessionInfo) {
+  const normalized = normalizeStoredSession(sessionInfo);
+  if (!normalized) return readStoredSessions();
+
+  const sessions = readStoredSessions();
+  const index = sessions.findIndex(
+    (candidate) =>
+      candidate.groupSecret === normalized.groupSecret &&
+      candidate.userSecret === normalized.userSecret
+  );
+
+  if (index === -1) {
+    sessions.push({ ...normalized, lastUsedAt: Date.now() });
+  } else {
+    sessions[index] = {
+      ...sessions[index],
+      ...normalized,
+      lastUsedAt: Date.now(),
+    };
+  }
+
+  writeStoredSessions(sessions);
+  return sessions;
+}
+
+export function removeStoredSession({ groupSecret, userSecret }) {
+  const sessions = readStoredSessions().filter(
+    (session) =>
+      session.groupSecret !== groupSecret ||
+      session.userSecret !== userSecret
+  );
+  writeStoredSessions(sessions);
+  return sessions;
+}
+
+export function clearStoredSessions() {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.removeItem(SESSIONS_STORAGE_KEY);
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
 function trim(value) {
   return String(value || '').trim();
 }
@@ -255,6 +366,7 @@ function emptyDemoState() {
     items: [],
     reservations: [],
     notifications: [],
+    hidden_items: [],
   };
 }
 
@@ -279,6 +391,9 @@ function readDemoState() {
         : [],
       notifications: Array.isArray(parsed.notifications)
         ? parsed.notifications
+        : [],
+      hidden_items: Array.isArray(parsed.hidden_items)
+        ? parsed.hidden_items
         : [],
     };
   } catch {
@@ -374,6 +489,7 @@ function mapItem(row) {
     image_url: row.image_url || '',
     notes: row.notes || '',
     price: row.price || '',
+    hidden_by_me: Boolean(row.hidden_by_me),
   };
 }
 
@@ -402,6 +518,8 @@ function mergeItems(items, reservations, memberId) {
       is_suggestion: isSuggestion,
       is_own_suggestion: createdById === memberId,
       can_delete: createdById === memberId,
+      can_edit: createdById === memberId,
+      hidden_by_me: Boolean(item.hidden_by_me),
       reservation: isOwnItem ? null : reservationsByItem.get(item.id) || null,
     };
   });
@@ -679,6 +797,12 @@ export async function loadGroupData({ group, member, session }) {
           ...item,
           owner_name: owner?.display_name || '',
           created_by_name: creator?.display_name || owner?.display_name || '',
+          hidden_by_me: state.hidden_items.some(
+            (hidden) =>
+              hidden.group_id === group.id &&
+              hidden.member_id === member.id &&
+              hidden.item_id === item.id
+          ),
         });
       })
       .sort(
@@ -956,6 +1080,213 @@ export async function addItems({ group, session, items }) {
     }
     throw error;
   }
+}
+
+export async function updateItem({
+  group,
+  session,
+  itemId,
+  title,
+  url,
+  image_url,
+  notes,
+  price,
+  ownerMemberId = null,
+}) {
+  const cleanTitle = trim(title);
+  if (!cleanTitle) throw new GroupError('TITLE_REQUIRED');
+
+  if (isDemo()) {
+    const state = readDemoState();
+    const currentMember = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!currentMember) throw new GroupError('NOT_APPROVED');
+
+    const item = state.items.find(
+      (candidate) =>
+        candidate.id === itemId && candidate.group_id === group.id
+    );
+    if (!item) throw new GroupError('ITEM_NOT_FOUND');
+
+    const creatorId = item.created_by_member_id || item.owner_member_id;
+    if (creatorId !== currentMember.id) {
+      throw new GroupError('NOT_ALLOWED');
+    }
+
+    let owner = currentMember;
+    if (ownerMemberId) {
+      const target = state.members.find(
+        (candidate) =>
+          candidate.id === ownerMemberId &&
+          candidate.group_id === group.id &&
+          candidate.status === 'approved'
+      );
+      if (!target) throw new GroupError('MEMBER_NOT_FOUND');
+      owner = target;
+    } else {
+      owner =
+        state.members.find(
+          (candidate) => candidate.id === item.owner_member_id
+        ) || currentMember;
+    }
+
+    item.owner_member_id = owner.id;
+    item.title = cleanTitle;
+    item.url = trim(url);
+    item.image_url = trim(image_url);
+    item.notes = trim(notes);
+    item.price = trim(price);
+    writeDemoState(state);
+
+    return mapItem({
+      ...item,
+      owner_name: owner.display_name,
+      created_by_name: currentMember.display_name,
+    });
+  }
+
+  const params = {
+    p_group_secret: group.groupSecret,
+    p_user_secret: session.userSecret,
+    p_item_id: itemId,
+    p_title: cleanTitle,
+    p_url: trim(url),
+    p_image_url: trim(image_url),
+    p_notes: trim(notes),
+    p_price: trim(price),
+  };
+  if (ownerMemberId) params.p_owner_member_id = ownerMemberId;
+
+  const data = await rpc('update_item', params);
+  const row = firstRow(data);
+  if (!row) throw new GroupError('UNKNOWN');
+  return mapItem(row);
+}
+
+export async function hideItem({ group, session, itemId }) {
+  if (isDemo()) {
+    const state = readDemoState();
+    const currentMember = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!currentMember) throw new GroupError('NOT_APPROVED');
+
+    const item = state.items.find(
+      (candidate) =>
+        candidate.id === itemId && candidate.group_id === group.id
+    );
+    if (!item || item.owner_member_id === currentMember.id) {
+      throw new GroupError('ITEM_NOT_FOUND');
+    }
+
+    if (
+      !state.hidden_items.some(
+        (hidden) =>
+          hidden.group_id === group.id &&
+          hidden.member_id === currentMember.id &&
+          hidden.item_id === itemId
+      )
+    ) {
+      state.hidden_items.push({
+        id: createId(),
+        group_id: group.id,
+        member_id: currentMember.id,
+        item_id: itemId,
+        created_at: new Date().toISOString(),
+      });
+      writeDemoState(state);
+    }
+
+    return true;
+  }
+
+  const data = await rpc('hide_item', {
+    p_group_secret: group.groupSecret,
+    p_user_secret: session.userSecret,
+    p_item_id: itemId,
+  });
+  return data !== false;
+}
+
+export async function unhideItem({ group, session, itemId }) {
+  if (isDemo()) {
+    const state = readDemoState();
+    const currentMember = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!currentMember) throw new GroupError('NOT_APPROVED');
+
+    const before = state.hidden_items.length;
+    state.hidden_items = state.hidden_items.filter(
+      (hidden) =>
+        !(
+          hidden.group_id === group.id &&
+          hidden.member_id === currentMember.id &&
+          hidden.item_id === itemId
+        )
+    );
+    if (state.hidden_items.length !== before) writeDemoState(state);
+    return before !== state.hidden_items.length;
+  }
+
+  const data = await rpc('unhide_item', {
+    p_group_secret: group.groupSecret,
+    p_user_secret: session.userSecret,
+    p_item_id: itemId,
+  });
+  return data !== false;
+}
+
+export async function getMembersForSession({ groupSecret, userSecret }) {
+  if (!groupSecret || !userSecret) return [];
+
+  if (isDemo()) {
+    const state = readDemoState();
+    const group = state.groups.find(
+      (candidate) => candidate.group_secret === groupSecret
+    );
+    if (!group) return [];
+
+    const current = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!current) throw new GroupError('NOT_APPROVED');
+
+    return state.members
+      .filter(
+        (candidate) =>
+          candidate.group_id === group.id && candidate.status === 'approved'
+      )
+      .map((candidate) => ({
+        id: candidate.id,
+        displayName: candidate.display_name,
+        isAdmin: Boolean(candidate.is_admin),
+      }));
+  }
+
+  const data = await rpc('get_group_members', {
+    p_group_secret: groupSecret,
+    p_user_secret: userSecret,
+  });
+
+  return (data || []).map((row) => ({
+    id: row.member_id,
+    displayName: row.display_name,
+    isAdmin: Boolean(row.is_admin),
+  }));
 }
 
 export async function reserveItem({ group, session, itemId }) {

@@ -57,6 +57,10 @@ export default function HomePage({
   onReserve,
   onRelease,
   onDelete,
+  onEdit,
+  onHide,
+  onUnhide,
+  canHide,
 }) {
   const { t, tn } = useI18n();
   const pageTitle = <h1 className="sr-only">{t('app.title')}</h1>;
@@ -137,6 +141,10 @@ export default function HomePage({
         onReserve={onReserve}
         onRelease={onRelease}
         onDelete={onDelete}
+        onEdit={onEdit}
+        onHide={onHide}
+        onUnhide={onUnhide}
+        canHide={canHide}
       />
     </div>
   );

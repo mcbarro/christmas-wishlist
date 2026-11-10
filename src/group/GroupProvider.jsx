@@ -10,6 +10,7 @@ import {
   buildSessionLink,
   clearSchemaProbeCache,
   clearStoredSession,
+  clearStoredSessions,
   createGroup as createGroupInStore,
   DEMO_GROUP_EVENT,
   generateSecret,
@@ -20,8 +21,10 @@ import {
   joinGroup as joinGroupInStore,
   parseSessionParams,
   probeGroupSchema,
-  readStoredSession,
+  readStoredSessions,
+  removeStoredSession,
   setDataMode as setStoreDataMode,
+  upsertStoredSession,
   writeStoredSession,
 } from '../lib/groupStore';
 import { isSupabaseConfigured } from '../lib/supabase';
@@ -51,11 +54,28 @@ function getBaseHref() {
   return new URL(import.meta.env.BASE_URL, window.location.origin).href;
 }
 
+function getRecentSession(sessions) {
+  return (
+    [...(sessions || [])].sort(
+      (first, second) =>
+        (second.lastUsedAt || 0) - (first.lastUsedAt || 0)
+    )[0] || null
+  );
+}
+
+function sameSession(first, second) {
+  return (
+    first?.groupSecret === second?.groupSecret &&
+    first?.userSecret === second?.userSecret
+  );
+}
+
 export function GroupProvider({ children }) {
   const [status, setStatus] = useState('loading');
   const [group, setGroup] = useState(null);
   const [member, setMember] = useState(null);
   const [session, setSession] = useState(null);
+  const [sessions, setSessions] = useState(() => readStoredSessions());
   const [inviteGroup, setInviteGroup] = useState(null);
   const [errorCode, setErrorCode] = useState('');
   const [checking, setChecking] = useState(false);
@@ -69,25 +89,86 @@ export function GroupProvider({ children }) {
     features: [],
   });
 
-  const applyResolved = useCallback((result, nextSession) => {
-    if (!result) {
-      setGroup(null);
-      setMember(null);
-      setSession(null);
-      setStatus('no-group');
-      setErrorCode('');
-      return;
-    }
-
-    setGroup(result.group);
-    setMember(result.member);
-    setSession(nextSession);
+  const clearCurrent = useCallback((nextStatus = 'no-group') => {
+    setGroup(null);
+    setMember(null);
+    setSession(null);
     setInviteGroup(null);
-    setStatus(result.member.status === 'approved' ? 'approved' : 'pending');
     setErrorCode('');
-    writeStoredSession(nextSession);
-    writeSessionToUrl(nextSession);
+    setStatus(nextStatus);
   }, []);
+
+  const applyResolved = useCallback(
+    (result, nextSession, { updateUrl = true } = {}) => {
+      if (!result) {
+        clearCurrent('no-group');
+        clearStoredSession();
+        return;
+      }
+
+      setGroup(result.group);
+      setMember(result.member);
+      setSession(nextSession);
+      setInviteGroup(null);
+      setStatus(result.member.status === 'approved' ? 'approved' : 'pending');
+      setErrorCode('');
+
+      const nextSessions = upsertStoredSession({
+        ...nextSession,
+        groupId: result.group.id,
+        groupName: result.group.name,
+        memberId: result.member.id,
+        displayName: result.member.displayName,
+        isAdmin: Boolean(result.member.isAdmin),
+      });
+      setSessions(nextSessions);
+      writeStoredSession(nextSession);
+      if (updateUrl) writeSessionToUrl(nextSession);
+    },
+    [clearCurrent]
+  );
+
+  const activateSession = useCallback(
+    async (nextSession, { updateUrl = true } = {}) => {
+      const resolved = await getSession(nextSession);
+      if (!resolved) {
+        const remaining = removeStoredSession(nextSession);
+        setSessions(remaining);
+        return null;
+      }
+      applyResolved(resolved, nextSession, { updateUrl });
+      return resolved;
+    },
+    [applyResolved]
+  );
+
+  const switchGroup = useCallback(
+    async (nextSession) => {
+      if (!nextSession) return null;
+      setStatus('loading');
+      setErrorCode('');
+
+      try {
+        const resolved = await activateSession(nextSession);
+        if (resolved) return resolved;
+
+        const fallback = getRecentSession(readStoredSessions());
+        if (fallback && !sameSession(fallback, nextSession)) {
+          const fallbackResolved = await activateSession(fallback);
+          if (fallbackResolved) return fallbackResolved;
+        }
+
+        clearCurrent('no-group');
+        clearSessionFromUrl();
+        return null;
+      } catch (error) {
+        setStatus('error');
+        setErrorCode(error.code || 'UNKNOWN');
+        return null;
+      }
+    },
+    [activateSession, clearCurrent]
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -120,79 +201,119 @@ export function GroupProvider({ children }) {
       setCapabilities(nextCapabilities);
 
       const urlSession = parseSessionParams(window.location.search);
-      const storedSession = readStoredSession();
-      let candidate = null;
+      const storedSessions = readStoredSessions();
+      setSessions(storedSessions);
 
+      // A complete personal link always wins and is resolved explicitly.
       if (urlSession.groupSecret && urlSession.userSecret) {
-        candidate = urlSession;
-      } else if (storedSession) {
-        candidate = storedSession;
-      } else if (urlSession.groupSecret) {
         try {
-          const result = await getGroupBySecret(urlSession.groupSecret);
+          const resolved = await getSession(urlSession);
           if (cancelled) return;
-          if (!result) {
-            setStatus('invalid');
-            setErrorCode('GROUP_NOT_FOUND');
+
+          if (resolved) {
+            applyResolved(resolved, urlSession);
             return;
           }
-          setInviteGroup(result);
-          setStatus('join');
-          setErrorCode('');
-          writeSessionToUrl({
-            groupSecret: urlSession.groupSecret,
-            userSecret: '',
-          });
+
+          const remaining = removeStoredSession(urlSession);
+          setSessions(remaining);
+          clearStoredSession();
+
+          const maybeGroup = await getGroupBySecret(
+            urlSession.groupSecret
+          ).catch(() => null);
+          if (cancelled) return;
+
+          if (maybeGroup) {
+            setInviteGroup(maybeGroup);
+            setStatus('join');
+            setErrorCode('SESSION_REVOKED');
+            writeSessionToUrl({
+              groupSecret: maybeGroup.groupSecret,
+              userSecret: '',
+            });
+          } else {
+            setStatus('invalid');
+            setErrorCode('GROUP_NOT_FOUND');
+          }
+          return;
+        } catch (error) {
+          if (cancelled) return;
+          setStatus('error');
+          setErrorCode(error.code || 'UNKNOWN');
+          return;
+        }
+      }
+
+      // A group-only link is an invitation to request access, even when the
+      // user already has other groups saved.
+      if (urlSession.groupSecret) {
+        try {
+          const maybeGroup = await getGroupBySecret(urlSession.groupSecret);
+          if (cancelled) return;
+
+          if (maybeGroup) {
+            setInviteGroup(maybeGroup);
+            setStatus('join');
+            setErrorCode('');
+            writeSessionToUrl({
+              groupSecret: urlSession.groupSecret,
+              userSecret: '',
+            });
+          } else {
+            setStatus('invalid');
+            setErrorCode('GROUP_NOT_FOUND');
+          }
         } catch (error) {
           if (cancelled) return;
           setStatus('error');
           setErrorCode(error.code || 'UNKNOWN');
         }
         return;
-      } else {
-        setStatus('no-group');
-        return;
       }
 
-      try {
-        const resolved = await getSession(candidate);
-        if (cancelled) return;
-
-        if (resolved) {
-          applyResolved(resolved, candidate);
-          return;
-        }
-
-        clearStoredSession();
-        const maybeGroup = await getGroupBySecret(candidate.groupSecret).catch(
-          () => null
+      // Otherwise use the most recent saved session that still resolves.
+      if (storedSessions.length) {
+        const ordered = [...storedSessions].sort(
+          (first, second) =>
+            (second.lastUsedAt || 0) - (first.lastUsedAt || 0)
         );
-        if (cancelled) return;
 
-        if (maybeGroup) {
-          setInviteGroup(maybeGroup);
-          setStatus('join');
-          setErrorCode('SESSION_REVOKED');
-          writeSessionToUrl({
-            groupSecret: maybeGroup.groupSecret,
-            userSecret: '',
-          });
-        } else {
-          setStatus('invalid');
-          setErrorCode('GROUP_NOT_FOUND');
+        for (const candidate of ordered) {
+          try {
+            const resolved = await getSession(candidate);
+            if (cancelled) return;
+
+            if (resolved) {
+              applyResolved(resolved, candidate);
+              return;
+            }
+
+            removeStoredSession(candidate);
+          } catch (error) {
+            if (cancelled) return;
+            if (error.code === 'NETWORK' || error.code === 'UNKNOWN') {
+              setStatus('error');
+              setErrorCode(error.code);
+              return;
+            }
+            removeStoredSession(candidate);
+          }
         }
-      } catch (error) {
-        if (cancelled) return;
-        setStatus('error');
-        setErrorCode(error.code || 'UNKNOWN');
+
+        const remaining = readStoredSessions();
+        setSessions(remaining);
       }
+
+      clearCurrent('no-group');
+      clearSessionFromUrl();
     }
 
     void resolve();
     return () => {
       cancelled = true;
     };
-  }, [reloadToken, applyResolved]);
+  }, [reloadToken, applyResolved, clearCurrent]);
 
   const createGroup = useCallback(
     async ({ groupName, displayName }) => {
@@ -235,36 +356,46 @@ export function GroupProvider({ children }) {
 
       try {
         const resolved = await getSession(session);
-        if (!resolved) {
-          clearStoredSession();
-          const maybeGroup = await getGroupBySecret(session.groupSecret).catch(
-            () => null
-          );
-          setGroup(null);
-          setMember(null);
-          setSession(null);
-          if (maybeGroup) {
-            setInviteGroup(maybeGroup);
-            setStatus('join');
-            setErrorCode('SESSION_REVOKED');
-            writeSessionToUrl({
-              groupSecret: maybeGroup.groupSecret,
-              userSecret: '',
-            });
-          } else {
-            setStatus('no-group');
-            setErrorCode('');
-          }
-          return null;
+        if (resolved) {
+          applyResolved(resolved, session, { updateUrl: false });
+          return resolved;
         }
 
-        setGroup(resolved.group);
-        setMember(resolved.member);
-        setStatus(
-          resolved.member.status === 'approved' ? 'approved' : 'pending'
+        const remaining = removeStoredSession(session);
+        setSessions(remaining);
+        clearStoredSession();
+
+        const fallback = getRecentSession(remaining);
+        if (fallback) {
+          try {
+            const fallbackResolved = await getSession(fallback);
+            if (fallbackResolved) {
+              applyResolved(fallbackResolved, fallback);
+              return fallbackResolved;
+            }
+            removeStoredSession(fallback);
+            setSessions(readStoredSessions());
+          } catch {
+            // Keep the revoked state below if the fallback is unreachable.
+          }
+        }
+
+        const maybeGroup = await getGroupBySecret(session.groupSecret).catch(
+          () => null
         );
-        setErrorCode('');
-        return resolved;
+        clearCurrent('no-group');
+        if (maybeGroup) {
+          setInviteGroup(maybeGroup);
+          setStatus('join');
+          setErrorCode('SESSION_REVOKED');
+          writeSessionToUrl({
+            groupSecret: maybeGroup.groupSecret,
+            userSecret: '',
+          });
+        } else {
+          clearSessionFromUrl();
+        }
+        return null;
       } catch (error) {
         if (!silent) throw error;
         return null;
@@ -272,7 +403,7 @@ export function GroupProvider({ children }) {
         if (!silent) setChecking(false);
       }
     },
-    [session]
+    [session, applyResolved, clearCurrent]
   );
 
   useEffect(() => {
@@ -291,16 +422,42 @@ export function GroupProvider({ children }) {
     };
   }, [status, dataMode, refreshSession]);
 
-  const leaveDevice = useCallback(() => {
+  const startAddGroup = useCallback(() => {
+    clearCurrent('no-group');
+    clearSessionFromUrl();
+  }, [clearCurrent]);
+
+  const resumeCurrentGroup = useCallback(async () => {
+    const next = getRecentSession(readStoredSessions());
+    if (next) await switchGroup(next);
+  }, [switchGroup]);
+
+  const leaveGroup = useCallback(async () => {
+    if (!session) {
+      startAddGroup();
+      return;
+    }
+
+    const remaining = removeStoredSession(session);
+    setSessions(remaining);
     clearStoredSession();
     clearSessionFromUrl();
-    setGroup(null);
-    setMember(null);
-    setSession(null);
-    setInviteGroup(null);
-    setErrorCode('');
-    setStatus('no-group');
-  }, []);
+
+    const next = getRecentSession(remaining);
+    if (next) {
+      await switchGroup(next);
+      return;
+    }
+
+    clearCurrent('no-group');
+  }, [session, startAddGroup, switchGroup, clearCurrent]);
+
+  const leaveAllGroups = useCallback(() => {
+    clearStoredSessions();
+    setSessions([]);
+    clearSessionFromUrl();
+    clearCurrent('no-group');
+  }, [clearCurrent]);
 
   const retry = useCallback(() => {
     clearSchemaProbeCache();
@@ -333,18 +490,25 @@ export function GroupProvider({ children }) {
       group,
       member,
       session,
+      sessions,
       inviteGroup,
       errorCode,
       checking,
       dataMode,
       fallbackReason,
       capabilities,
+      baseHref,
       personalLink,
       groupInviteLink,
       createGroup,
       joinGroup,
       refreshSession,
-      leaveDevice,
+      switchGroup,
+      startAddGroup,
+      resumeCurrentGroup,
+      leaveGroup,
+      leaveAllGroups,
+      leaveDevice: leaveGroup,
       retry,
     }),
     [
@@ -352,18 +516,24 @@ export function GroupProvider({ children }) {
       group,
       member,
       session,
+      sessions,
       inviteGroup,
       errorCode,
       checking,
       dataMode,
       fallbackReason,
       capabilities,
+      baseHref,
       personalLink,
       groupInviteLink,
       createGroup,
       joinGroup,
       refreshSession,
-      leaveDevice,
+      switchGroup,
+      startAddGroup,
+      resumeCurrentGroup,
+      leaveGroup,
+      leaveAllGroups,
       retry,
     ]
   );

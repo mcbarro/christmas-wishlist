@@ -90,6 +90,37 @@ describe('filterWishes', () => {
     });
     expect(reserved.map((item) => item.id)).toEqual(['b']);
   });
+
+  it('hides hidden wishes unless showHidden is enabled', () => {
+    const hiddenItems = [
+      ...items,
+      {
+        ...items[0],
+        id: 'hidden',
+        title: 'Hidden gift',
+        hidden_by_me: true,
+      },
+    ];
+
+    expect(
+      filterWishes(hiddenItems, {
+        memberId: 'all',
+        budget: fullBudget,
+        status: 'all',
+        query: '',
+      }).map((item) => item.id)
+    ).toEqual(['a', 'b', 'c']);
+
+    expect(
+      filterWishes(hiddenItems, {
+        memberId: 'all',
+        budget: fullBudget,
+        status: 'all',
+        query: '',
+        showHidden: true,
+      }).map((item) => item.id)
+    ).toEqual(['a', 'b', 'c', 'hidden']);
+  });
 });
 
 describe('getPriceBounds', () => {

@@ -10,10 +10,15 @@ export function itemMatchesBudget(item, budget) {
   return amount >= budget.min && amount <= budget.max;
 }
 
-export function filterWishes(items, { memberId, budget, status, query } = {}) {
+export function filterWishes(
+  items,
+  { memberId, budget, status, query, showHidden = false } = {}
+) {
   const normalizedQuery = normalizeSearch(query);
 
   return (items || []).filter((item) => {
+    if (item.hidden_by_me && !showHidden) return false;
+
     if (memberId && memberId !== 'all' && item.owner_member_id !== memberId) {
       return false;
     }
