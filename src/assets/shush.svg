@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Shushing face">
+  <defs>
+    <linearGradient id="face" x1="0.2" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#FFD84D" />
+      <stop offset="0.55" stop-color="#FFC21F" />
+      <stop offset="1" stop-color="#F5A623" />
+    </linearGradient>
+    <linearGradient id="hand" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#E6E6E6" />
+    </linearGradient>
+  </defs>
+
+  <circle cx="512" cy="470" r="352" fill="url(#face)" stroke="#000000" stroke-width="46" />
+
+  <path d="M432 334 Q482 292 534 324" fill="none" stroke="#000000" stroke-width="20" stroke-linecap="round" />
+  <path d="M632 324 Q688 290 746 336" fill="none" stroke="#000000" stroke-width="20" stroke-linecap="round" />
+
+  <ellipse cx="480" cy="440" rx="64" ry="86" fill="#5C2C0B" />
+  <ellipse cx="461" cy="408" rx="22" ry="30" fill="#FFD84D" />
+  <ellipse cx="705" cy="440" rx="64" ry="86" fill="#5C2C0B" />
+  <ellipse cx="686" cy="408" rx="22" ry="30" fill="#FFD84D" />
+
+  <g stroke="#000000" stroke-width="24" stroke-linejoin="round" stroke-linecap="round">
+    <rect x="576" y="520" width="92" height="246" rx="46" fill="url(#hand)" />
+    <rect x="654" y="690" width="78" height="132" rx="39" fill="url(#hand)" transform="rotate(8 693 756)" />
+    <rect x="722" y="678" width="78" height="132" rx="39" fill="url(#hand)" transform="rotate(14 761 744)" />
+    <rect x="786" y="688" width="76" height="124" rx="38" fill="url(#hand)" transform="rotate(22 824 750)" />
+    <path d="M600 782 Q600 720 662 720 L788 720 Q858 720 858 790 L858 856 Q858 926 788 926 L670 926 Q600 926 600 856 Z" fill="url(#hand)" />
+  </g>
+</svg>

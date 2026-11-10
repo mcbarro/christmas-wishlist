@@ -12,6 +12,7 @@ import {
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
 import { getMemberColor } from '../lib/memberColor';
+import shushIcon from '../assets/shush.svg';
 
 export default function WishCard({
   item,
@@ -275,6 +276,16 @@ export default function WishCard({
           </div>
         </div>
       </div>
+
+      {isSuggestion ? (
+        <img
+          src={shushIcon}
+          alt=""
+          aria-hidden="true"
+          draggable="false"
+          className="pointer-events-none absolute -bottom-10 -right-10 h-40 w-40 select-none opacity-[0.07] sm:h-48 sm:w-48 sm:opacity-[0.08]"
+        />
+      ) : null}
     </article>
   );
 }
