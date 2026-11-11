@@ -80,6 +80,8 @@ const en = {
   "rating.value": "{value} out of 5",
   "rating.hint": "Click or use the arrow keys. Each step is 0.5.",
   "rating.error": "We couldn't save your rating. Please try again.",
+  "rating.decrease": "Decrease rating by 0.5",
+  "rating.increase": "Increase rating by 0.5",
 
   "add.title": "Add a wish",
   "add.description": "Paste a product link or fill in the details yourself.",
@@ -96,6 +98,8 @@ const en = {
   "add.titlePlaceholder": "What would you like?",
   "add.priceLabel": "Price (optional)",
   "add.pricePlaceholder": "e.g. € 29.99",
+  "add.ratingLabel": "How much do you want it?",
+  "add.ratingHint": "Only you can change it, in 0.5 steps.",
   "add.notesLabel": "Notes (optional)",
   "add.notesPlaceholder": "Size, color, where to find it...",
   "add.imageLabel": "Image URL (optional)",

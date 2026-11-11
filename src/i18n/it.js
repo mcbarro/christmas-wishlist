@@ -81,6 +81,8 @@ const it = {
   "rating.value": "{value} su 5",
   "rating.hint": "Clicca o usa le frecce. Ogni passo vale 0,5.",
   "rating.error": "Non siamo riusciti a salvare il voto. Riprova.",
+  "rating.decrease": "Diminuisci il voto di 0,5",
+  "rating.increase": "Aumenta il voto di 0,5",
 
   "add.title": "Aggiungi un desiderio",
   "add.description":
@@ -98,6 +100,8 @@ const it = {
   "add.titlePlaceholder": "Cosa vorresti?",
   "add.priceLabel": "Prezzo (opzionale)",
   "add.pricePlaceholder": "es. 29,99 €",
+  "add.ratingLabel": "Quanto lo vuoi?",
+  "add.ratingHint": "Solo tu puoi cambiarlo, con passi da 0,5.",
   "add.notesLabel": "Note (opzionale)",
   "add.notesPlaceholder": "Taglia, colore, dove trovarlo...",
   "add.imageLabel": "URL immagine (opzionale)",

@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import Modal from './Modal';
+import RatingControl from './RatingControl';
 import { useI18n } from '../i18n/I18nProvider';
 import { searchGiftImages } from '../lib/imageSearch';
 import { fetchUrlMetadata } from '../lib/ogScraper';
@@ -52,12 +53,14 @@ export default function AddWishModal({
   members = [],
   currentMemberId = '',
   editing = false,
+  showRating = true,
   onAmazonImport,
   onClose,
   onSubmit,
 }) {
   const { t } = useI18n();
   const [form, setForm] = useState(EMPTY_FORM);
+  const [rating, setRating] = useState(2.5);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [scraping, setScraping] = useState(false);
@@ -77,6 +80,7 @@ export default function AddWishModal({
     if (!open) return undefined;
 
     setForm(seedForm(initial));
+    setRating(typeof initial?.rating === 'number' ? initial.rating : 2.5);
     setErrors({});
     setSubmitting(false);
     setScraping(false);
@@ -280,6 +284,7 @@ export default function AddWishModal({
         notes: form.notes.trim(),
         price: form.price.trim(),
         ownerMemberId: form.owner_member_id || null,
+        rating: showRating && !isSuggestion ? rating : null,
       });
 
       onClose();
@@ -498,6 +503,22 @@ export default function AddWishModal({
             className={INPUT_CLASS}
           />
         </div>
+
+        {showRating && !isSuggestion ? (
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-muted">
+                {t('add.ratingLabel')}
+              </span>
+              <span className="text-[11px] text-subtle">
+                {t('add.ratingHint')}
+              </span>
+            </div>
+            <div className="mt-1.5">
+              <RatingControl value={rating} onChange={setRating} />
+            </div>
+          </div>
+        ) : null}
 
         <div>
           <label htmlFor="add-notes" className={LABEL_CLASS}>

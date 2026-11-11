@@ -144,6 +144,8 @@ export default function WishlistApp() {
       notes: editTarget.notes || '',
       price: editTarget.price || '',
       owner_member_id: editTarget.owner_member_id || '',
+      rating:
+        typeof editTarget.rating === 'number' ? editTarget.rating : 2.5,
     };
   }, [editTarget, addInitial]);
 
@@ -588,6 +590,7 @@ export default function WishlistApp() {
         members={hasFeature('suggestions') ? members : []}
         currentMemberId={member?.id}
         editing={Boolean(editTarget)}
+        showRating={hasFeature('item_ratings')}
         onAmazonImport={openAmazonImport}
         onClose={closeAdd}
         onSubmit={handleAdd}

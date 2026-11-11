@@ -976,6 +976,7 @@ export async function addItem({
   image_url,
   notes,
   price,
+  rating = null,
   ownerMemberId = null,
 }) {
   const cleanTitle = trim(title);
@@ -1013,7 +1014,7 @@ export async function addItem({
       image_url: trim(image_url),
       notes: trim(notes),
       price: trim(price),
-      rating: 2.5,
+      rating: normalizeRating(rating ?? 2.5),
       created_at: new Date().toISOString(),
     };
     state.items.push(item);
@@ -1043,7 +1044,21 @@ export async function addItem({
   const data = await rpc('add_item', params);
   const row = firstRow(data);
   if (!row) throw new GroupError('UNKNOWN');
-  return mapItem(row);
+
+  const item = mapItem(row);
+  if (rating != null) {
+    const value = normalizeRating(rating);
+    if (value !== 2.5) {
+      await setItemRating({
+        group,
+        session,
+        itemId: item.id,
+        rating: value,
+      });
+      item.rating = value;
+    }
+  }
+  return item;
 }
 
 export async function addItems({ group, session, items }) {
@@ -1121,6 +1136,7 @@ export async function updateItem({
   image_url,
   notes,
   price,
+  rating = null,
   ownerMemberId = null,
 }) {
   const cleanTitle = trim(title);
@@ -1170,6 +1186,7 @@ export async function updateItem({
     item.image_url = trim(image_url);
     item.notes = trim(notes);
     item.price = trim(price);
+    if (rating != null) item.rating = normalizeRating(rating);
     writeDemoState(state);
 
     return mapItem({
@@ -1194,7 +1211,19 @@ export async function updateItem({
   const data = await rpc('update_item', params);
   const row = firstRow(data);
   if (!row) throw new GroupError('UNKNOWN');
-  return mapItem(row);
+
+  const item = mapItem(row);
+  if (rating != null) {
+    const value = normalizeRating(rating);
+    await setItemRating({
+      group,
+      session,
+      itemId: item.id,
+      rating: value,
+    });
+    item.rating = value;
+  }
+  return item;
 }
 
 export async function setItemRating({ group, session, itemId, rating }) {

@@ -284,7 +284,9 @@ for them.
 ### Wish ratings and list view
 
 - Each wish created for yourself starts with a rating of **2.5** and can be set
-  from **1 to 5** in **0.5** steps.
+  from **1 to 5** in **0.5** steps, both while adding/editing and from the card.
+- On mobile the card control adds **− / +** buttons for precise half steps; on
+  desktop, hovering the icons previews the value before clicking.
 - Only the member who created the wish can change its rating; other members see
   it read-only.
 - Gift ideas created for someone else have no rating. They are always listed

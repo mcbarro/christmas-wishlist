@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Gift, Star } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Gift, Minus, Plus, Star } from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
 import { useTheme } from '../theme/ThemeProvider';
 
@@ -15,11 +15,14 @@ function stepRating(value, direction) {
   return clampRating(Math.round((value + direction * STEP) * 2) / 2);
 }
 
-function ratingFromPointer(clientX, element) {
+function ratingFromPointer(clientX, element, { snapWhole = false } = {}) {
   const rect = element.getBoundingClientRect();
   if (!rect.width) return null;
 
   const ratio = (clientX - rect.left) / rect.width;
+  if (snapWhole) {
+    return clampRating(Math.round(ratio * MAX_RATING));
+  }
   return clampRating(Math.round(ratio * MAX_RATING * 2) / 2);
 }
 
@@ -33,6 +36,7 @@ export default function RatingControl({
   const { t } = useI18n();
   const { isChristmas } = useTheme();
   const [hoverRating, setHoverRating] = useState(null);
+  const pointerTypeRef = useRef('mouse');
   const rating = clampRating(Number(value) || 2.5);
   const interactive = !readOnly && typeof onChange === 'function';
   const displayRating =
@@ -51,7 +55,9 @@ export default function RatingControl({
 
   const handleClick = (event) => {
     if (!interactive) return;
-    const next = ratingFromPointer(event.clientX, event.currentTarget);
+    const next = ratingFromPointer(event.clientX, event.currentTarget, {
+      snapWhole: pointerTypeRef.current === 'touch',
+    });
     if (next != null) handleValue(next);
     setHoverRating(null);
   };
@@ -140,6 +146,16 @@ export default function RatingControl({
 
   return (
     <span className={`inline-flex items-center gap-1 ${className}`}>
+      <button
+        type="button"
+        onClick={() => handleValue(stepRating(rating, -1))}
+        disabled={rating <= MIN_RATING}
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 sm:hidden"
+        aria-label={t('rating.decrease')}
+      >
+        <Minus className="h-4 w-4" aria-hidden="true" />
+      </button>
+
       <div
         role="slider"
         tabIndex={0}
@@ -151,12 +167,26 @@ export default function RatingControl({
         title={`${t('rating.hint')} ${displayLabel}`}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        onPointerDown={(event) => {
+          pointerTypeRef.current = event.pointerType || 'mouse';
+        }}
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setHoverRating(null)}
         className="inline-flex cursor-pointer touch-manipulation items-center gap-1 rounded-lg py-0.5 outline-none transition focus-visible:ring-2 focus-visible:ring-accent/40"
       >
         {icons}
       </div>
+
+      <button
+        type="button"
+        onClick={() => handleValue(stepRating(rating, 1))}
+        disabled={rating >= MAX_RATING}
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 sm:hidden"
+        aria-label={t('rating.increase')}
+      >
+        <Plus className="h-4 w-4" aria-hidden="true" />
+      </button>
+
       {numericLabel}
     </span>
   );
