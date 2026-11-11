@@ -181,10 +181,18 @@ describe('sortWishes', () => {
 });
 
 describe('getPriceBounds', () => {
-  it('rounds the maximum up to the next five', () => {
+  it('uses the most expensive wish as the maximum', () => {
     expect(getPriceBounds(items)).toEqual({
       min: 0,
-      max: 60,
+      max: 59,
+      hasPrices: true,
+    });
+  });
+
+  it('rounds a fractional maximum up to the next euro', () => {
+    expect(getPriceBounds([{ price: '26,40 €' }])).toEqual({
+      min: 0,
+      max: 27,
       hasPrices: true,
     });
   });

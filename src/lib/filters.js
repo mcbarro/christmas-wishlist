@@ -76,7 +76,7 @@ export function getPriceBounds(items) {
   const maximum = Math.max(...prices);
   return {
     min: 0,
-    max: Math.max(10, Math.ceil(maximum / 5) * 5),
+    max: Math.max(1, Math.ceil(maximum)),
     hasPrices: true,
   };
 }

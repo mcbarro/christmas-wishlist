@@ -31,6 +31,7 @@ export default function RatingControl({
   onChange,
   readOnly = false,
   compact = false,
+  stacked = false,
   className = '',
 }) {
   const { t } = useI18n();
@@ -144,49 +145,71 @@ export default function RatingControl({
     );
   }
 
+  const decreaseButton = (
+    <button
+      type="button"
+      onClick={() => handleValue(stepRating(rating, -1))}
+      disabled={rating <= MIN_RATING}
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+      aria-label={t('rating.decrease')}
+    >
+      <Minus className="h-4 w-4" aria-hidden="true" />
+    </button>
+  );
+  const increaseButton = (
+    <button
+      type="button"
+      onClick={() => handleValue(stepRating(rating, 1))}
+      disabled={rating >= MAX_RATING}
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
+      aria-label={t('rating.increase')}
+    >
+      <Plus className="h-4 w-4" aria-hidden="true" />
+    </button>
+  );
+  const slider = (
+    <div
+      role="slider"
+      tabIndex={0}
+      aria-label={t('rating.label')}
+      aria-valuemin={MIN_RATING}
+      aria-valuemax={MAX_RATING}
+      aria-valuenow={rating}
+      aria-valuetext={valueLabel}
+      title={`${t('rating.hint')} ${displayLabel}`}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      onPointerDown={(event) => {
+        pointerTypeRef.current = event.pointerType || 'mouse';
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setHoverRating(null)}
+      className="inline-flex cursor-pointer touch-manipulation items-center gap-1 rounded-lg py-0.5 outline-none transition focus-visible:ring-2 focus-visible:ring-accent/40"
+    >
+      {icons}
+    </div>
+  );
+
+  if (stacked) {
+    return (
+      <span className={`inline-flex max-w-full flex-col items-start gap-1 ${className}`}>
+        <span className="inline-flex min-w-0 items-center gap-1">
+          {slider}
+          {numericLabel}
+        </span>
+        <span className="inline-flex items-center gap-1 sm:hidden">
+          {decreaseButton}
+          {increaseButton}
+        </span>
+      </span>
+    );
+  }
+
   return (
-    <span className={`inline-flex items-center gap-1 ${className}`}>
-      <button
-        type="button"
-        onClick={() => handleValue(stepRating(rating, -1))}
-        disabled={rating <= MIN_RATING}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 sm:hidden"
-        aria-label={t('rating.decrease')}
-      >
-        <Minus className="h-4 w-4" aria-hidden="true" />
-      </button>
-
-      <div
-        role="slider"
-        tabIndex={0}
-        aria-label={t('rating.label')}
-        aria-valuemin={MIN_RATING}
-        aria-valuemax={MAX_RATING}
-        aria-valuenow={rating}
-        aria-valuetext={valueLabel}
-        title={`${t('rating.hint')} ${displayLabel}`}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        onPointerDown={(event) => {
-          pointerTypeRef.current = event.pointerType || 'mouse';
-        }}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverRating(null)}
-        className="inline-flex cursor-pointer touch-manipulation items-center gap-1 rounded-lg py-0.5 outline-none transition focus-visible:ring-2 focus-visible:ring-accent/40"
-      >
-        {icons}
-      </div>
-
-      <button
-        type="button"
-        onClick={() => handleValue(stepRating(rating, 1))}
-        disabled={rating >= MAX_RATING}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted transition hover:bg-surface-strong hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 sm:hidden"
-        aria-label={t('rating.increase')}
-      >
-        <Plus className="h-4 w-4" aria-hidden="true" />
-      </button>
-
+    <span className={`inline-flex max-w-full flex-wrap items-center gap-1 ${className}`}>
+      <span className="sm:hidden">{decreaseButton}</span>
+      {slider}
+      <span className="sm:hidden">{increaseButton}</span>
       {numericLabel}
     </span>
   );

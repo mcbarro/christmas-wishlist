@@ -307,8 +307,9 @@ for them.
   approved members with their color and initial.
 - The availability filter is a dropdown with the same all/available/reserved
   counts.
-- The budget button opens a min/max slider. You can include wishes without a
-  parsable price with the dedicated checkbox.
+- The budget button opens a min/max slider. Its maximum is the most expensive
+  wish in the list, rounded up to the next euro. You can include wishes without
+  a parsable price with the dedicated checkbox.
 - Member, budget, availability and text search all combine with AND.
 - If no price can be parsed, the budget slider is disabled.
 

@@ -76,6 +76,7 @@ export default function WishCard({
       value={item.rating}
       readOnly={!canRate}
       compact={variant === 'list'}
+      stacked={variant === 'list'}
       onChange={canRate ? (value) => onRate(item, value) : undefined}
     />
   ) : null;
@@ -143,28 +144,36 @@ export default function WishCard({
         }}
       >
         <div className="flex gap-3 p-3 sm:gap-4 sm:p-4">
-          <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-surface-strong sm:h-28 sm:w-28">
-            {hasImage ? (
-              <img
-                src={item.image_url}
-                alt={t('card.imageAlt', { title: item.title })}
-                loading="lazy"
-                decoding="async"
-                onError={() => setImageFailed(true)}
-                className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(225,29,72,0.24),transparent_60%),radial-gradient(circle_at_70%_80%,rgba(16,185,129,0.16),transparent_60%)]">
-                <Gift className="h-7 w-7 text-subtle" aria-hidden="true" />
-              </div>
-            )}
+          <div className="flex w-24 shrink-0 flex-col gap-1.5 sm:w-28">
+            <div className="relative h-24 w-24 overflow-hidden rounded-xl bg-surface-strong sm:h-28 sm:w-28">
+              {hasImage ? (
+                <img
+                  src={item.image_url}
+                  alt={t('card.imageAlt', { title: item.title })}
+                  loading="lazy"
+                  decoding="async"
+                  onError={() => setImageFailed(true)}
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_30%_20%,rgba(225,29,72,0.24),transparent_60%),radial-gradient(circle_at_70%_80%,rgba(16,185,129,0.16),transparent_60%)]">
+                  <Gift className="h-7 w-7 text-subtle" aria-hidden="true" />
+                </div>
+              )}
+            </div>
+
+            {item.price ? (
+              <span className="break-words text-[15px] font-bold leading-tight text-price">
+                {item.price}
+              </span>
+            ) : null}
           </div>
 
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex min-w-0 items-start justify-between gap-2">
               <h3
                 id={titleId}
-                className="line-clamp-2 font-display text-base font-semibold leading-snug text-ink sm:text-lg"
+                className="min-w-0 line-clamp-2 font-display text-base font-semibold leading-snug text-ink sm:text-lg"
               >
                 {item.url ? (
                   <a
@@ -179,12 +188,6 @@ export default function WishCard({
                   item.title
                 )}
               </h3>
-
-              {item.price ? (
-                <span className="mt-0.5 shrink-0 rounded-full border border-price/25 bg-price-bg px-2 py-0.5 text-[11px] font-bold text-price">
-                  {item.price}
-                </span>
-              ) : null}
             </div>
 
             {item.notes ? (
@@ -352,7 +355,7 @@ export default function WishCard({
         )}
 
         {item.price ? (
-          <span className="absolute right-3 top-3 max-w-[55%] truncate rounded-full border border-price/25 bg-price-bg px-2.5 py-1 text-xs font-bold text-price backdrop-blur">
+          <span className="absolute right-3 top-3 z-10 max-w-[55%] truncate rounded-full border border-price/25 bg-price-bg px-2.5 py-1 text-[15px] font-bold text-price backdrop-blur">
             {item.price}
           </span>
         ) : null}
