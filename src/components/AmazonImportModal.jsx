@@ -9,6 +9,7 @@ import {
 import Modal from './Modal';
 import { useI18n } from '../i18n/I18nProvider';
 import { fetchAmazonWishlist } from '../lib/amazonImport';
+import { formatPrice } from '../lib/price';
 import { normalizeUrl } from '../lib/url';
 
 const INPUT_CLASS =
@@ -30,7 +31,7 @@ export default function AmazonImportModal({
   existingItems,
   onImport,
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [url, setUrl] = useState('');
   const [status, setStatus] = useState('idle');
   const [items, setItems] = useState([]);
@@ -332,7 +333,7 @@ export default function AmazonImportModal({
                         <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                           {item.price ? (
                             <span className="font-semibold text-price">
-                              {item.price}
+                              {formatPrice(item.price, locale)}
                             </span>
                           ) : (
                             <span>{t('amazon.noPrice')}</span>

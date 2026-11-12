@@ -12,6 +12,7 @@ import {
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
 import { getMemberColor } from '../lib/memberColor';
+import { formatPrice } from '../lib/price';
 import RatingControl from './RatingControl';
 import shushIcon from '../assets/shush.svg';
 
@@ -70,6 +71,7 @@ export default function WishCard({
   const dateLabel = relativeDate
     ? t('card.addedOn', { date: relativeDate })
     : '';
+  const priceLabel = item.price ? formatPrice(item.price, locale) : '';
 
   const ratingNode = showItemRating ? (
     <RatingControl
@@ -162,9 +164,9 @@ export default function WishCard({
               )}
             </div>
 
-            {item.price ? (
+            {priceLabel ? (
               <span className="break-words text-[15px] font-bold leading-tight text-price">
-                {item.price}
+                {priceLabel}
               </span>
             ) : null}
           </div>
@@ -354,9 +356,9 @@ export default function WishCard({
           </span>
         )}
 
-        {item.price ? (
+        {priceLabel ? (
           <span className="absolute right-3 top-3 z-10 max-w-[55%] truncate rounded-full border border-price/25 bg-price-bg px-2.5 py-1 text-[15px] font-bold text-price backdrop-blur">
-            {item.price}
+            {priceLabel}
           </span>
         ) : null}
       </div>

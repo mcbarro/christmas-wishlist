@@ -322,6 +322,19 @@ for them.
 - Member, budget, availability and text search all combine with AND.
 - If no price can be parsed, the budget slider is disabled.
 
+### Price display
+
+Prices are normalized when rendered on cards and in the Amazon import preview:
+
+- a dot or a comma separates the decimals; if both appear, the last one is the
+  decimal separator and the other is dropped;
+- thousands separators are never shown;
+- the euro symbol is added when it is missing;
+- integer prices stay without cents, decimal prices show two decimals.
+
+Examples: `19.99` → `19,99 €`, `1.299,00 €` → `1299,00 €`, `59` → `59 €`.
+The same parser drives the budget filter, so display and filtering agree.
+
 ### Delete a wish and notifications
 
 - Only the member who created a wish can delete it. Admins cannot delete other
