@@ -456,6 +456,9 @@ const en = {
   "hidden.toggle": "Hidden",
   "hidden.toggleHint":
     "Show or hide the wishes you have hidden for yourself.",
+  "own.filter": "My wishes",
+  "own.hide": "Hide my wishes",
+  "own.show": "Show my wishes",
   "hide.success": "Wish hidden.",
   "unhide.success": "Wish visible again.",
 

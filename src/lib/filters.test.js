@@ -91,6 +91,19 @@ describe('filterWishes', () => {
     expect(reserved.map((item) => item.id)).toEqual(['b']);
   });
 
+  it('hides own wishes when requested', () => {
+    const result = filterWishes(items, {
+      memberId: 'all',
+      budget: fullBudget,
+      status: 'all',
+      query: '',
+      hideOwn: true,
+      ownMemberId: 'b',
+    });
+
+    expect(result.map((item) => item.id)).toEqual(['c']);
+  });
+
   it('hides hidden wishes unless showHidden is enabled', () => {
     const hiddenItems = [
       ...items,

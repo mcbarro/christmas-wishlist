@@ -51,6 +51,8 @@ export default function Navbar({
   hiddenCount,
   hideFeature,
   onToggleHidden,
+  hideOwn,
+  onToggleHideOwn,
   viewMode,
   onViewModeChange,
   onInbox,
@@ -328,6 +330,22 @@ export default function Navbar({
                 ) : null}
               </button>
             ) : null}
+
+            <button
+              type="button"
+              onClick={onToggleHideOwn}
+              aria-pressed={hideOwn}
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                hideOwn
+                  ? 'border-accent/30 bg-accent/10 text-accent'
+                  : 'border-line bg-surface text-muted hover:bg-surface-strong hover:text-ink'
+              }`}
+              aria-label={hideOwn ? t('own.show') : t('own.hide')}
+              title={hideOwn ? t('own.show') : t('own.hide')}
+            >
+              <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('own.filter')}
+            </button>
 
             <div
               className="flex shrink-0 items-center gap-0.5 rounded-full border border-line bg-surface p-0.5"

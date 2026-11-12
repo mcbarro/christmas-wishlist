@@ -29,6 +29,8 @@ Responsive card grid, closed family groups and native mobile sharing.
 - Filter by member and by budget range; the header keeps compact dropdowns for
   availability and members, and the search field expands from its icon.
 - Hide wishes for your own view and reveal them again with a dedicated toggle.
+- Hide all of your own wishes with a header filter that stays enabled after a
+  page reload.
 - Family sync across devices through Supabase.
 - English and Italian UI, detected from the browser language and switchable
   from the profile dialog.
@@ -316,6 +318,8 @@ for them.
   approved members with their color and initial.
 - The availability filter is a dropdown with the same all/available/reserved
   counts.
+- The **My wishes** button hides every wish owned by the current member. Its
+  state is stored in the browser and restored after a reload or a new visit.
 - The budget button opens a min/max slider. Its maximum is the most expensive
   wish in the list, rounded up to the next euro. You can include wishes without
   a parsable price with the dedicated checkbox.

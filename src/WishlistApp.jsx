@@ -28,6 +28,7 @@ import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
 const VIEW_STORAGE_KEY = 'christmas-wishlist:view:v1';
+const HIDE_OWN_STORAGE_KEY = 'christmas-wishlist:hide-own:v1';
 const MOBILE_VIEW_QUERY = '(max-width: 639px)';
 
 function isMobileViewport() {
@@ -49,6 +50,16 @@ function readInitialViewMode() {
   }
 
   return isMobileViewport() ? 'list' : 'grid';
+}
+
+function readInitialHideOwn() {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return window.localStorage.getItem(HIDE_OWN_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
 }
 
 export default function WishlistApp() {
@@ -111,6 +122,7 @@ export default function WishlistApp() {
   const [editTarget, setEditTarget] = useState(null);
   const [showHidden, setShowHidden] = useState(false);
   const [viewMode, setViewMode] = useState(readInitialViewMode);
+  const [hideOwn, setHideOwnState] = useState(readInitialHideOwn);
   const [amazonOpen, setAmazonOpen] = useState(false);
   const [bookmarkletData, setBookmarkletData] = useState(null);
   const [reservation, setReservation] = useState(null);
@@ -200,9 +212,11 @@ export default function WishlistApp() {
           status: filter,
           query: search,
           showHidden,
+          hideOwn,
+          ownMemberId: member?.id,
         })
       ),
-    [items, memberFilter, budget, filter, search, showHidden]
+    [items, memberFilter, budget, filter, search, showHidden, hideOwn, member?.id]
   );
 
   const handleViewModeChange = useCallback((mode) => {
@@ -216,11 +230,26 @@ export default function WishlistApp() {
     }
   }, []);
 
+  const setHideOwn = useCallback((next) => {
+    setHideOwnState(next);
+
+    try {
+      window.localStorage.setItem(HIDE_OWN_STORAGE_KEY, next ? '1' : '0');
+    } catch {
+      // Keep the in-memory preference when storage is unavailable.
+    }
+  }, []);
+
+  const toggleHideOwn = useCallback(() => {
+    setHideOwn(!hideOwn);
+  }, [hideOwn, setHideOwn]);
+
   const hasFilters =
     filter !== 'all' ||
     Boolean(search.trim()) ||
     memberFilter !== 'all' ||
-    Boolean(budget.active);
+    Boolean(budget.active) ||
+    hideOwn;
 
   const openAdd = useCallback(() => {
     setAddInitial(null);
@@ -329,13 +358,14 @@ export default function WishlistApp() {
     setFilter('all');
     setMemberFilter('all');
     setShowHidden(false);
+    setHideOwn(false);
     setBudget({
       active: false,
       min: budgetBounds.min,
       max: budgetBounds.max,
       includeMissing: false,
     });
-  }, [budgetBounds]);
+  }, [budgetBounds, setHideOwn]);
 
   const resetBudget = useCallback(() => {
     setBudget({
@@ -513,6 +543,8 @@ export default function WishlistApp() {
         hiddenCount={hiddenCount}
         hideFeature={hasFeature('hide_items')}
         onToggleHidden={() => setShowHidden((current) => !current)}
+        hideOwn={hideOwn}
+        onToggleHideOwn={toggleHideOwn}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
         onInbox={() => setInboxOpen(true)}

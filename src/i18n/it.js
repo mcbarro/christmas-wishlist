@@ -462,6 +462,9 @@ const it = {
   "hidden.toggle": "Nascosti",
   "hidden.toggleHint":
     "Mostra o nascondi i desideri che hai nascosto per te.",
+  "own.filter": "I miei desideri",
+  "own.hide": "Nascondi i miei desideri",
+  "own.show": "Mostra i miei desideri",
   "hide.success": "Desiderio nascosto.",
   "unhide.success": "Desiderio di nuovo visibile.",
 
