@@ -21,6 +21,7 @@ const SQL_FILES = [
   'supabase/migrations/20261110080000_item_ratings.sql',
   'supabase/migrations/20261110090000_member_removal.sql',
   'supabase/migrations/20261110100000_reissue_invites.sql',
+  'supabase/migrations/20261112090000_removed_member_cleanup.sql',
   'supabase_schema.sql',
 ];
 

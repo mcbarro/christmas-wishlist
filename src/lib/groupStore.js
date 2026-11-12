@@ -121,7 +121,7 @@ export class GroupError extends Error {
 }
 
 const DEMO_CAPABILITIES = {
-  schema_version: 8,
+  schema_version: 9,
   features: [
     'suggestions',
     'delete_notifications',
@@ -137,6 +137,7 @@ const DEMO_CAPABILITIES = {
     'item_ratings',
     'member_removal',
     'member_reinvite',
+    'removed_member_cleanup',
   ],
 };
 
@@ -510,6 +511,7 @@ function mapItem(row) {
     price: row.price || '',
     rating: normalizeRating(row.rating),
     hidden_by_me: Boolean(row.hidden_by_me),
+    can_admin_delete: Boolean(row.can_admin_delete),
   };
 }
 
@@ -537,7 +539,8 @@ function mergeItems(items, reservations, memberId) {
       is_own_item: isOwnItem,
       is_suggestion: isSuggestion,
       is_own_suggestion: createdById === memberId,
-      can_delete: createdById === memberId,
+      can_delete:
+        createdById === memberId || Boolean(item.can_admin_delete),
       can_edit: createdById === memberId,
       can_rate: !isSuggestion && createdById === memberId,
       rating: isSuggestion ? null : normalizeRating(item.rating),
@@ -800,8 +803,10 @@ export async function loadGroupData({ group, member, session }) {
     if (!currentMember) throw new GroupError('NOT_APPROVED');
 
     const groupMembers = state.members.filter(
-      (candidate) =>
-        candidate.group_id === group.id && candidate.status === 'approved'
+      (candidate) => candidate.group_id === group.id
+    );
+    const approvedMembers = groupMembers.filter(
+      (candidate) => candidate.status === 'approved'
     );
     const membersById = new Map(
       groupMembers.map((candidate) => [candidate.id, candidate])
@@ -825,6 +830,9 @@ export async function loadGroupData({ group, member, session }) {
           ...item,
           owner_name: owner?.display_name || '',
           created_by_name: creator?.display_name || owner?.display_name || '',
+          can_admin_delete:
+            Boolean(currentMember.is_admin) &&
+            creator?.status === 'removed',
           hidden_by_me: state.hidden_items.some(
             (hidden) =>
               hidden.group_id === group.id &&
@@ -872,7 +880,7 @@ export async function loadGroupData({ group, member, session }) {
           )
       : [];
 
-    const members = groupMembers
+    const members = approvedMembers
       .map((candidate) => ({
         id: candidate.id,
         displayName: candidate.display_name,
@@ -1485,7 +1493,13 @@ export async function deleteItem({ group, session, itemId }) {
     const creatorId =
       item.created_by_member_id || item.owner_member_id;
     if (creatorId !== currentMember.id) {
-      throw new GroupError('NOT_ALLOWED');
+      const creator = state.members.find(
+        (candidate) =>
+          candidate.id === creatorId && candidate.group_id === group.id
+      );
+      if (!currentMember.is_admin || creator?.status !== 'removed') {
+        throw new GroupError('NOT_ALLOWED');
+      }
     }
 
     const reservations = state.reservations.filter(

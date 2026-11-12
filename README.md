@@ -9,7 +9,8 @@ Responsive card grid, closed family groups and native mobile sharing.
   invited person can enter immediately without waiting for approval; the link
   stops working after the first use.
 - Admins can remove a member, revoking access immediately while keeping the
-  wishes and gift ideas already shared with the group.
+  wishes and gift ideas already shared with the group. An admin can then delete
+  wishes created by that removed member.
 - Admins can reissue a one-time link for a member who lost their link, without
   losing that member's wishes or suggestions.
 - Join multiple family groups and switch between them from the header.
@@ -96,6 +97,7 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261110080000_item_ratings.sql`
 - `supabase/migrations/20261110090000_member_removal.sql`
 - `supabase/migrations/20261110100000_reissue_invites.sql`
+- `supabase/migrations/20261112090000_removed_member_cleanup.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -240,6 +242,13 @@ invite token is cleared, so access is revoked immediately. Their reservations,
 hidden items and notifications are deleted. Their wishes and gift ideas stay in
 the group, so the family does not lose the ideas they contributed. Admins cannot
 remove themselves; use **Leave this group** from the profile dialog instead.
+
+Wishes and gift ideas created by the removed member stay in the group so nothing
+is lost. Because the original creator can no longer sign in, an admin can delete
+those wishes directly from their cards: the trash button appears on items whose
+creator has status `removed`. The normal rule still applies everywhere else —
+only the creator can delete an active member's wish. Reservations on a deleted
+wish notify the members who had reserved it.
 
 ### Reissuing a lost link
 
@@ -591,7 +600,8 @@ dialogs, forms and status messages.
 │       ├── 20261110070000_fix_invite_token.sql
 │       ├── 20261110080000_item_ratings.sql
 │       ├── 20261110090000_member_removal.sql
-│       └── 20261110100000_reissue_invites.sql
+│       ├── 20261110100000_reissue_invites.sql
+│       └── 20261112090000_removed_member_cleanup.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json
