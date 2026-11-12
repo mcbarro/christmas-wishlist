@@ -385,6 +385,16 @@ on any page opens the app on a dedicated save screen where you choose:
 
 The page URL and title are prefilled, and metadata is fetched when possible.
 
+### Amazon product links
+
+Pasting an Amazon product link into **Add a wish** uses Jina Reader instead of
+the generic OpenGraph scraper, which Amazon often blocks. The app reads the
+rendered page for the title and main image. If the product has no buy-box price,
+it also checks the **other sellers** page and uses the first available offer.
+This is how the Lindt listing with only third-party offers still gets a price.
+If no seller is available, the title and image are still filled in and the price
+can be entered manually.
+
 ### Import an Amazon wishlist
 
 1. Open **Add a wish → Import from Amazon**.
@@ -679,6 +689,11 @@ titles, prices and images, deduplicates by ASIN and returns a preview list.
 selected items in one RPC (with a sequential `add_item` fallback for older
 databases).
 
+`src/lib/ogScraper.js` handles single Amazon product links. It detects canonical
+`/dp/`, `/gp/product/` and mobile `/gp/aw/d/` URLs, parses the Jina Reader
+Markdown for title, image and price, and falls back to the offer-listing page
+when the main buy box has no price.
+
 ### GitHub Pages routing
 
 GitHub Pages does not serve `index.html` for unknown paths. `public/404.html`
@@ -710,7 +725,7 @@ both project sites and custom domains.
 | The Christmas theme looks wrong after an update | Reload once to refresh the cached CSS and service worker. |
 | The Amazon import says the list is private | Make the Amazon wishlist public; the reader service cannot access lists that require a login. |
 | The Amazon import fails or times out | Jina Reader may be rate-limited or temporarily unavailable. Wait a moment and try again; the rest of the app is unaffected. |
-| Amazon items have no price or image | Amazon does not always expose them in the public page. The item is still imported and can be edited manually. |
+| Amazon items have no price or image | Amazon does not always expose them in the public page. Product links also try the other-sellers page; if no offer exists, the item is still imported and can be edited manually. |
 | Another device does not update immediately | The list refreshes every 15 seconds and when the tab becomes visible; use the status pill to refresh manually. |
 | A shared link opens a 404 | Make sure GitHub Pages uses **GitHub Actions** as its source and that the latest build contains `404.html`. |
 | Share Target does not appear | Install the PWA over HTTPS, then share from a compatible Android browser. iOS does not support Web Share Target. |

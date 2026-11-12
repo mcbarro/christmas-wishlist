@@ -4,6 +4,8 @@ import {
   extractPrice,
   extractPriceFromText,
   fetchUrlMetadata,
+  isAmazonProductUrl,
+  parseAmazonProductText,
 } from './ogScraper';
 
 describe('extractPrice', () => {
@@ -67,6 +69,64 @@ describe('cleanTitle', () => {
   });
 });
 
+describe('Amazon product metadata', () => {
+  const amazonText = `Title: Lindt Lindor Milk Chocolate Praline 16 Chocolates, 200 g Pack : Amazon.it: Grocery
+
+![Image](https://m.media-amazon.com/images/I/6123._AC_SR38,50_.jpg)
+![Image](https://m.media-amazon.com/images/I/61kiWKfZurL._AC_SX569_.jpg)
+
+# Lindt Lindor Milk Chocolate Praline 16 Chocolates, 200 g Pack
+
+## Price
+
+€ 12,99
+`;
+
+  it('recognizes Amazon product URLs only', () => {
+    expect(
+      isAmazonProductUrl(
+        'https://www.amazon.it/Lindt-Praline-Cioccolato/dp/B00XUMTTYI?th=1'
+      )
+    ).toBe(true);
+    expect(
+      isAmazonProductUrl('https://www.amazon.it/gp/product/B00XUMTTYI')
+    ).toBe(true);
+    expect(
+      isAmazonProductUrl('https://www.amazon.it/gp/aw/d/B00XUMTTYI')
+    ).toBe(true);
+    expect(
+      isAmazonProductUrl('https://www.amazon.it/hz/wishlist/ls/ABC123')
+    ).toBe(false);
+    expect(isAmazonProductUrl('https://example.com/dp/B00XUMTTYI')).toBe(false);
+  });
+
+  it('extracts the title, main image and price from reader markdown', () => {
+    const metadata = parseAmazonProductText(
+      amazonText,
+      'https://www.amazon.it/dp/B00XUMTTYI'
+    );
+
+    expect(metadata.title).toBe(
+      'Lindt Lindor Milk Chocolate Praline 16 Chocolates, 200 g Pack'
+    );
+    expect(metadata.image_url).toBe(
+      'https://m.media-amazon.com/images/I/61kiWKfZurL._AC_SX569_.jpg'
+    );
+    expect(metadata.price).toBe('€ 12,99');
+  });
+
+  it('still returns title and image when Amazon has no offer', () => {
+    const metadata = parseAmazonProductText(
+      amazonText.replace('€ 12,99', 'No featured offers available'),
+      'https://www.amazon.it/dp/B00XUMTTYI'
+    );
+
+    expect(metadata.title).toContain('Lindt Lindor');
+    expect(metadata.image_url).toContain('m.media-amazon.com');
+    expect(metadata.price).toBe('');
+  });
+});
+
 describe('fetchUrlMetadata', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -105,5 +165,79 @@ describe('fetchUrlMetadata', () => {
       'https://www.lidl.it/p/parkside-levigatrice-a-penna-multifunzione-ricaricabile/p11131409'
     );
     expect(requestedUrl.searchParams.get('meta')).toBe('true');
+  });
+
+  it('uses the reader fallback for Amazon product pages', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () =>
+        `Title: Lindt Lindor Milk Chocolate Praline 16 Chocolates, 200 g Pack : Amazon.it: Grocery
+
+![Image](https://m.media-amazon.com/images/I/61kiWKfZurL._AC_SX569_.jpg)
+
+## Price
+
+€ 12,99
+`,
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const metadata = await fetchUrlMetadata(
+      'https://www.amazon.it/Lindt-Praline-Cioccolato-Cioccolatini-confezione/dp/B00XUMTTYI?th=1'
+    );
+
+    expect(metadata.title).toBe(
+      'Lindt Lindor Milk Chocolate Praline 16 Chocolates, 200 g Pack'
+    );
+    expect(metadata.image_url).toBe(
+      'https://m.media-amazon.com/images/I/61kiWKfZurL._AC_SX569_.jpg'
+    );
+    expect(metadata.price).toBe('€ 12,99');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toContain('r.jina.ai');
+    expect(fetchMock.mock.calls[0][0]).toContain(
+      'https://www.amazon.it/dp/B00XUMTTYI'
+    );
+  });
+
+  it('falls back to the offer-listing page when Amazon has no buy box price', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          `Title: Lindt Lindor Milk Chocolate Praline 16 Chocolates, 200 g Pack : Amazon.it: Grocery
+
+![Image](https://m.media-amazon.com/images/I/61kiWKfZurL._AC_SX569_.jpg)
+
+## Price
+
+No featured offers available
+`,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          `Title: Lindt Lindor Milk Chocolate Praline 16 Chocolates, 200 g Pack
+
+##### 1 option
+
+One-time purchase
+
+ €12.00 €12.00
+`,
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const metadata = await fetchUrlMetadata(
+      'https://www.amazon.it/Lindt-Praline-Cioccolato-Cioccolatini-confezione/dp/B00XUMTTYI?th=1'
+    );
+
+    expect(metadata.title).toContain('Lindt Lindor');
+    expect(metadata.price).toBe('€12.00');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toContain(
+      'https://www.amazon.it/gp/offer-listing/B00XUMTTYI'
+    );
   });
 });
