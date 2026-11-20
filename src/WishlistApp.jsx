@@ -24,6 +24,7 @@ import {
   addItem as addItemInStore,
   buildSessionLink,
 } from './lib/groupStore';
+import { fetchUrlMetadata } from './lib/ogScraper';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 
@@ -62,6 +63,17 @@ function readInitialHideOwn() {
   }
 }
 
+function shouldReplaceItemTitle(current, candidate) {
+  if (!candidate) return false;
+  const value = String(current || '').trim();
+  if (!value) return true;
+  return (
+    /product gallery/i.test(value) ||
+    /amazon\.[a-z.]+/i.test(value) ||
+    /^https?:\/\//i.test(value)
+  );
+}
+
 export default function WishlistApp() {
   const { t } = useI18n();
   const {
@@ -93,6 +105,7 @@ export default function WishlistApp() {
     addItem,
     addItems,
     updateItem,
+    refreshItemMetadata,
     setItemRating,
     deleteItem,
     hideItem,
@@ -352,6 +365,37 @@ export default function WishlistApp() {
     [setItemRating, showToast, t]
   );
 
+  const handleRefreshItem = useCallback(
+    async (item) => {
+      if (!item?.url) return false;
+
+      try {
+        const metadata = await fetchUrlMetadata(item.url);
+        const title = shouldReplaceItemTitle(item.title, metadata.title)
+          ? metadata.title
+          : '';
+
+        if (!metadata.image_url && !metadata.price && !title) {
+          showToast(t('card.refreshEmpty'), 'info');
+          return false;
+        }
+
+        await refreshItemMetadata(item.id, {
+          image_url: metadata.image_url,
+          price: metadata.price,
+          title,
+        });
+        showToast(t('card.refreshSuccess'), 'success');
+        return true;
+      } catch (error) {
+        console.error('Could not refresh the wish metadata:', error);
+        showToast(t('card.refreshError'), 'error');
+        return false;
+      }
+    },
+    [refreshItemMetadata, showToast, t]
+  );
+
   const closeReservation = useCallback(() => setReservation(null), []);
   const clearFilters = useCallback(() => {
     setSearch('');
@@ -578,6 +622,9 @@ export default function WishlistApp() {
                 onReserve={handleReserve}
                 onRelease={handleRelease}
                 onRate={handleRate}
+                onRefresh={
+                  hasFeature('item_refresh') ? handleRefreshItem : undefined
+                }
                 showRating={hasFeature('item_ratings')}
                 onDelete={
                   hasFeature('delete_notifications')

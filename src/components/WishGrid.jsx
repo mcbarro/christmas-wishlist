@@ -10,6 +10,7 @@ export default function WishGrid({
   onHide,
   onUnhide,
   onRate,
+  onRefresh,
   showRating,
   canHide,
 }) {
@@ -36,6 +37,7 @@ export default function WishGrid({
             onHide={onHide}
             onUnhide={onUnhide}
             onRate={onRate}
+            onRefresh={onRefresh}
             showRating={showRating}
             canHide={canHide}
           />

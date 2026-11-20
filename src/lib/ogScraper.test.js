@@ -5,6 +5,7 @@ import {
   extractPriceFromText,
   fetchUrlMetadata,
   isAmazonProductUrl,
+  isAmazonShortUrl,
   parseAmazonProductText,
 } from './ogScraper';
 
@@ -98,6 +99,9 @@ describe('Amazon product metadata', () => {
       isAmazonProductUrl('https://www.amazon.it/hz/wishlist/ls/ABC123')
     ).toBe(false);
     expect(isAmazonProductUrl('https://example.com/dp/B00XUMTTYI')).toBe(false);
+    expect(isAmazonShortUrl('https://amzn.eu/d/01CmLUdt')).toBe(true);
+    expect(isAmazonShortUrl('https://amzn.to/abc')).toBe(true);
+    expect(isAmazonShortUrl('https://example.com/d/01CmLUdt')).toBe(false);
   });
 
   it('extracts the title, main image and price from reader markdown', () => {
@@ -124,6 +128,18 @@ describe('Amazon product metadata', () => {
     expect(metadata.title).toContain('Lindt Lindor');
     expect(metadata.image_url).toContain('m.media-amazon.com');
     expect(metadata.price).toBe('');
+  });
+
+  it('reads the buy-box price amount from Amazon JSON', () => {
+    const metadata = parseAmazonProductText(
+      `${amazonText.replace('€ 12,99', 'No featured offers available')}
+
+{"desktop_buybox_group_1":[{"displayPrice":"42,16€","priceAmount":42.16}]}
+`,
+      'https://www.amazon.it/dp/B00XUMTTYI'
+    );
+
+    expect(metadata.price).toBe('42,16€');
   });
 });
 
@@ -196,8 +212,47 @@ describe('fetchUrlMetadata', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][0]).toContain('r.jina.ai');
     expect(fetchMock.mock.calls[0][0]).toContain(
-      'https://www.amazon.it/dp/B00XUMTTYI'
+      'https://www.amazon.it/gp/aw/d/B00XUMTTYI'
     );
+  });
+
+  it('resolves amzn.eu short links before reading Amazon metadata', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          `Title: Amazon.it
+
+URL Source: https://amzn.eu/d/01CmLudt
+
+Final URL: https://www.amazon.it/dp/B0DRCRNFN6?language=it-IT
+`,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          `Title: Tolesum Lima Unghie Cani : Amazon.it: Prodotti per animali domestici
+
+![Image](https://m.media-amazon.com/images/I/61Yw-VJPQyL._AC_SX522_.jpg)
+
+## Price
+
+€ 12,00
+`,
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const metadata = await fetchUrlMetadata('https://amzn.eu/d/01CmLUdt');
+
+    expect(metadata.title).toBe('Tolesum Lima Unghie Cani');
+    expect(metadata.image_url).toContain('m.media-amazon.com');
+    expect(metadata.price).toBe('€ 12,00');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[1][0]).toContain(
+      'https://www.amazon.it/gp/aw/d/B0DRCRNFN6'
+    );
+    expect(fetchMock.mock.calls[1][0]).toContain('language=it_IT');
   });
 
   it('falls back to the offer-listing page when Amazon has no buy box price', async () => {

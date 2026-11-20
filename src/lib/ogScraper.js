@@ -99,6 +99,18 @@ export function extractPrice(data) {
   return '';
 }
 
+const AMAZON_SHORT_HOSTS = new Set(['amzn.eu', 'amzn.to', 'a.co']);
+
+export function isAmazonShortUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    if (url.protocol !== 'https:') return false;
+    return AMAZON_SHORT_HOSTS.has(url.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
 export function isAmazonProductUrl(value) {
   try {
     const url = new URL(String(value || ''));
@@ -118,7 +130,7 @@ function canonicalAmazonProductUrl(value) {
     const url = new URL(value);
     const match = url.pathname.match(/\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})/i);
     if (!match) return value;
-    return `https://${url.hostname}/dp/${match[1].toUpperCase()}`;
+    return `https://${url.hostname}/gp/aw/d/${match[1].toUpperCase()}`;
   } catch {
     return value;
   }
@@ -136,6 +148,34 @@ function amazonProductParts(value) {
   } catch {
     return null;
   }
+}
+
+function withAmazonLanguage(value) {
+  try {
+    const url = new URL(value);
+    const hostname = url.hostname.replace(/^www\./i, '').toLowerCase();
+    if (hostname === 'amazon.it') url.searchParams.set('language', 'it_IT');
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
+function extractFinalUrl(text) {
+  const match = String(text || '').match(/^Final URL:\s*(\S+)/m);
+  return match ? match[1] : '';
+}
+
+async function resolveAmazonShortUrl(value, { signal } = {}) {
+  const text = await fetchJinaText(value, {
+    signal,
+    timeoutMs: REQUEST_TIMEOUT_MS,
+  });
+  const finalUrl = extractFinalUrl(text);
+  return {
+    finalUrl: isAmazonProductUrl(finalUrl) ? normalizeUrl(finalUrl) : '',
+    text,
+  };
 }
 
 function cleanAmazonTitle(value) {
@@ -196,6 +236,20 @@ export function parseAmazonProductText(text, sourceUrl = '') {
     );
   }
   if (!price) {
+    const amountMatch = source.match(
+      /"priceAmount"\s*:\s*(\d+(?:[.,]\d+)?)/i
+    );
+    if (amountMatch) price = amountMatch[1];
+  }
+  if (!price) {
+    const displayMatch = source.match(
+      /"displayPrice"\s*:\s*"([^"]+)"/i
+    );
+    if (displayMatch) {
+      price = extractPriceFromText(displayMatch[1]) || displayMatch[1];
+    }
+  }
+  if (!price) {
     price = extractPriceFromText(source.slice(0, 12000));
   }
 
@@ -236,7 +290,7 @@ async function fetchJinaText(targetUrl, { signal, timeoutMs } = {}) {
 }
 
 async function fetchAmazonProductMetadata(url, { signal } = {}) {
-  const text = await fetchJinaText(canonicalAmazonProductUrl(url), {
+  const text = await fetchJinaText(withAmazonLanguage(canonicalAmazonProductUrl(url)), {
     signal,
     timeoutMs: AMAZON_REQUEST_TIMEOUT_MS,
   });
@@ -277,14 +331,30 @@ export async function fetchUrlMetadata(targetUrl, { signal } = {}) {
 
   if (!url) return emptyResult;
 
-  // Amazon product pages need the rendered-reader fallback.
-  if (isAmazonProductUrl(url)) {
+  // Amazon product pages need the rendered-reader fallback. Short links such
+  // as amzn.eu are resolved first so the ASIN and offer page can be found.
+  let amazonTarget = url;
+  let shortText = '';
+  if (isAmazonShortUrl(url)) {
     try {
-      const amazon = await fetchAmazonProductMetadata(url, { signal });
+      const resolved = await resolveAmazonShortUrl(url, { signal });
+      amazonTarget = resolved.finalUrl || url;
+      shortText = resolved.text;
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        console.warn('Could not resolve Amazon short link:', error);
+      }
+      if (signal?.aborted) return emptyResult;
+    }
+  }
+
+  if (isAmazonProductUrl(amazonTarget)) {
+    try {
+      const amazon = await fetchAmazonProductMetadata(amazonTarget, { signal });
       if (amazon.title || amazon.image_url || amazon.price) {
         if (!amazon.price) {
           try {
-            amazon.price = await fetchAmazonOfferPrice(url, { signal });
+            amazon.price = await fetchAmazonOfferPrice(amazonTarget, { signal });
           } catch (error) {
             if (error.name !== 'AbortError') {
               console.warn('Could not fetch Amazon offer price:', error);
@@ -298,6 +368,15 @@ export async function fetchUrlMetadata(targetUrl, { signal } = {}) {
         console.warn('Could not fetch Amazon product metadata:', error);
       }
       if (signal?.aborted) return emptyResult;
+    }
+  }
+
+  // Some short-link responses already contain the product content, and some
+  // final URLs are intermittent. Use the short-link page as a fallback.
+  if (shortText) {
+    const parsed = parseAmazonProductText(shortText, url);
+    if (parsed.title || parsed.image_url || parsed.price) {
+      return { ...emptyResult, ...parsed, url };
     }
   }
 

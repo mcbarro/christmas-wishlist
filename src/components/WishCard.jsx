@@ -1,16 +1,19 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import {
   Check,
   ExternalLink,
   Eye,
   EyeOff,
   Gift,
+  Loader2,
   Pencil,
+  RefreshCw,
   Trash2,
   Undo2,
 } from 'lucide-react';
 import { useI18n } from '../i18n/I18nProvider';
 import { formatRelativeDate } from '../lib/date';
+import { isUsableImageUrl } from '../lib/image';
 import { getMemberColor } from '../lib/memberColor';
 import { formatPrice } from '../lib/price';
 import RatingControl from './RatingControl';
@@ -28,11 +31,17 @@ export default function WishCard({
   canHide = false,
   variant = 'grid',
   onRate,
+  onRefresh,
   showRating = false,
 }) {
   const { t, locale } = useI18n();
   const [imageFailed, setImageFailed] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const titleId = useId();
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [item.image_url]);
 
   const hasImage = Boolean(item.image_url) && !imageFailed;
   const isOwnItem = Boolean(item.is_own_item);
@@ -72,6 +81,41 @@ export default function WishCard({
     ? t('card.addedOn', { date: relativeDate })
     : '';
   const priceLabel = item.price ? formatPrice(item.price, locale) : '';
+  const canRefresh =
+    Boolean(item.can_refresh) && typeof onRefresh === 'function';
+  const needsRefresh =
+    imageFailed ||
+    !isUsableImageUrl(item.image_url) ||
+    !String(item.price || '').trim();
+  const showRefresh = canRefresh && needsRefresh && Boolean(item.url);
+
+  const handleRefresh = async () => {
+    if (!showRefresh || refreshing) return;
+    setRefreshing(true);
+    try {
+      await onRefresh(item);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const refreshButton = showRefresh ? (
+    <button
+      type="button"
+      onClick={handleRefresh}
+      disabled={refreshing}
+      className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-accent/20 bg-accent/10 px-2.5 text-xs font-semibold text-accent transition hover:bg-accent/20 disabled:cursor-not-allowed disabled:opacity-60"
+      aria-label={t('card.refreshAria', { title: item.title })}
+      title={t('card.refreshAria', { title: item.title })}
+    >
+      {refreshing ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+      ) : (
+        <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+      )}
+      {refreshing ? t('card.refreshing') : t('card.refresh')}
+    </button>
+  ) : null;
 
   const ratingNode = showItemRating ? (
     <RatingControl
@@ -244,6 +288,7 @@ export default function WishCard({
             {ratingNode ? <div>{ratingNode}</div> : null}
 
             <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+              {refreshButton}
               {!isOwnItem ? (
                 reserved ? (
                   reservedByMe ? (
@@ -449,6 +494,8 @@ export default function WishCard({
             {t('card.reserve')}
           </button>
         )}
+
+        {refreshButton ? <div>{refreshButton}</div> : null}
 
         <div className="flex items-center justify-between gap-3">
           {item.url ? (

@@ -11,6 +11,7 @@ import {
   hideItem as hideItemInStore,
   loadGroupData,
   markNotificationsRead as markNotificationsReadInStore,
+  refreshItemMetadata as refreshItemMetadataInStore,
   releaseItem as releaseItemInStore,
   removeMember as removeMemberInStore,
   reissueInvite as reissueInviteInStore,
@@ -143,6 +144,20 @@ export function useGroupWishlist() {
       });
       await load({ quiet: true });
       return item;
+    },
+    [group, session, load]
+  );
+
+  const refreshItemMetadata = useCallback(
+    async (itemId, metadata) => {
+      await refreshItemMetadataInStore({
+        group,
+        session,
+        itemId,
+        ...metadata,
+      });
+      await load({ quiet: true });
+      return true;
     },
     [group, session, load]
   );
@@ -315,6 +330,7 @@ export function useGroupWishlist() {
     addItem,
     addItems,
     updateItem,
+    refreshItemMetadata,
     setItemRating,
     deleteItem,
     hideItem,

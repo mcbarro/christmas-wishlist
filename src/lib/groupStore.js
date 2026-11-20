@@ -121,7 +121,7 @@ export class GroupError extends Error {
 }
 
 const DEMO_CAPABILITIES = {
-  schema_version: 9,
+  schema_version: 10,
   features: [
     'suggestions',
     'delete_notifications',
@@ -138,6 +138,7 @@ const DEMO_CAPABILITIES = {
     'member_removal',
     'member_reinvite',
     'removed_member_cleanup',
+    'item_refresh',
   ],
 };
 
@@ -515,7 +516,7 @@ function mapItem(row) {
   };
 }
 
-function mergeItems(items, reservations, memberId) {
+function mergeItems(items, reservations, memberId, isAdmin = false) {
   const reservationsByItem = new Map(
     (reservations || []).map((reservation) => [
       reservation.item_id,
@@ -542,6 +543,7 @@ function mergeItems(items, reservations, memberId) {
       can_delete:
         createdById === memberId || Boolean(item.can_admin_delete),
       can_edit: createdById === memberId,
+      can_refresh: Boolean(isAdmin) || createdById === memberId,
       can_rate: !isSuggestion && createdById === memberId,
       rating: isSuggestion ? null : normalizeRating(item.rating),
       hidden_by_me: Boolean(item.hidden_by_me),
@@ -906,7 +908,12 @@ export async function loadGroupData({ group, member, session }) {
       .map(mapNotification);
 
     return {
-      items: mergeItems(items, reservations, member.id),
+      items: mergeItems(
+        items,
+        reservations,
+        member.id,
+        currentMember.is_admin
+      ),
       pendingMembers,
       members,
       notifications,
@@ -959,7 +966,8 @@ export async function loadGroupData({ group, member, session }) {
     items: mergeItems(
       itemRows.map(mapItem),
       reservationRows,
-      member.id
+      member.id,
+      member.isAdmin
     ),
     pendingMembers: pendingRows.map((row) => ({
       id: row.member_id,
@@ -1232,6 +1240,54 @@ export async function updateItem({
     item.rating = value;
   }
   return item;
+}
+
+export async function refreshItemMetadata({
+  group,
+  session,
+  itemId,
+  image_url,
+  price,
+  title,
+}) {
+  if (isDemo()) {
+    const state = readDemoState();
+    const currentMember = state.members.find(
+      (candidate) =>
+        candidate.group_id === group.id &&
+        candidate.user_secret === session.userSecret &&
+        candidate.status === 'approved'
+    );
+    if (!currentMember) throw new GroupError('NOT_APPROVED');
+
+    const item = state.items.find(
+      (candidate) =>
+        candidate.id === itemId && candidate.group_id === group.id
+    );
+    if (!item) throw new GroupError('ITEM_NOT_FOUND');
+
+    const creatorId = item.created_by_member_id || item.owner_member_id;
+    if (creatorId !== currentMember.id && !currentMember.is_admin) {
+      throw new GroupError('NOT_ALLOWED');
+    }
+
+    if (trim(image_url)) item.image_url = trim(image_url);
+    if (trim(price)) item.price = trim(price);
+    if (trim(title)) item.title = trim(title);
+    writeDemoState(state);
+    return true;
+  }
+
+  const data = await rpc('refresh_item_metadata', {
+    p_group_secret: group.groupSecret,
+    p_user_secret: session.userSecret,
+    p_item_id: itemId,
+    p_image_url: trim(image_url),
+    p_price: trim(price),
+    p_title: trim(title) || null,
+  });
+  if (data === false) throw new GroupError('ITEM_NOT_FOUND');
+  return true;
 }
 
 export async function setItemRating({ group, session, itemId, rating }) {

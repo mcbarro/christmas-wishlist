@@ -13,6 +13,8 @@ Responsive card grid, closed family groups and native mobile sharing.
   wishes created by that removed member.
 - Admins can reissue a one-time link for a member who lost their link, without
   losing that member's wishes or suggestions.
+- The creator or an admin can refresh a wish preview and price from its source
+  link when the image or price is missing.
 - Join multiple family groups and switch between them from the header.
 - Add wishes manually, share a product link from a phone, import a public
   Amazon wishlist, or save the current page with a desktop bookmarklet.
@@ -100,6 +102,7 @@ The repository contains these migrations, applied in order:
 - `supabase/migrations/20261110090000_member_removal.sql`
 - `supabase/migrations/20261110100000_reissue_invites.sql`
 - `supabase/migrations/20261112090000_removed_member_cleanup.sql`
+- `supabase/migrations/20261120090000_refresh_item_metadata.sql`
 
 The GitHub Actions workflow applies them with `supabase db push` before
 building the site.
@@ -147,7 +150,7 @@ through SECURITY DEFINER functions that validate the group and member secrets:
   `create_preapproved_member`, `get_invite`, `claim_invite`, `remove_member`,
   `reissue_invite`
 - `delete_item`, `get_notifications`, `mark_notifications_read`
-- `hide_item`, `unhide_item`, `set_item_rating`
+- `hide_item`, `unhide_item`, `set_item_rating`, `refresh_item_metadata`
 - `get_app_capabilities`
 
 Two privacy rules are enforced in the database:
@@ -338,6 +341,19 @@ Prices are normalized when rendered on cards and in the Amazon import preview:
 
 Examples: `19.99` → `19,99 €`, `1.299,00 €` → `1299,00 €`, `59` → `59 €`.
 The same parser drives the budget filter, so display and filtering agree.
+
+### Refreshing a preview or price
+
+When a wish has no usable image or no price, the creator or a group admin sees
+an **Refresh** button on its card. It re-reads the original product URL, updates
+the image and price when found, and keeps the existing values when the source no
+longer exposes them. A title is replaced only when the current one is empty,
+looks like a URL, contains an Amazon suffix, or is the generic “Product gallery”.
+
+Amazon short links (`amzn.eu`, `amzn.to`, `a.co`) are resolved before reading,
+and product pages are requested with the Italian locale to avoid Amazon's
+interstitial pages. If the buy box has no price, the first offer on the
+other-sellers page is used.
 
 ### Delete a wish and notifications
 
@@ -628,7 +644,8 @@ dialogs, forms and status messages.
 │       ├── 20261110080000_item_ratings.sql
 │       ├── 20261110090000_member_removal.sql
 │       ├── 20261110100000_reissue_invites.sql
-│       └── 20261112090000_removed_member_cleanup.sql
+│       ├── 20261112090000_removed_member_cleanup.sql
+│       └── 20261120090000_refresh_item_metadata.sql
 ├── supabase_schema.sql
 ├── index.html
 ├── package.json

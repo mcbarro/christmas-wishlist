@@ -62,6 +62,7 @@ export default function HomePage({
   onHide,
   onUnhide,
   onRate,
+  onRefresh,
   showRating,
   canHide,
 }) {
@@ -149,6 +150,7 @@ export default function HomePage({
         onHide={onHide}
         onUnhide={onUnhide}
         onRate={onRate}
+        onRefresh={onRefresh}
         showRating={showRating}
         canHide={canHide}
       />
