@@ -352,8 +352,10 @@ looks like a URL, contains an Amazon suffix, or is the generic “Product galler
 
 Amazon short links (`amzn.eu`, `amzn.to`, `a.co`) are resolved before reading,
 and product pages are requested with the Italian locale to avoid Amazon's
-interstitial pages. If the buy box has no price, the first offer on the
-other-sellers page is used.
+interstitial pages. The reader uses a cache-busting parameter and retries an
+interstitial once. If the buy box has no price, the first offer on the
+other-sellers page is used, then the first variant option (“1 opzione da …”).
+Products with no available offer legitimately keep an empty price.
 
 ### Delete a wish and notifications
 

@@ -167,11 +167,20 @@ function extractFinalUrl(text) {
 }
 
 async function resolveAmazonShortUrl(value, { signal } = {}) {
-  const text = await fetchJinaText(value, {
+  let text = await fetchJinaText(value, {
     signal,
     timeoutMs: REQUEST_TIMEOUT_MS,
   });
-  const finalUrl = extractFinalUrl(text);
+  let finalUrl = extractFinalUrl(text);
+
+  if (!finalUrl && looksLikeAmazonInterstitial(text)) {
+    text = await fetchJinaText(value, {
+      signal,
+      timeoutMs: REQUEST_TIMEOUT_MS,
+    });
+    finalUrl = extractFinalUrl(text);
+  }
+
   return {
     finalUrl: isAmazonProductUrl(finalUrl) ? normalizeUrl(finalUrl) : '',
     text,
@@ -227,6 +236,14 @@ export function parseAmazonProductText(text, sourceUrl = '') {
     title = candidates[0] || '';
   }
 
+  if (
+    /^(ci dispiace|sorry|amazon\.[a-z.]+|impossibile trovare la pagina)$/i.test(
+      title
+    )
+  ) {
+    title = '';
+  }
+
   const priceSection = source.search(/^##\s+(?:Price|Prezzo)\b/im);
   let price = '';
 
@@ -250,6 +267,15 @@ export function parseAmazonProductText(text, sourceUrl = '') {
     }
   }
   if (!price) {
+    const optionMatch = source.match(
+      new RegExp(
+        `\\b(?:\\d+\\s+)?(?:opzion[ei]\\s+da|options?\\s+from)\\s*(?:€|eur)?\\s*(${CURRENCY_AMOUNT})\\s*(?:€|eur\\b)?`,
+        'i'
+      )
+    );
+    if (optionMatch) price = optionMatch[1];
+  }
+  if (!price) {
     price = extractPriceFromText(source.slice(0, 12000));
   }
 
@@ -260,6 +286,25 @@ export function parseAmazonProductText(text, sourceUrl = '') {
     price,
     url: normalizeUrl(sourceUrl) || sourceUrl,
   };
+}
+
+function withJinaCacheBuster(value) {
+  try {
+    const url = new URL(value);
+    url.searchParams.set('_cb', Math.random().toString(36).slice(2));
+    return url.toString();
+  } catch {
+    return value;
+  }
+}
+
+function looksLikeAmazonInterstitial(text) {
+  return (
+    String(text || '').length < 3000 &&
+    /fai clic sul pulsante|click the button below|continue shopping/i.test(
+      String(text || '')
+    )
+  );
 }
 
 async function fetchJinaText(targetUrl, { signal, timeoutMs } = {}) {
@@ -273,10 +318,13 @@ async function fetchJinaText(targetUrl, { signal, timeoutMs } = {}) {
   }
 
   try {
-    const response = await fetch(`${JINA_ENDPOINT}${targetUrl}`, {
-      headers: { Accept: 'text/plain' },
-      signal: controller.signal,
-    });
+    const response = await fetch(
+      `${JINA_ENDPOINT}${withJinaCacheBuster(targetUrl)}`,
+      {
+        headers: { Accept: 'text/plain' },
+        signal: controller.signal,
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Jina Reader returned HTTP ${response.status}`);
@@ -290,10 +338,19 @@ async function fetchJinaText(targetUrl, { signal, timeoutMs } = {}) {
 }
 
 async function fetchAmazonProductMetadata(url, { signal } = {}) {
-  const text = await fetchJinaText(withAmazonLanguage(canonicalAmazonProductUrl(url)), {
+  const productUrl = withAmazonLanguage(canonicalAmazonProductUrl(url));
+  let text = await fetchJinaText(productUrl, {
     signal,
     timeoutMs: AMAZON_REQUEST_TIMEOUT_MS,
   });
+
+  if (looksLikeAmazonInterstitial(text)) {
+    text = await fetchJinaText(productUrl, {
+      signal,
+      timeoutMs: AMAZON_REQUEST_TIMEOUT_MS,
+    });
+  }
+
   return parseAmazonProductText(text, url);
 }
 
@@ -303,10 +360,17 @@ async function fetchAmazonOfferPrice(url, { signal } = {}) {
 
   const offersUrl =
     `https://${parts.hostname}/gp/offer-listing/${parts.asin}`;
-  const text = await fetchJinaText(offersUrl, {
+  let text = await fetchJinaText(offersUrl, {
     signal,
     timeoutMs: REQUEST_TIMEOUT_MS,
   });
+
+  if (looksLikeAmazonInterstitial(text)) {
+    text = await fetchJinaText(offersUrl, {
+      signal,
+      timeoutMs: REQUEST_TIMEOUT_MS,
+    });
+  }
 
   // The first price on the offer page belongs to the first available seller.
   return extractPriceFromText(text.slice(0, 8000));

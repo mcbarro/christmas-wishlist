@@ -141,6 +141,30 @@ describe('Amazon product metadata', () => {
 
     expect(metadata.price).toBe('42,16€');
   });
+
+  it('uses the first variant option price when there is no buy box', () => {
+    const metadata = parseAmazonProductText(
+      amazonText.replace('€ 12,99', '1 opzione da 24,07€'),
+      'https://www.amazon.it/dp/B00XUMTTYI'
+    );
+
+    expect(metadata.price).toBe('24,07€');
+  });
+
+  it('recognizes English option prices and rejects generic error titles', () => {
+    const metadata = parseAmazonProductText(
+      `Title: Ci dispiace
+
+![Image](https://m.media-amazon.com/images/I/61kiWKfZurL._AC_SX569_.jpg)
+
+1 option from €24.07
+`,
+      'https://www.amazon.it/dp/B00XUMTTYI'
+    );
+
+    expect(metadata.title).toBe('');
+    expect(metadata.price).toBe('24.07');
+  });
 });
 
 describe('fetchUrlMetadata', () => {
