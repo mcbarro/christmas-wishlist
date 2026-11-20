@@ -2,6 +2,11 @@ import { normalizeUrl } from './url';
 
 const MICROLINK_ENDPOINT = 'https://api.microlink.io/';
 const JINA_ENDPOINT = 'https://r.jina.ai/';
+// Amazon.it only shows some offers to European delivery locations. Jina's
+// default reader exits from the United States, where those offers look
+// unavailable. The EU residency endpoint exits from the EU (Brussels) and
+// renders the same Italian price a local visitor sees.
+const JINA_EU_ENDPOINT = 'https://eu-r-beta.jina.ai/';
 const REQUEST_TIMEOUT_MS = 12000;
 const AMAZON_REQUEST_TIMEOUT_MS = 20000;
 
@@ -167,14 +172,14 @@ function extractFinalUrl(text) {
 }
 
 async function resolveAmazonShortUrl(value, { signal } = {}) {
-  let text = await fetchJinaText(value, {
+  let text = await fetchAmazonReader(value, {
     signal,
     timeoutMs: REQUEST_TIMEOUT_MS,
   });
   let finalUrl = extractFinalUrl(text);
 
   if (!finalUrl && looksLikeAmazonInterstitial(text)) {
-    text = await fetchJinaText(value, {
+    text = await fetchAmazonReader(value, {
       signal,
       timeoutMs: REQUEST_TIMEOUT_MS,
     });
@@ -307,7 +312,26 @@ function looksLikeAmazonInterstitial(text) {
   );
 }
 
-async function fetchJinaText(targetUrl, { signal, timeoutMs } = {}) {
+/**
+ * Reads Amazon through the EU reader, which sees European offers. Falls back to
+ * the default reader when the EU endpoint is rate-limited or unavailable.
+ */
+async function fetchAmazonReader(targetUrl, { signal, timeoutMs } = {}) {
+  try {
+    return await fetchJinaText(targetUrl, {
+      signal,
+      timeoutMs,
+      endpoint: JINA_EU_ENDPOINT,
+    });
+  } catch {
+    return fetchJinaText(targetUrl, { signal, timeoutMs });
+  }
+}
+
+async function fetchJinaText(
+  targetUrl,
+  { signal, timeoutMs, endpoint = JINA_ENDPOINT } = {}
+) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const abortFromParent = () => controller.abort();
@@ -319,7 +343,7 @@ async function fetchJinaText(targetUrl, { signal, timeoutMs } = {}) {
 
   try {
     const response = await fetch(
-      `${JINA_ENDPOINT}${withJinaCacheBuster(targetUrl)}`,
+      `${endpoint}${withJinaCacheBuster(targetUrl)}`,
       {
         headers: { Accept: 'text/plain' },
         signal: controller.signal,
@@ -339,13 +363,14 @@ async function fetchJinaText(targetUrl, { signal, timeoutMs } = {}) {
 
 async function fetchAmazonProductMetadata(url, { signal } = {}) {
   const productUrl = withAmazonLanguage(canonicalAmazonProductUrl(url));
-  let text = await fetchJinaText(productUrl, {
+  let text = await fetchAmazonReader(productUrl, {
     signal,
     timeoutMs: AMAZON_REQUEST_TIMEOUT_MS,
   });
-
-  if (looksLikeAmazonInterstitial(text)) {
-    text = await fetchJinaText(productUrl, {
+  // Amazon rate-limits the reader with a "click to continue" interstitial.
+  // A couple of fresh attempts almost always get the real product page.
+  for (let attempt = 0; attempt < 2 && looksLikeAmazonInterstitial(text); attempt += 1) {
+    text = await fetchAmazonReader(productUrl, {
       signal,
       timeoutMs: AMAZON_REQUEST_TIMEOUT_MS,
     });
@@ -360,13 +385,12 @@ async function fetchAmazonOfferPrice(url, { signal } = {}) {
 
   const offersUrl =
     `https://${parts.hostname}/gp/offer-listing/${parts.asin}`;
-  let text = await fetchJinaText(offersUrl, {
+  let text = await fetchAmazonReader(offersUrl, {
     signal,
     timeoutMs: REQUEST_TIMEOUT_MS,
   });
-
-  if (looksLikeAmazonInterstitial(text)) {
-    text = await fetchJinaText(offersUrl, {
+  for (let attempt = 0; attempt < 2 && looksLikeAmazonInterstitial(text); attempt += 1) {
+    text = await fetchAmazonReader(offersUrl, {
       signal,
       timeoutMs: REQUEST_TIMEOUT_MS,
     });

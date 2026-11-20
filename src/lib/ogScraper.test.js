@@ -234,10 +234,67 @@ describe('fetchUrlMetadata', () => {
     );
     expect(metadata.price).toBe('€ 12,99');
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toContain('r.jina.ai');
+    expect(fetchMock.mock.calls[0][0]).toContain('jina.ai');
     expect(fetchMock.mock.calls[0][0]).toContain(
       'https://www.amazon.it/gp/aw/d/B00XUMTTYI'
     );
+  });
+
+  it('reads Amazon from the EU reader so regional offers are visible', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () =>
+        `Title: Tolesum Lima Unghie Cani,Tagliaunghie Elettrico Cani : Amazon.it: Prodotti per animali domestici
+
+[In consegna a Modena 41125 Aggiorna posizione](https://www.amazon.it/gp/aw/d/B0FRDZQ2CG)
+
+18,04€18,04€
+
+ Consegna GRATUITA mercoledì, 25 novembre sul tuo primo ordine.
+
+![Image](https://m.media-amazon.com/images/I/61Yw-VJPQyL._AC_SX522_.jpg)
+`,
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const metadata = await fetchUrlMetadata(
+      'https://www.amazon.it/dp/B0FRDZQ2CG'
+    );
+
+    expect(metadata.title).toBe(
+      'Tolesum Lima Unghie Cani,Tagliaunghie Elettrico Cani'
+    );
+    expect(metadata.price).toBe('€18,04');
+    expect(fetchMock.mock.calls[0][0]).toContain(
+      'https://eu-r-beta.jina.ai/'
+    );
+  });
+
+  it('falls back to the default reader when the EU reader fails', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, status: 429 })
+      .mockResolvedValueOnce({
+        ok: true,
+        text: async () =>
+          `Title: Lindt Lindor Milk Chocolate Praline 16 Chocolates : Amazon.it: Grocery
+
+## Price
+
+€ 9,99
+`,
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const metadata = await fetchUrlMetadata(
+      'https://www.amazon.it/dp/B00XUMTTYI'
+    );
+
+    expect(metadata.price).toBe('€ 9,99');
+    expect(fetchMock.mock.calls[0][0]).toContain(
+      'https://eu-r-beta.jina.ai/'
+    );
+    expect(fetchMock.mock.calls[1][0]).toContain('https://r.jina.ai/');
   });
 
   it('resolves amzn.eu short links before reading Amazon metadata', async () => {

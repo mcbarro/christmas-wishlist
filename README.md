@@ -352,12 +352,14 @@ looks like a URL, contains an Amazon suffix, or is the generic “Product galler
 
 Amazon short links (`amzn.eu`, `amzn.to`, `a.co`) are resolved before reading,
 and product pages are requested with the Italian locale to avoid Amazon's
-interstitial pages. The reader uses a cache-busting parameter and retries an
-interstitial once. If the buy box has no price, the first offer on the
-other-sellers page is used, then the first variant option (“1 opzione da …”).
-Products with no available offer legitimately keep an empty price. In that case
-refreshing still updates the image/title and shows an explanatory message
-instead of claiming the price was updated.
+interstitial pages. Amazon only shows some Italian offers to European delivery
+locations, so reads go through Jina's EU residency reader (falling back to the
+default reader when it is rate-limited). The reader uses a cache-busting
+parameter and retries an interstitial a couple of times. If the buy box has no
+price, the first offer on the other-sellers page is used, then the first variant
+option (“1 opzione da …”). Products with no available offer legitimately keep an
+empty price. In that case refreshing still updates the image/title and shows an
+explanatory message instead of claiming the price was updated.
 
 ### Delete a wish and notifications
 
