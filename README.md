@@ -355,7 +355,9 @@ and product pages are requested with the Italian locale to avoid Amazon's
 interstitial pages. The reader uses a cache-busting parameter and retries an
 interstitial once. If the buy box has no price, the first offer on the
 other-sellers page is used, then the first variant option (“1 opzione da …”).
-Products with no available offer legitimately keep an empty price.
+Products with no available offer legitimately keep an empty price. In that case
+refreshing still updates the image/title and shows an explanatory message
+instead of claiming the price was updated.
 
 ### Delete a wish and notifications
 

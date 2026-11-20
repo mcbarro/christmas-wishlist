@@ -80,6 +80,8 @@ const en = {
   "card.refreshing": "Refreshing...",
   "card.refreshAria": "Refresh image and price — {title}",
   "card.refreshSuccess": "Image and price updated.",
+  "card.refreshNoPrice":
+    "Image updated. Amazon does not expose a price for this product.",
   "card.refreshEmpty": "No new image or price found.",
   "card.refreshError": "We couldn't refresh this wish. Please try again.",
   "rating.label": "Wish rating",

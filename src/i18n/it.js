@@ -81,6 +81,8 @@ const it = {
   "card.refreshing": "Aggiornamento...",
   "card.refreshAria": "Aggiorna immagine e prezzo — {title}",
   "card.refreshSuccess": "Immagine e prezzo aggiornati.",
+  "card.refreshNoPrice":
+    "Immagine aggiornata. Amazon non espone un prezzo per questo prodotto.",
   "card.refreshEmpty": "Nessuna nuova immagine o prezzo trovati.",
   "card.refreshError": "Non siamo riusciti ad aggiornare il desiderio. Riprova.",
   "rating.label": "Voto del desiderio",

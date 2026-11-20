@@ -374,8 +374,9 @@ export default function WishlistApp() {
         const title = shouldReplaceItemTitle(item.title, metadata.title)
           ? metadata.title
           : '';
+        const hasPrice = Boolean(metadata.price);
 
-        if (!metadata.image_url && !metadata.price && !title) {
+        if (!metadata.image_url && !hasPrice && !title) {
           showToast(t('card.refreshEmpty'), 'info');
           return false;
         }
@@ -385,7 +386,14 @@ export default function WishlistApp() {
           price: metadata.price,
           title,
         });
-        showToast(t('card.refreshSuccess'), 'success');
+
+        if (hasPrice) {
+          showToast(t('card.refreshSuccess'), 'success');
+        } else if (metadata.image_url) {
+          showToast(t('card.refreshNoPrice'), 'info');
+        } else {
+          showToast(t('card.refreshEmpty'), 'info');
+        }
         return true;
       } catch (error) {
         console.error('Could not refresh the wish metadata:', error);
